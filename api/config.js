@@ -1,5 +1,5 @@
 export default function handler(req, res) {
-    // Memastikan API boleh diakses oleh frontend (CORS)
+    // Memastikan API bisa diakses oleh dashboard UI
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Content-Type', 'application/json');
 
@@ -7,12 +7,11 @@ export default function handler(req, res) {
         "settings": {
             "apiName": "KuroNeko",
             "creator": "InuuTyzDev",
-            "description": "Vercel Native API Dashboard — Lightweight & Powerful",
+            "description": "Vercel Native API Dashboard — Optimized for Hobby Plan",
             "thumbnail": "https://c.termai.cc/i181/aGwK.png",
             "favicon": "https://c.termai.cc/i181/aGwK.png",
-            "github": "https://github.com/DanzzAraAra",
-            "channelUrl": "#",
-            "apiVersion": "2.0.0"
+            "github": "https://github.com/inuunew/apiweb",
+            "apiVersion": "2.1.0"
         },
         "tags": {
             "maker": [
@@ -20,41 +19,43 @@ export default function handler(req, res) {
                     "name": "Brat Generator",
                     "endpoint": "/api/maker/brat",
                     "method": "GET",
-                    "params": [
-                        { "name": "text", "required": true, "description": "Teks untuk dijadikan sticker brat" }
-                    ]
+                    "params": [{ "name": "text", "required": true, "description": "Teks untuk stiker brat" }]
                 }
             ],
             "downloader": [
                 {
                     "name": "TikTok Downloader",
-                    "endpoint": "/api/downloader/tiktok",
+                    "endpoint": "/api/download",
                     "method": "GET",
                     "params": [
+                        { "name": "type", "required": true, "description": "isi dengan: tiktok" },
                         { "name": "url", "required": true, "description": "Link video TikTok" }
                     ]
                 },
                 {
                     "name": "Instagram Downloader",
-                    "endpoint": "/api/downloader/instagram",
+                    "endpoint": "/api/download",
                     "method": "GET",
                     "params": [
-                        { "name": "url", "required": true, "description": "Link Reels/Post/IGTV" }
+                        { "name": "type", "required": true, "description": "isi dengan: ig" },
+                        { "name": "url", "required": true, "description": "Link post/reels IG" }
                     ]
                 },
                 {
                     "name": "Facebook Downloader",
-                    "endpoint": "/api/downloader/facebook",
+                    "endpoint": "/api/download",
                     "method": "GET",
                     "params": [
-                        { "name": "url", "required": true, "description": "Link video Facebook" }
+                        { "name": "type", "required": true, "description": "isi dengan: fb" },
+                        { "name": "url", "required": true, "description": "Link video FB" }
                     ]
                 },
                 {
                     "name": "Mediafire Downloader",
-                    "endpoint": "/api/downloader/mediafire",
+                    "endpoint": "/api/download",
                     "method": "GET",
                     "params": [
+                        { "name": "type", "required": true, "description": "isi dengan: mediafire" },
                         { "name": "url", "required": true, "description": "Link file Mediafire" }
                     ]
                 }
@@ -64,48 +65,38 @@ export default function handler(req, res) {
                     "name": "Pinterest Search",
                     "endpoint": "/api/search/pinterest",
                     "method": "GET",
-                    "params": [
-                        { "name": "q", "required": true, "description": "Kata kunci gambar" }
-                    ]
+                    "params": [{ "name": "q", "required": true, "description": "Cari gambar" }]
                 },
                 {
                     "name": "TikTok Search",
                     "endpoint": "/api/search/tiktok",
                     "method": "GET",
-                    "params": [
-                        { "name": "q", "required": true, "description": "Kata kunci video TikTok" }
-                    ]
+                    "params": [{ "name": "q", "required": true, "description": "Cari video" }]
                 },
                 {
                     "name": "YouTube Search",
                     "endpoint": "/api/search/yts",
                     "method": "GET",
-                    "params": [
-                        { "name": "q", "required": true, "description": "Kata kunci video YouTube" }
-                    ]
+                    "params": [{ "name": "q", "required": true, "description": "Cari video YT" }]
                 }
             ],
             "tools": [
                 {
-                    "name": "Short URL (TinyURL)",
+                    "name": "Short URL",
                     "endpoint": "/api/tools/shorturl",
                     "method": "GET",
-                    "params": [
-                        { "name": "url", "required": true, "description": "Link panjang yang ingin dipendekkan" },
-                        { "name": "alias", "required": false, "description": "Custom nama link (opsional)" }
-                    ]
+                    "params": [{ "name": "url", "required": true, "description": "Link panjang" }]
                 },
                 {
-                    "name": "SS Web (Screenshot)",
+                    "name": "SS Web",
                     "endpoint": "/api/tools/ssweb",
                     "method": "GET",
                     "params": [
-                        { "name": "url", "required": true, "description": "Link website" },
-                        { "name": "type", "required": false, "description": "pilih: mobile / windows" }
+                        { "name": "url", "required": true, "description": "URL website" },
+                        { "name": "type", "required": false, "description": "mobile / windows" }
                     ]
                 }
             ]
         }
     });
 }
-
