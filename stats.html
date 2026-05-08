@@ -154,9 +154,10 @@
         const updateInterval = 1000;
         let lastRequestsJson = '';
 
-        async function fetchStats() {
+                async function fetchStats() {
             try {
                 const response = await fetch('/stats/data');
+
                 const data = await response.json();
                 
                 if(data.status) {
