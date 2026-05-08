@@ -336,7 +336,7 @@
         }
 
         // PERUBAHAN DI SINI: Fetch langsung ke file statis /config.json
-        fetch('/config.json')
+        fetch('/api/config')
             .then(res => res.json())
             .then(config => {
                 document.getElementById('dash-title').innerText = config.settings.apiName;
