@@ -452,7 +452,7 @@
         async function loadReminder() {
             try {
                 // Diperbarui ke path root untuk v2
-                const req = await fetch('/reminder.json');
+                const req = await fetch('/api/reminder');
                 const data = await req.json();
                 if(data?.message) {
                     const runningText = document.getElementById('running-text');
