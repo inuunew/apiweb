@@ -1,9 +1,5 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import axios from 'axios';
-
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-    // Vercel otomatis membaca query parameters
-    const text = req.query.text as string;
+export default async function handler(req, res) {
+    const text = req.query.text;
 
     if (!text) {
         return res.status(400).json({ status: false, message: "Parameter 'text' diperlukan." });
@@ -11,15 +7,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     try {
         const url = `https://brat.siputzx.my.id/image?text=${encodeURIComponent(text)}`;
-        const response = await axios.get(url, {
-            responseType: 'arraybuffer',
+        
+        // Menggunakan fetch bawaan Node.js (Tanpa perlu Axios)
+        const response = await fetch(url, {
             headers: { 'User-Agent': 'Mozilla/5.0' }
         });
 
-        // Set header gambar dan kirim
+        if (!response.ok) throw new Error(`Gagal mengambil gambar: ${response.statusText}`);
+
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
         res.setHeader('Content-Type', 'image/png');
-        res.status(200).send(response.data);
-    } catch (error: any) {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.status(200).send(buffer);
+    } catch (error) {
         res.status(500).json({ status: false, message: error.message });
     }
 }
