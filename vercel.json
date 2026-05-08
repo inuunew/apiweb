@@ -1,6 +1,20 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/public/docs.html" },
-    { "source": "/config", "destination": "/public/config.json" }
+    {
+      "source": "/",
+      "destination": "/public/index.html"
+    },
+    {
+      "source": "/docs",
+      "destination": "/public/docs.html"
+    },
+    {
+      "source": "/stats",
+      "destination": "/public/stats.html"
+    },
+    {
+      "source": "/config",
+      "destination": "/public/config.json"
+    }
   ]
 }
