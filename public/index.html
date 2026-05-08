@@ -67,18 +67,12 @@
 
         /* --- SOFT BUTTON CSS START --- */
         .soft-btn {
-            --button-raise-level: 8px; /* Slightly reduced for mobile fit */
+            --button-raise-level: 8px;
             --press-inset: 4px;
-            --press-compensated: 0px;
             --button-hover-pressure: 1.5;
             --transform-speed: 160ms;
             --radius: 12px;
             --border-width: 0px;
-            --edge-aa: 0px;
-            --glare-rgb: 255, 255, 255;
-            --glare-alpha: 0.2;
-            --glare-width: 20;
-
             position: relative;
             border: none;
             background: transparent;
@@ -99,56 +93,35 @@
             transform-style: preserve-3d;
         }
 
-        /* Side wall */
         .soft-btn__wrapper::before {
             content: '';
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            position: absolute; left: 0; right: 0; bottom: 0;
             height: calc(100% - var(--button-raise-level));
             background: var(--side-color);
-            border-radius: var(--radius);
-            z-index: 1;
+            border-radius: var(--radius); z-index: 1;
         }
 
-        /* Face */
         .soft-btn__content {
-            position: relative;
-            width: 100%;
+            position: relative; width: 100%;
             height: calc(100% - var(--button-raise-level));
-            background: var(--surface-color);
-            color: var(--text-color);
+            background: var(--surface-color); color: var(--text-color);
             border-radius: var(--radius);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transform: translateY(0);
-            transition: transform var(--transform-speed) ease-out;
-            will-change: transform;
-            backface-visibility: hidden;
-            transform-origin: center;
-            z-index: 2;
+            display: flex; align-items: center; justify-content: center;
+            transform: translateY(0); transition: transform var(--transform-speed) ease-out;
+            will-change: transform; backface-visibility: hidden;
+            transform-origin: center; z-index: 2;
             border: var(--border-width) solid var(--border-color);
         }
 
         .soft-btn__inner {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            z-index: 4;
-            width: 100%;
-            height: 100%;
-            pointer-events: none; /* Let clicks pass to parent */
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 8px; z-index: 4; width: 100%; height: 100%; pointer-events: none; 
         }
 
-        /* Hover deformation */
         .soft-btn--middle .soft-btn__content { transform: translateY(calc(1px * var(--button-hover-pressure))); }
         .soft-btn--left .soft-btn__content { transform: skewY(calc(-1deg * var(--button-hover-pressure))); }
         .soft-btn--right .soft-btn__content { transform: skewY(calc(1deg * var(--button-hover-pressure))); }
 
-        /* Pressed */
         .soft-btn--active .soft-btn__content {
             transform: translateY(var(--press-inset));
             transition: transform calc(var(--transform-speed) * 0.8) ease-out;
@@ -162,51 +135,18 @@
             transform: skewY(calc(1deg * var(--button-hover-pressure))) translateY(var(--press-inset));
         }
 
-        /* Glare layer */
-        .soft-btn__content::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            pointer-events: none;
-            background: linear-gradient(90deg,
-                rgba(var(--glare-rgb), 0) calc(50% - var(--glare-width) * 1%),
-                rgba(var(--glare-rgb), calc(var(--glare-alpha) * 0.5)) calc(50% - var(--glare-width) * 0.5%),
-                rgba(var(--glare-rgb), var(--glare-alpha)) 50%,
-                rgba(var(--glare-rgb), calc(var(--glare-alpha) * 0.5)) calc(50% + var(--glare-width) * 0.5%),
-                rgba(var(--glare-rgb), 0) calc(50% + var(--glare-width) * 1%));
-            background-size: 200% 100%;
-            background-position: 50% 50%;
-            opacity: 0;
-            transition: opacity 160ms ease, background-position var(--transform-speed) ease;
-            z-index: 3;
-        }
-
-        .soft-btn--right .soft-btn__content::after { opacity: 1; background-position: 0% 50%; }
-        .soft-btn--middle .soft-btn__content::after { opacity: 1; background-position: 50% 50%; }
-        .soft-btn--left .soft-btn__content::after { opacity: 1; background-position: 100% 50%; }
-        .soft-btn--active .soft-btn__content::after { opacity: 1; background: rgba(var(--glare-rgb), var(--glare-alpha)); background-position: 50% 50%; }
-
         /* VARIANTS MAPPING */
         .variant-solid {
-            --surface-color: #6366f1; /* Primary */
-            --side-color: #4338ca;    /* Darker Primary */
-            --text-color: #ffffff;
-            --border-color: transparent;
+            --surface-color: #6366f1; --side-color: #4338ca; 
+            --text-color: #ffffff; --border-color: transparent;
         }
         .variant-outline {
-            --surface-color: #ffffff;
-            --side-color: #94a3b8;
-            --text-color: #1e293b;
-            --border-color: #cbd5e1;
-            --border-width: 2px;
+            --surface-color: #ffffff; --side-color: #94a3b8;
+            --text-color: #1e293b; --border-color: #cbd5e1; --border-width: 2px;
         }
         .variant-steel {
-            --surface-color: #f1f5f9;
-            --side-color: #94a3b8;
-            --text-color: #334155;
-            --border-color: #cbd5e1;
-            --border-width: 1px;
+            --surface-color: #f1f5f9; --side-color: #94a3b8;
+            --text-color: #334155; --border-color: #cbd5e1; --border-width: 1px;
         }
         /* --- SOFT BUTTON CSS END --- */
     </style>
@@ -258,7 +198,7 @@
                         
                         <div class="absolute bottom-3 left-3 z-20">
                             <span class="bg-white border-2 border-dark px-2 py-1 text-[10px] font-bold shadow-[2px_2px_0px_0px_#1e293b] flex items-center gap-1">
-                                <i class="fa-solid fa-server text-primary"></i> v1.0.0
+                                <i class="fa-solid fa-server text-primary"></i> v2.0.0
                             </span>
                         </div>
                     </div>
@@ -329,7 +269,7 @@
                     </div>
                     <div class="mt-8 pt-4 border-t-2 border-dashed border-slate-300 text-center animate-fade-up" style="animation-delay: 0.3s">
                         <p class="text-[10px] font-mono text-slate-400">
-                            POWERED BY <span class="text-primary font-bold">DANZZ</span> &bull; 2026
+                            POWERED BY <span id="dash-creator" class="text-primary font-bold">DANZZ</span> &bull; 2026
                         </p>
                     </div>
 
@@ -358,13 +298,11 @@
                     const x = e.clientX - rect.left;
                     const w = rect.width;
 
-                    // Set capture on down
                     if(e.type === 'pointerdown') {
                         btn.classList.add('soft-btn--active');
                         try { btn.setPointerCapture(e.pointerId); } catch(err){}
                     }
 
-                    // Calculate direction
                     btn.classList.remove('soft-btn--left', 'soft-btn--right', 'soft-btn--middle');
                     if (x < w * 0.33) btn.classList.add('soft-btn--left');
                     else if (x > w * 0.66) btn.classList.add('soft-btn--right');
@@ -390,7 +328,6 @@
                 }).catch(console.error);
             } else {
                 navigator.clipboard.writeText(window.location.href);
-                // Simple toast or alert
                 const originalText = document.querySelector('button[onclick="share()"] .soft-btn__inner').innerHTML;
                 const inner = document.querySelector('button[onclick="share()"] .soft-btn__inner');
                 inner.innerHTML = '<i class="fa-solid fa-check text-green-500"></i>';
@@ -398,11 +335,16 @@
             }
         }
 
-        fetch('/config')
+        // PERUBAHAN DI SINI: Fetch langsung ke file statis /config.json
+        fetch('/config.json')
             .then(res => res.json())
             .then(config => {
                 document.getElementById('dash-title').innerText = config.settings.apiName;
                 document.getElementById('dash-desc').innerText = config.settings.description;
+                
+                // Set Footer Nama Creator Dinamis
+                const dashCreator = document.getElementById('dash-creator');
+                if(config.settings.creator) dashCreator.innerText = config.settings.creator.toUpperCase();
                 
                 const btnChannel = document.getElementById('btn-channel');
                 if(config.settings.channelUrl) btnChannel.href = config.settings.channelUrl;
@@ -425,13 +367,11 @@
                     document.getElementById('loader').classList.add('hidden');
                     const content = document.getElementById('content');
                     content.classList.remove('hidden');
-                    // Initialize button physics after content is visible
                     initSoftButtons();
                 }, remaining);
             })
             .catch(err => {
                 console.error(err);
-                // Fallback for demo/error
                 document.getElementById('dash-title').innerText = "KuroNeko";
                 document.getElementById('dash-desc').innerText = "Simple Dashboard Template";
                 
