@@ -8,10 +8,10 @@ export default function handler(req, res) {
             "apiName": "KuroNeko",
             "creator": "InuuTyzDev",
             "description": "Vercel Native API Dashboard — Optimized for Hobby Plan",
-            "thumbnail": "https://c.termai.cc/i181/aGwK.png",
-            "favicon": "https://c.termai.cc/i181/aGwK.png",
+            "thumbnail": "https://files.catbox.moe/la9esc.png",
+            "favicon": "https://files.catbox.moe/tv1rv6.jpeg",
             "github": "https://github.com/inuunew/apiweb",
-            "apiVersion": "2.1.0"
+            "apiVersion": "1.1.0"
         },
         "tags": {
             "maker": [
