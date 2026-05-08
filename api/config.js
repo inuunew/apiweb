@@ -22,7 +22,7 @@ export default function handler(req, res) {
                     "params": [{ "name": "text", "required": true, "description": "Teks untuk stiker brat" }]
                 }
             ],
-            "            "downloader": [
+            "downloader": [
                 {
                     "name": "TikTok Downloader",
                     "endpoint": "/api/download?type=tiktok",
@@ -53,6 +53,43 @@ export default function handler(req, res) {
                     "method": "GET",
                     "params": [
                         { "name": "url", "required": true, "description": "Link file Mediafire" }
+                    ]
+                }
+            ],
+            "search": [
+                {
+                    "name": "Pinterest Search",
+                    "endpoint": "/api/search/pinterest",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Cari gambar" }]
+                },
+                {
+                    "name": "TikTok Search",
+                    "endpoint": "/api/search/tiktok",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Cari video" }]
+                },
+                {
+                    "name": "YouTube Search",
+                    "endpoint": "/api/search/yts",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Cari video YT" }]
+                }
+            ],
+            "tools": [
+                {
+                    "name": "Short URL",
+                    "endpoint": "/api/tools/shorturl",
+                    "method": "GET",
+                    "params": [{ "name": "url", "required": true, "description": "Link panjang" }]
+                },
+                {
+                    "name": "SS Web",
+                    "endpoint": "/api/tools/ssweb",
+                    "method": "GET",
+                    "params": [
+                        { "name": "url", "required": true, "description": "URL website" },
+                        { "name": "type", "required": false, "description": "mobile / windows" }
                     ]
                 }
             ]
