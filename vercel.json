@@ -1,21 +1,3 @@
 {
-  "cleanUrls": true,
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/public/index.html"
-    },
-    {
-      "source": "/docs",
-      "destination": "/public/docs.html"
-    },
-    {
-      "source": "/stats",
-      "destination": "/public/stats.html"
-    },
-    {
-      "source": "/config",
-      "destination": "/public/config.json"
-    }
-  ]
+  "cleanUrls": true
 }
