@@ -18,36 +18,43 @@ export default async function handler(req, res) {
             if (!url) return res.status(400).json({ status: false, message: "Parameter 'url' wajib diisi!" });
             return res.status(200).json({ status: true, creator: "InuuTyzDev", result: `URL berhasil dipendekkan: ${url}` });
         } 
-        // --- FITUR SSWEB TERBARU (SIPUTZX API) ---
         else if (type === 'ssweb') {
             if (!url) return res.status(400).json({ status: false, message: "Parameter 'url' wajib diisi!" });
-
-            // Parameter theme=light & fullPage=true ditanamkan otomatis
-            // Perangkat default ke desktop jika tidak diisi
             const targetDevice = device || 'desktop';
             const targetUrl = `https://api.siputzx.my.id/api/tools/ssweb?url=${encodeURIComponent(url)}&device=${targetDevice}&theme=light&fullPage=true`;
-
-            // Mengambil gambar mentah (buffer) dari server target
             const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
-
-            // Memberitahu browser bahwa ini adalah file gambar PNG
             res.setHeader('Content-Type', 'image/png');
             return res.status(200).send(response.data);
         } 
         else if (type === 'subdomain') {
             if (!domain) return res.status(400).json({ status: false, message: "Parameter 'domain' wajib diisi!" });
             const response = await axios.get(`https://api.siputzx.my.id/api/tools/subdomains?domain=${domain}`);
-            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.data });
+            
+            // --- TRIK SAPU BERSIH ---
+            let cleanData = response.data.data || response.data;
+            if (cleanData && typeof cleanData === 'object') { delete cleanData.creator; delete cleanData.status; }
+            
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
         }
         else if (type === 'kodepos') {
             if (!query) return res.status(400).json({ status: false, message: "Parameter 'query' wajib diisi!" });
             const response = await axios.get(`https://api.siputzx.my.id/api/tools/kodepos?form=${encodeURIComponent(query)}`);
-            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.data || response.data });
+            
+            // --- TRIK SAPU BERSIH ---
+            let cleanData = response.data.data || response.data;
+            if (cleanData && typeof cleanData === 'object') { delete cleanData.creator; delete cleanData.status; }
+            
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
         }
         else if (type === 'countryinfo') {
             if (!country) return res.status(400).json({ status: false, message: "Parameter 'country' wajib diisi!" });
             const response = await axios.get(`https://api.siputzx.my.id/api/tools/countryInfo?name=${encodeURIComponent(country)}`);
-            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.data || response.data });
+            
+            // --- TRIK SAPU BERSIH ---
+            let cleanData = response.data.data || response.data;
+            if (cleanData && typeof cleanData === 'object') { delete cleanData.creator; delete cleanData.status; }
+            
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
         }
         else if (type === 'getcode') {
             if (!url) return res.status(400).json({ status: false, message: "Harap sertakan parameter URL target!" });
