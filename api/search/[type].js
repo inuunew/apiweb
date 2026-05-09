@@ -16,27 +16,45 @@ export default async function handler(req, res) {
         // --- SPOTIFY SEARCH ---
         if (type === 'spotify') {
             const response = await axios.get(`https://api.yupra.my.id/api/search/spotify?q=${encodeURIComponent(keyword)}`);
-            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data });
+            
+            // TRIK SAPU BERSIH: Menghilangkan watermark dari API target
+            const cleanData = response.data;
+            delete cleanData.creator; // Melenyapkan "YP INC."
+            delete cleanData.status;  // Melenyapkan status ganda
+
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
         }
-        // --- FITUR BARU: GSM ARENA SEARCH ---
+        // --- GSM ARENA SEARCH ---
         else if (type === 'gsm') {
             const response = await axios.get(`https://www.neoapis.xyz/api/search/gsm?query=${encodeURIComponent(keyword)}`);
-            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data });
+            const cleanData = response.data;
+            delete cleanData.creator;
+            delete cleanData.status;
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
         }
-        // --- FITUR BARU: MLBB HERO DETAIL ---
+        // --- MLBB HERO DETAIL ---
         else if (type === 'mlbb') {
             const response = await axios.get(`https://www.neoapis.xyz/api/search/mlbbdetail?hero=${encodeURIComponent(keyword)}`);
-            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data });
+            const cleanData = response.data;
+            delete cleanData.creator;
+            delete cleanData.status;
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
         }
-        // --- FITUR BARU: APP SEARCH ---
+        // --- APP SEARCH ---
         else if (type === 'appsearch') {
             const response = await axios.get(`https://www.neoapis.xyz/api/search/appsearch?query=${encodeURIComponent(keyword)}`);
-            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data });
+            const cleanData = response.data;
+            delete cleanData.creator;
+            delete cleanData.status;
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
         }
-        // --- FITUR BARU: LAZADA SEARCH ---
+        // --- LAZADA SEARCH ---
         else if (type === 'lazada') {
             const response = await axios.get(`https://www.neoapis.xyz/api/search/lazada?query=${encodeURIComponent(keyword)}`);
-            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data });
+            const cleanData = response.data;
+            delete cleanData.creator;
+            delete cleanData.status;
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
         }
         // --- PINTEREST (Placeholder) ---
         else if (type === 'pinterest') {
