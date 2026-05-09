@@ -19,7 +19,15 @@ export default async function handler(req, res) {
             if (temperature) targetUrl += `&temperature=${temperature}`;
 
             const response = await axios.get(targetUrl);
-            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data });
+
+            // --- TRIK SAPU BERSIH ---
+            let cleanData = response.data.data || response.data;
+            if (cleanData && typeof cleanData === 'object') { 
+                delete cleanData.creator; 
+                delete cleanData.status; 
+            }
+
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
         }
         
         // --- MODEL AI KHUSUS: GITA ---
@@ -27,7 +35,15 @@ export default async function handler(req, res) {
             if (!q) return res.status(400).json({ status: false, message: "Parameter 'q' (pertanyaan) wajib diisi!" });
             
             const response = await axios.get(`https://api.siputzx.my.id/api/ai/gita?q=${encodeURIComponent(q)}`);
-            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data });
+            
+            // --- TRIK SAPU BERSIH ---
+            let cleanData = response.data.data || response.data;
+            if (cleanData && typeof cleanData === 'object') { 
+                delete cleanData.creator; 
+                delete cleanData.status; 
+            }
+
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
         }
 
         // --- MODEL AI KHUSUS: GEMINI ---
@@ -39,7 +55,15 @@ export default async function handler(req, res) {
             if (promptSystem) targetUrl += `&promptSystem=${encodeURIComponent(promptSystem)}`;
 
             const response = await axios.get(targetUrl);
-            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data });
+            
+            // --- TRIK SAPU BERSIH ---
+            let cleanData = response.data.data || response.data;
+            if (cleanData && typeof cleanData === 'object') { 
+                delete cleanData.creator; 
+                delete cleanData.status; 
+            }
+
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
         }
         
         else {
