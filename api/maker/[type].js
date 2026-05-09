@@ -1,22 +1,25 @@
 import axios from 'axios';
 
 export default async function handler(req, res) {
+    // Mengizinkan akses dari dashboard UI
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Content-Type', 'application/json');
     
-    // Vercel akan otomatis mengisi variabel "type" ini dari nama rute URL-nya!
+    // Mengambil parameter dari URL
     const { type, text, text1, text2, url } = req.query;
 
     try {
         if (type === 'brat') {
             if (!text) return res.status(400).json({ status: false, message: "Parameter 'text' wajib diisi" });
             
-            return res.status(200).json({ 
-                status: true, 
-                creator: "InuuTyzDev", 
-                message: "Brat sukses diproses",
-                result: `Membuat stiker dengan teks: ${text}` 
-            });
+            // --- LOGIKA BRAT (DIRECT IMAGE) ---
+            const targetUrl = `https://brat.siputzx.my.id/image?text=${encodeURIComponent(text)}`;
+            
+            // Menyedot gambar dari API target dalam bentuk data mentah (buffer)
+            const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
+            
+            // Mengubah tipe konten menjadi gambar agar browser menampilkannya sebagai foto
+            res.setHeader('Content-Type', 'image/png');
+            return res.status(200).send(response.data);
         }
         else if (type === 'ephoto360') {
             if (!url || !text1) {
@@ -33,6 +36,7 @@ export default async function handler(req, res) {
                 headers: { "Content-Type": "application/json" }
             });
 
+            // Ephoto360 tetap merespons dengan JSON standar
             return res.status(200).json({
                 status: true,
                 creator: "InuuTyzDev",
@@ -40,7 +44,7 @@ export default async function handler(req, res) {
             });
         }
         else {
-            return res.status(400).json({ status: false, message: `Type maker '${type}' tidak valid (gunakan brat atau ephoto360)` });
+            return res.status(400).json({ status: false, message: `Type maker '${type}' tidak valid` });
         }
     } catch (e) {
         return res.status(500).json({ status: false, creator: "InuuTyzDev", message: e.message });
