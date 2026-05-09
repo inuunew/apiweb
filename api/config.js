@@ -7,9 +7,10 @@ export default function handler(req, res) {
             "apiName": "KuroNeko",
             "creator": "InuuTyzDev",
             "description": "Developer Modal AI — Masterpiece Vercel Native API Dashboard",
-            "thumbnail": "https://c.termai.cc/i181/aGwK.png",
-            "favicon": "https://c.termai.cc/i181/aGwK.png",
-            "github": "https://github.com/inuunew/apiweb",
+            "thumbnail": "https://files.catbox.moe/la9esc.png",
+            "favicon": "https://files.catbox.moe/tv1rv6.jpeg",
+            "websiteUrl": "https://social-information.inuu.my.id", 
+            "whatsappUrl": "https://wa.me/6283160556330",
             "apiVersion": "4.5.0"
         },
         "tags": {
