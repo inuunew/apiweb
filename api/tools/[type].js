@@ -2,7 +2,9 @@ import axios from 'axios';
 
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    const { type, url, device, domain } = req.query;
+    
+    // Menambahkan parameter 'query' dan 'country' untuk fitur baru
+    const { type, url, device, domain, query, country } = req.query;
 
     try {
         if (type === 'shorturl') {
@@ -12,11 +14,8 @@ export default async function handler(req, res) {
         else if (type === 'ssweb') {
             if (!url) return res.status(400).json({ status: false, message: "Parameter 'url' wajib diisi!" });
 
-            // --- LOGIKA SS WEB (IMAGY APP) ---
-            // Kita siapkan payload dasar. Beberapa API SS juga mendeteksi kata 'mobile' dari parameter device
             const payload = { 
                 url: url,
-                // Jika imagy mendukung parameter jenis device, kita lempar juga ke sana
                 device: device || "desktop" 
             };
 
@@ -27,12 +26,7 @@ export default async function handler(req, res) {
                 }
             });
 
-            // Meneruskan hasil JSON/Gambar dari Imagy ke dashboard InuuTyzDev
-            return res.status(200).json({ 
-                status: true, 
-                creator: "InuuTyzDev", 
-                result: data 
-            });
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: data });
         } 
         else if (type === 'subdomain') {
             if (!domain) return res.status(400).json({ status: false, message: "Parameter 'domain' wajib diisi! (contoh: siputzx.my.id)" });
@@ -41,6 +35,28 @@ export default async function handler(req, res) {
                 status: true,
                 creator: "InuuTyzDev",
                 result: response.data.data
+            });
+        }
+        // --- FITUR BARU: KODE POS ---
+        else if (type === 'kodepos') {
+            if (!query) return res.status(400).json({ status: false, message: "Parameter 'query' wajib diisi! (contoh: Lempuyang)" });
+            
+            const response = await axios.get(`https://api.siputzx.my.id/api/tools/kodepos?form=${encodeURIComponent(query)}`);
+            return res.status(200).json({
+                status: true,
+                creator: "InuuTyzDev",
+                result: response.data.data || response.data // Menangkap data array dari Siputzx
+            });
+        }
+        // --- FITUR BARU: COUNTRY INFO ---
+        else if (type === 'countryinfo') {
+            if (!country) return res.status(400).json({ status: false, message: "Parameter 'country' wajib diisi! (contoh: Indonesia)" });
+            
+            const response = await axios.get(`https://api.siputzx.my.id/api/tools/countryInfo?name=${encodeURIComponent(country)}`);
+            return res.status(200).json({
+                status: true,
+                creator: "InuuTyzDev",
+                result: response.data.data || response.data
             });
         }
         else {
