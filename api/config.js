@@ -1,5 +1,4 @@
 export default function handler(req, res) {
-    // Memastikan API bisa diakses oleh dashboard UI
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Content-Type', 'application/json');
 
@@ -7,7 +6,7 @@ export default function handler(req, res) {
         "settings": {
             "apiName": "KuroNeko",
             "creator": "InuuTyzDev",
-            "description": "Vercel Native API Dashboard — Single-File Architecture Masterpiece",
+            "description": "Vercel Native API Dashboard — Dynamic Route Architecture",
             "thumbnail": "https://c.termai.cc/i181/aGwK.png",
             "favicon": "https://c.termai.cc/i181/aGwK.png",
             "github": "https://github.com/inuunew/apiweb",
@@ -17,13 +16,13 @@ export default function handler(req, res) {
             "maker": [
                 {
                     "name": "Brat Generator",
-                    "endpoint": "/api/maker?type=brat",
+                    "endpoint": "/api/maker/brat",
                     "method": "GET",
                     "params": [{ "name": "text", "required": true, "description": "Teks untuk stiker brat" }]
                 },
                 {
                     "name": "Ephoto360 Graffiti",
-                    "endpoint": "/api/maker?type=ephoto360",
+                    "endpoint": "/api/maker/ephoto360",
                     "method": "GET",
                     "params": [
                         { "name": "url", "required": true, "description": "URL template Ephoto360" },
@@ -35,25 +34,25 @@ export default function handler(req, res) {
             "downloader": [
                 {
                     "name": "TikTok Downloader",
-                    "endpoint": "/api/download?type=tiktok",
+                    "endpoint": "/api/download/tiktok",
                     "method": "GET",
                     "params": [{ "name": "url", "required": true, "description": "Link video TikTok" }]
                 },
                 {
                     "name": "Instagram Downloader",
-                    "endpoint": "/api/download?type=ig",
+                    "endpoint": "/api/download/ig",
                     "method": "GET",
                     "params": [{ "name": "url", "required": true, "description": "Link post/reels IG" }]
                 },
                 {
                     "name": "Facebook Downloader",
-                    "endpoint": "/api/download?type=fb",
+                    "endpoint": "/api/download/fb",
                     "method": "GET",
                     "params": [{ "name": "url", "required": true, "description": "Link video FB" }]
                 },
                 {
                     "name": "Mediafire Downloader",
-                    "endpoint": "/api/download?type=mediafire",
+                    "endpoint": "/api/download/mediafire",
                     "method": "GET",
                     "params": [{ "name": "url", "required": true, "description": "Link file Mediafire" }]
                 }
@@ -61,19 +60,19 @@ export default function handler(req, res) {
             "search": [
                 {
                     "name": "Pinterest Search",
-                    "endpoint": "/api/search?type=pinterest",
+                    "endpoint": "/api/search/pinterest",
                     "method": "GET",
                     "params": [{ "name": "q", "required": true, "description": "Cari gambar" }]
                 },
                 {
                     "name": "TikTok Search",
-                    "endpoint": "/api/search?type=tiktok",
+                    "endpoint": "/api/search/tiktok",
                     "method": "GET",
                     "params": [{ "name": "q", "required": true, "description": "Cari video" }]
                 },
                 {
                     "name": "YouTube Search",
-                    "endpoint": "/api/search?type=yts",
+                    "endpoint": "/api/search/yts",
                     "method": "GET",
                     "params": [{ "name": "q", "required": true, "description": "Cari video YT" }]
                 }
@@ -81,19 +80,19 @@ export default function handler(req, res) {
             "tools": [
                 {
                     "name": "Subdomain Scanner",
-                    "endpoint": "/api/tools?type=subdomain",
+                    "endpoint": "/api/tools/subdomain",
                     "method": "GET",
                     "params": [{ "name": "domain", "required": true, "description": "Target domain (contoh: siputzx.my.id)" }]
                 },
                 {
                     "name": "Short URL",
-                    "endpoint": "/api/tools?type=shorturl",
+                    "endpoint": "/api/tools/shorturl",
                     "method": "GET",
                     "params": [{ "name": "url", "required": true, "description": "Link panjang" }]
                 },
                 {
                     "name": "SS Web",
-                    "endpoint": "/api/tools?type=ssweb",
+                    "endpoint": "/api/tools/ssweb",
                     "method": "GET",
                     "params": [
                         { "name": "url", "required": true, "description": "URL website" },
