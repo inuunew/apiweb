@@ -1,47 +1,82 @@
 import axios from 'axios';
 
 export default async function handler(req, res) {
-    // Mengizinkan akses dari dashboard UI
     res.setHeader('Access-Control-Allow-Origin', '*');
     
-    // Mengambil parameter dari URL (Parameter 'url' sudah kita hapus karena akan di-hardcode)
-    const { type, text, text1, text2 } = req.query;
+    // Mengambil semua kemungkinan parameter untuk kategori Maker
+    const { 
+        type, text, text1, text2, text3, 
+        name, comment, ppurl, 
+        number, title, time, avatarUrl 
+    } = req.query;
+
+    const apiKey = "cuki-x"; // API Key tertanam otomatis
 
     try {
+        // --- 1. BRAT GENERATOR ---
         if (type === 'brat') {
             if (!text) return res.status(400).json({ status: false, message: "Parameter 'text' wajib diisi" });
-            
             const targetUrl = `https://brat.siputzx.my.id/image?text=${encodeURIComponent(text)}`;
             const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
-            
             res.setHeader('Content-Type', 'image/png');
             return res.status(200).send(response.data);
         }
+
+        // --- 2. EPHOTO360 GRAFFITI ---
         else if (type === 'ephoto360') {
-            // Hanya butuh text1, tidak perlu lagi meminta url dari user
-            if (!text1) {
-                return res.status(400).json({ status: false, message: "Parameter 'text1' wajib diisi!" });
-            }
-
-            // --- HARDCODE URL TEMPLATE SESUAI PERMINTAAN ---
+            if (!text1) return res.status(400).json({ status: false, message: "Parameter 'text1' wajib diisi!" });
             const template_url = "https://en.ephoto360.com/create-a-cartoon-style-graffiti-text-effect-online-668.html";
-
-            const payload = {
-                url: template_url,
-                text1: text1,
-                text2: text2 || "" 
-            };
-
-            // Menembak API Siputzx dengan responseType: 'arraybuffer' untuk menangkap gambar asli
+            const payload = { url: template_url, text1, text2: text2 || "" };
             const response = await axios.post("https://api.siputzx.my.id/api/m/ephoto360", payload, {
                 headers: { "Content-Type": "application/json" },
                 responseType: 'arraybuffer'
             });
-
-            // Mengubah tipe konten menjadi gambar JPEG agar browser langsung menampilkannya sebagai foto
             res.setHeader('Content-Type', 'image/jpeg');
             return res.status(200).send(response.data);
         }
+
+        // --- 3. FB COMMAND (CANVAS) ---
+        else if (type === 'fbcommand') {
+            if (!name || !comment || !ppurl) {
+                return res.status(400).json({ status: false, message: "Parameter 'name', 'comment', dan 'ppurl' (Link Foto) wajib diisi!" });
+            }
+            const targetUrl = `https://api.cuki.biz.id/api/canvas/fbcommand?apikey=${apiKey}&name=${encodeURIComponent(name)}&comment=${encodeURIComponent(comment)}&ppurl=${encodeURIComponent(ppurl)}`;
+            const response = await axios.get(targetUrl, { 
+                headers: { 'x-api-key': apiKey },
+                responseType: 'arraybuffer' 
+            });
+            res.setHeader('Content-Type', 'image/png');
+            return res.status(200).send(response.data);
+        }
+
+        // --- 4. FAKE GROUP MAKER ---
+        else if (type === 'fakegroup') {
+            if (!number || !title || !time || !avatarUrl) {
+                return res.status(400).json({ status: false, message: "Parameter 'number', 'title', 'time', dan 'avatarUrl' wajib diisi!" });
+            }
+            const targetUrl = `https://api.cuki.biz.id/api/maker/fakegroup?apikey=${apiKey}&number=${number}&title=${encodeURIComponent(title)}&time=${time}&avatarUrl=${encodeURIComponent(avatarUrl)}`;
+            const response = await axios.get(targetUrl, { 
+                headers: { 'x-api-key': apiKey },
+                responseType: 'arraybuffer' 
+            });
+            res.setHeader('Content-Type', 'image/jpeg');
+            return res.status(200).send(response.data);
+        }
+
+        // --- 5. ROASTING MAKER ---
+        else if (type === 'roasting') {
+            if (!text1 || !text2 || !text3) {
+                return res.status(400).json({ status: false, message: "Parameter 'teks1', 'teks2', dan 'teks3' wajib diisi!" });
+            }
+            const targetUrl = `https://api.cuki.biz.id/api/maker/roasting?apikey=${apiKey}&teks1=${encodeURIComponent(text1)}&teks2=${encodeURIComponent(text2)}&teks3=${encodeURIComponent(text3)}`;
+            const response = await axios.get(targetUrl, { 
+                headers: { 'x-api-key': apiKey },
+                responseType: 'arraybuffer' 
+            });
+            res.setHeader('Content-Type', 'image/jpeg');
+            return res.status(200).send(response.data);
+        }
+
         else {
             return res.status(400).json({ status: false, message: `Type maker '${type}' tidak valid` });
         }
