@@ -8,33 +8,27 @@ export default async function handler(req, res) {
     if (!url) return res.status(400).json({ status: false, message: "Parameter 'url' wajib diisi" });
 
     try {
-        // --- TRIK PRO: KELOMPOK API SIPUTZX ---
-        // Daftar tipe yang menggunakan jalur GET Siputzx secara langsung
+        // --- KELOMPOK API SIPUTZX ---
         const siputzxTypes = [
             'twitter', 'douyin', 'fastdl', 'github', 
             'tiktok', 'gdrive', 'snackvideo', 
             'savefrom', 'ummy', 'capcut'
         ];
 
-        // Jika type yang diminta ada di dalam daftar di atas, eksekusi otomatis!
         if (siputzxTypes.includes(type)) {
             const targetUrl = `https://api.siputzx.my.id/api/d/${type}?url=${encodeURIComponent(url)}`;
             const response = await axios.get(targetUrl);
-            
-            return res.status(200).json({ 
-                status: true, 
-                creator: "InuuTyzDev", 
-                result: response.data 
-            });
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data });
         }
-        // --- TIKTOK V2 (Endpoint Khusus) ---
+        // --- TIKTOK V2 (Endpoint Khusus Siputzx) ---
         else if (type === 'tiktok_v2') {
             const response = await axios.get(`https://api.siputzx.my.id/api/d/tiktok/v2?url=${encodeURIComponent(url)}`);
-            return res.status(200).json({ 
-                status: true, 
-                creator: "InuuTyzDev", 
-                result: response.data 
-            });
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data });
+        }
+        // --- SPOTIFY DOWNLOADER ---
+        else if (type === 'spotify') {
+            const response = await axios.get(`https://api.yupra.my.id/api/downloader/spotify?url=${encodeURIComponent(url)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data });
         }
         // --- FACEBOOK (FDOWN) ---
         else if (type === 'fb') {
@@ -74,7 +68,7 @@ export default async function handler(req, res) {
             if (!downloadLink) throw new Error('Gagal menemukan link download.');
             return res.json({ status: true, creator: "InuuTyzDev", result: { dl: downloadLink }});
         }
-        // --- ERROR TYPE TIDAK DITEMUKAN ---
+        // --- ERROR HANDLING ---
         else {
             return res.status(400).json({ status: false, message: `Type downloader '${type}' tidak valid` });
         }
