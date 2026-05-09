@@ -8,7 +8,6 @@ export default async function handler(req, res) {
         type, text, text1, text2, text3, 
         name, comment, ppurl, 
         number, title, time, avatarUrl,
-        // Parameter khusus E-KTP
         provinsi, kota, nik, nama, ttl, jenis_kelamin, golongan_darah, alamat,
         kecamatan, agama, status, pekerjaan, kewarganegaraan, masa_berlaku, terbuat, pas_photo
     } = req.query;
@@ -25,15 +24,13 @@ export default async function handler(req, res) {
             return res.status(200).send(response.data);
         }
 
-        // --- 2. E-KTP MAKER (NEW!) ---
+        // --- 2. E-KTP MAKER ---
         else if (type === 'ektp') {
-            // Validasi field utama agar tidak kosong
             const required = ['provinsi', 'kota', 'nik', 'nama', 'ttl', 'jenis_kelamin', 'alamat', 'kecamatan', 'agama', 'status', 'pekerjaan', 'pas_photo'];
             for (const field of required) {
                 if (!req.query[field]) return res.status(400).json({ status: false, message: `Parameter '${field}' wajib diisi!` });
             }
 
-            // Menangani parameter dengan karakter khusus /
             const rt_rw = req.query['rt/rw'] || "000/000";
             const kel_desa = req.query['kel/desa'] || "Desa";
 
@@ -57,9 +54,47 @@ export default async function handler(req, res) {
             return res.status(200).send(response.data);
         }
 
-        // --- LOGIKA MAKER LAINNYA (Cuki Biz, dll) ---
-        // (Tetap pertahankan logika fbcommand, fakegroup, dan roasting di sini)
-        // ... (kode sebelumnya)
+        // --- 4. FB COMMAND (CANVAS) ---
+        else if (type === 'fbcommand') {
+            if (!name || !comment || !ppurl) {
+                return res.status(400).json({ status: false, message: "Parameter 'name', 'comment', dan 'ppurl' (Link Foto) wajib diisi!" });
+            }
+            const targetUrl = `https://api.cuki.biz.id/api/canvas/fbcommand?apikey=${apiKeyCuki}&name=${encodeURIComponent(name)}&comment=${encodeURIComponent(comment)}&ppurl=${encodeURIComponent(ppurl)}`;
+            const response = await axios.get(targetUrl, { 
+                headers: { 'x-api-key': apiKeyCuki },
+                responseType: 'arraybuffer' 
+            });
+            res.setHeader('Content-Type', 'image/png');
+            return res.status(200).send(response.data);
+        }
+
+        // --- 5. FAKE GROUP MAKER ---
+        else if (type === 'fakegroup') {
+            if (!number || !title || !time || !avatarUrl) {
+                return res.status(400).json({ status: false, message: "Parameter 'number', 'title', 'time', dan 'avatarUrl' wajib diisi!" });
+            }
+            const targetUrl = `https://api.cuki.biz.id/api/maker/fakegroup?apikey=${apiKeyCuki}&number=${number}&title=${encodeURIComponent(title)}&time=${time}&avatarUrl=${encodeURIComponent(avatarUrl)}`;
+            const response = await axios.get(targetUrl, { 
+                headers: { 'x-api-key': apiKeyCuki },
+                responseType: 'arraybuffer' 
+            });
+            res.setHeader('Content-Type', 'image/jpeg');
+            return res.status(200).send(response.data);
+        }
+
+        // --- 6. ROASTING MAKER ---
+        else if (type === 'roasting') {
+            if (!text1 || !text2 || !text3) {
+                return res.status(400).json({ status: false, message: "Parameter 'teks1', 'teks2', dan 'teks3' wajib diisi!" });
+            }
+            const targetUrl = `https://api.cuki.biz.id/api/maker/roasting?apikey=${apiKeyCuki}&teks1=${encodeURIComponent(text1)}&teks2=${encodeURIComponent(text2)}&teks3=${encodeURIComponent(text3)}`;
+            const response = await axios.get(targetUrl, { 
+                headers: { 'x-api-key': apiKeyCuki },
+                responseType: 'arraybuffer' 
+            });
+            res.setHeader('Content-Type', 'image/jpeg');
+            return res.status(200).send(response.data);
+        }
 
         else {
             return res.status(400).json({ status: false, message: `Type maker '${type}' tidak valid` });
