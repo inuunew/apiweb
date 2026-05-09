@@ -305,21 +305,21 @@ export default function handler(req, res) {
                     "method": "GET",
                     "params": [{ "name": "url", "required": true, "description": "Link panjang" }]
                 }, 
-                                {
+                {
                     "name": "HTML Encryptor",
                     "endpoint": "/api/tools?type=encrypthtml",
-                    "method": "POST",
+                    "method": "GET",
                     "params": [
-                        { "name": "html", "required": true, "description": "Raw HTML code (Kirim via Body JSON)" }
+                        { "name": "html", "required": true, "description": "Raw HTML code (Masukkan langsung ke URL)" }
                     ]
                 },
                 {
                     "name": "JS Obfuscator & Minifier",
                     "endpoint": "/api/tools?type=obfuscatejs",
-                    "method": "POST",
+                    "method": "GET",
                     "params": [
-                        { "name": "code", "required": true, "description": "Raw JavaScript code (Kirim via Body JSON)" },
-                        { "name": "download", "required": false, "description": "Isi 'true' jika ingin otomatis mengunduh file .js" }
+                        { "name": "code", "required": true, "description": "Raw JavaScript code (Masukkan langsung ke URL)" },
+                        { "name": "download", "required": false, "description": "Isi 'true' jika ingin output berupa file .js" }
                     ]
                 }
             ],
@@ -384,6 +384,37 @@ export default function handler(req, res) {
                     "params": [
                         { "name": "label", "required": true, "description": "Nama Status" },
                         { "name": "value", "required": true, "description": "Angka 0 - 100" }
+                    ]
+                }, 
+                                {
+                    "name": "Placeholder Image",
+                    "endpoint": "/api/generator/placeholder",
+                    "method": "GET",
+                    "params": [
+                        { "name": "w", "required": false, "description": "Lebar gambar (Contoh: 800)" },
+                        { "name": "h", "required": false, "description": "Tinggi gambar (Contoh: 400)" },
+                        { "name": "text", "required": false, "description": "Teks di tengah gambar" },
+                        { "name": "bg", "required": false, "description": "Warna background (Hex tanpa #)" },
+                        { "name": "color", "required": false, "description": "Warna teks (Hex tanpa #)" }
+                    ]
+                },
+                {
+                    "name": "Aesthetic Wave BG",
+                    "endpoint": "/api/generator/wave",
+                    "method": "GET",
+                    "params": [
+                        { "name": "color1", "required": false, "description": "Warna gradasi 1 (Hex tanpa #)" },
+                        { "name": "color2", "required": false, "description": "Warna gradasi 2 (Hex tanpa #)" },
+                        { "name": "bg", "required": false, "description": "Warna background (Hex tanpa #)" }
+                    ]
+                },
+                {
+                    "name": "Secure Token",
+                    "endpoint": "/api/generator/token",
+                    "method": "GET",
+                    "params": [
+                        { "name": "length", "required": false, "description": "Panjang token (Max 256)" },
+                        { "name": "symbols", "required": false, "description": "Gunakan true untuk menyertakan simbol" }
                     ]
                 }
             ]
