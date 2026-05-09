@@ -166,7 +166,88 @@ export default async function handler(req, res) {
             res.setHeader('Content-Type', 'image/svg+xml');
             res.setHeader('Cache-Control', 'no-cache');
             return res.status(200).send(svg);
+        }  
+               // ==========================================
+        // 6. PLACEHOLDER IMAGE GENERATOR (SVG)
+        // ==========================================
+        else if (type === 'placeholder') {
+            const w = parseInt(req.query.w) || 300;
+            const h = parseInt(req.query.h) || 300;
+            const bg = req.query.bg || '1a1a2e';
+            const color = req.query.color || '8A2BE2';
+            const text = req.query.text || `${w} x ${h}`;
+
+            // Kalkulasi ukuran font agar responsif
+            const fontSize = Math.max(12, Math.min(w, h) / 8);
+
+            const svg = `
+            <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+                <rect width="${w}" height="${h}" fill="#${bg.replace('#', '')}"/>
+                <text x="50%" y="50%" fill="#${color.replace('#', '')}" font-family="Orbitron, Arial, sans-serif" font-size="${fontSize}" font-weight="bold" dominant-baseline="middle" text-anchor="middle">
+                    ${text}
+                </text>
+            </svg>`;
+
+            res.setHeader('Content-Type', 'image/svg+xml');
+            res.setHeader('Cache-Control', 'public, max-age=31536000');
+            return res.status(200).send(svg);
         }
+        // ==========================================
+        // 7. AESTHETIC WAVE BACKGROUND (SVG)
+        // ==========================================
+        else if (type === 'wave') {
+            const color1 = req.query.color1 || '8A2BE2'; 
+            const color2 = req.query.color2 || '00f3ff'; 
+            const bg = req.query.bg || '050505';
+
+            const svg = `
+            <svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#${color1.replace('#', '')}" />
+                        <stop offset="100%" stop-color="#${color2.replace('#', '')}" />
+                    </linearGradient>
+                </defs>
+                <rect width="1440" height="320" fill="#${bg.replace('#', '')}"/>
+                <path fill="url(#waveGrad)" fill-opacity="1" d="M0,160L48,144C96,128,192,96,288,106.7C384,117,480,171,576,165.3C672,160,768,96,864,80C960,64,1056,96,1152,112C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            </svg>`;
+
+            res.setHeader('Content-Type', 'image/svg+xml');
+            res.setHeader('Cache-Control', 'public, max-age=86400');
+            return res.status(200).send(svg);
+        }
+        // ==========================================
+        // 8. SECURE TOKEN / PASSWORD GENERATOR
+        // ==========================================
+        else if (type === 'token') {
+            const length = parseInt(req.query.length) || 16;
+            const useSymbols = req.query.symbols === 'true'; // false jika tidak diisi
+
+            // Batasi panjang maksimal agar server tidak jebol jika user iseng
+            const safeLength = Math.min(length, 256); 
+
+            let chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            if (useSymbols) {
+                chars += '!@#$%^&*()_+~`|}{[]:;?><,./-=';
+            }
+
+            let token = '';
+            for (let i = 0; i < safeLength; i++) {
+                token += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: { 
+                    length: safeLength,
+                    includes_symbols: useSymbols,
+                    token: token 
+                } 
+            });
+        }
+
+        
 
         // ==========================================
         // ERROR HANDLER JIKA TYPE TIDAK ADA
