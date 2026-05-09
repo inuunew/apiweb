@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KuroNeko | Server Monitor</title>
+    <title>InuuTyzDev | Server Monitor</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -72,7 +72,8 @@
 
     <main class="flex-grow max-w-7xl mx-auto w-full px-4 py-8 grid gap-6">
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            
             <div class="glass-card rounded-2xl p-6 relative overflow-hidden group">
                 <div class="absolute -right-4 -top-4 w-24 h-24 bg-green-400/20 rounded-full blur-xl group-hover:bg-green-400/30 transition-all"></div>
                 <div class="flex items-center gap-4 mb-4">
@@ -111,6 +112,19 @@
                 </div>
                  <p id="cpu-model" class="text-[10px] font-mono text-slate-500 truncate">Detecting...</p>
             </div>
+
+            <div class="glass-card rounded-2xl p-6 relative overflow-hidden group">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-yellow-400/20 rounded-full blur-xl group-hover:bg-yellow-400/30 transition-all"></div>
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 rounded-xl bg-yellow-100 text-yellow-500 flex items-center justify-center text-xl shadow-sm"><i class="fa-solid fa-link"></i></div>
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Endpoints</h3>
+                        <p id="total-endpoints" class="font-mono font-bold text-lg text-slate-700">Counting...</p>
+                    </div>
+                </div>
+                 <p class="text-[10px] font-mono text-slate-500 truncate">Live from config</p>
+            </div>
+
         </div>
 
         <div class="glass-card rounded-2xl p-6 md:p-8">
@@ -154,11 +168,31 @@
         const updateInterval = 1000;
         let lastRequestsJson = '';
 
-                  async function fetchStats() {
+        // Fungsi baru untuk menghitung total endpoints dari config.js
+        async function fetchTotalEndpoints() {
+            try {
+                const response = await fetch('/api/config');
+                const configData = await response.json();
+                
+                let totalCount = 0;
+                
+                // Looping ke semua kategori di dalam tags dan menghitung jumlah itemnya
+                for (const category in configData.tags) {
+                    if (Array.isArray(configData.tags[category])) {
+                        totalCount += configData.tags[category].length;
+                    }
+                }
+                
+                document.getElementById('total-endpoints').innerText = totalCount + ' APIs';
+            } catch (e) {
+                console.error("Gagal mengambil config:", e);
+                document.getElementById('total-endpoints').innerText = 'Error';
+            }
+        }
+
+        async function fetchStats() {
             try {
                 const response = await fetch('/api/stats');
-
-
                 const data = await response.json();
                 
                 if(data.status) {
@@ -232,6 +266,10 @@
             container.scrollTop = container.scrollHeight;
         }
 
+        // Jalankan fetch config sekali saja saat halaman dimuat
+        fetchTotalEndpoints();
+
+        // Jalankan fetch stats setiap detik
         fetchStats();
         setInterval(fetchStats, updateInterval);
     </script>
