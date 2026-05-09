@@ -10,9 +10,47 @@ export default function handler(req, res) {
             "thumbnail": "https://c.termai.cc/i181/aGwK.png",
             "favicon": "https://c.termai.cc/i181/aGwK.png",
             "github": "https://github.com/inuunew/apiweb",
-            "apiVersion": "3.8.0"
+            "apiVersion": "4.5.0"
         },
         "tags": {
+            "ai": [
+                {
+                    "name": "DeepSeek R1",
+                    "endpoint": "/api/ai/deepseekr1",
+                    "method": "GET",
+                    "params": [
+                        { "name": "prompt", "required": true, "description": "Tanyakan apa saja ke DeepSeek R1" },
+                        { "name": "system", "required": false, "description": "Instruksi sistem (opsional)" }
+                    ]
+                },
+                {
+                    "name": "Gemini AI",
+                    "endpoint": "/api/ai/gemini",
+                    "method": "GET",
+                    "params": [
+                        { "name": "text", "required": true, "description": "Pesan untuk Gemini" },
+                        { "name": "promptSystem", "required": false, "description": "Persona/Peran AI" }
+                    ]
+                },
+                {
+                    "name": "Gita (Spiritual AI)",
+                    "endpoint": "/api/ai/gita",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Ask about Karma/Spirituality" }]
+                },
+                {
+                    "name": "QWQ 32B",
+                    "endpoint": "/api/ai/qwq32b",
+                    "method": "GET",
+                    "params": [{ "name": "prompt", "required": true, "description": "Chat dengan model QWQ" }]
+                },
+                {
+                    "name": "GPT-OSS 120B",
+                    "endpoint": "/api/ai/gptoss120b",
+                    "method": "GET",
+                    "params": [{ "name": "prompt", "required": true, "description": "Model GPT open-source 120B" }]
+                }
+            ],
             "maker": [
                 {
                     "name": "Brat Generator",
@@ -38,7 +76,7 @@ export default function handler(req, res) {
                         { "name": "agama", "required": true, "description": "Agama" },
                         { "name": "status", "required": true, "description": "Contoh: Belum Kawin" },
                         { "name": "pekerjaan", "required": true, "description": "Pekerjaan" },
-                        { "name": "pas_photo", "required": true, "description": "Link Foto Wajah (URL)" }
+                        { "name": "pas_photo", "required": true, "description": "Link Foto (URL)" }
                     ]
                 },
                 {
@@ -46,9 +84,20 @@ export default function handler(req, res) {
                     "endpoint": "/api/maker/fbcommand",
                     "method": "GET",
                     "params": [
-                        { "name": "name", "required": true, "description": "Nama Pengguna" },
+                        { "name": "name", "required": true, "description": "Nama Profil" },
                         { "name": "comment", "required": true, "description": "Isi Komentar" },
-                        { "name": "ppurl", "required": true, "description": "Link Foto Profil (URL)" }
+                        { "name": "ppurl", "required": true, "description": "Link Foto Profil" }
+                    ]
+                },
+                {
+                    "name": "Fake Group Chat",
+                    "endpoint": "/api/maker/fakegroup",
+                    "method": "GET",
+                    "params": [
+                        { "name": "title", "required": true, "description": "Nama Grup" },
+                        { "name": "number", "required": true, "description": "Jumlah Peserta" },
+                        { "name": "time", "required": true, "description": "Waktu (13.00)" },
+                        { "name": "avatarUrl", "required": true, "description": "Link Foto Grup" }
                     ]
                 },
                 {
@@ -56,9 +105,9 @@ export default function handler(req, res) {
                     "endpoint": "/api/maker/roasting",
                     "method": "GET",
                     "params": [
-                        { "name": "text1", "required": true, "description": "Teks Atas" },
-                        { "name": "text2", "required": true, "description": "Teks Tengah" },
-                        { "name": "text3", "required": true, "description": "Teks Bawah" }
+                        { "name": "text1", "required": true, "description": "Teks 1" },
+                        { "name": "text2", "required": true, "description": "Teks 2" },
+                        { "name": "text3", "required": true, "description": "Teks 3" }
                     ]
                 },
                 {
@@ -97,10 +146,46 @@ export default function handler(req, res) {
                     "params": [{ "name": "url", "required": true, "description": "Link tweet/video X" }]
                 },
                 {
+                    "name": "Facebook",
+                    "endpoint": "/api/download/fb",
+                    "method": "GET",
+                    "params": [{ "name": "url", "required": true, "description": "Link video FB" }]
+                },
+                {
                     "name": "Google Drive",
                     "endpoint": "/api/download/gdrive",
                     "method": "GET",
                     "params": [{ "name": "url", "required": true, "description": "Link file GDrive" }]
+                },
+                {
+                    "name": "Mediafire",
+                    "endpoint": "/api/download/mediafire",
+                    "method": "GET",
+                    "params": [{ "name": "url", "required": true, "description": "Link file Mediafire" }]
+                },
+                {
+                    "name": "CapCut",
+                    "endpoint": "/api/download/capcut",
+                    "method": "GET",
+                    "params": [{ "name": "url", "required": true, "description": "Link template CapCut" }]
+                },
+                {
+                    "name": "Douyin",
+                    "endpoint": "/api/download/douyin",
+                    "method": "GET",
+                    "params": [{ "name": "url", "required": true, "description": "Link video Douyin" }]
+                },
+                {
+                    "name": "SaveFrom",
+                    "endpoint": "/api/download/savefrom",
+                    "method": "GET",
+                    "params": [{ "name": "url", "required": true, "description": "Link video/audio" }]
+                },
+                {
+                    "name": "FastDL",
+                    "endpoint": "/api/download/fastdl",
+                    "method": "GET",
+                    "params": [{ "name": "url", "required": true, "description": "Link FastDL" }]
                 }
             ],
             "search": [
@@ -117,27 +202,43 @@ export default function handler(req, res) {
                     "params": [{ "name": "q", "required": true, "description": "Nama HP" }]
                 },
                 {
-                    "name": "MLBB Hero Detail",
+                    "name": "MLBB Detail",
                     "endpoint": "/api/search/mlbb",
                     "method": "GET",
                     "params": [{ "name": "q", "required": true, "description": "Nama Hero" }]
-                }
-            ],
-            "ai": [
-                {
-                    "name": "DeepSeek R1",
-                    "endpoint": "/api/ai/deepseekr1",
-                    "method": "GET",
-                    "params": [{ "name": "prompt", "required": true, "description": "Tanyakan apa saja" }]
                 },
                 {
-                    "name": "Gemini AI",
-                    "endpoint": "/api/ai/gemini",
+                    "name": "App Search",
+                    "endpoint": "/api/search/appsearch",
                     "method": "GET",
-                    "params": [{ "name": "text", "required": true, "description": "Pesan untuk Gemini" }]
+                    "params": [{ "name": "q", "required": true, "description": "Nama aplikasi/game" }]
+                },
+                {
+                    "name": "Lazada",
+                    "endpoint": "/api/search/lazada",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Nama produk" }]
+                },
+                {
+                    "name": "Pinterest",
+                    "endpoint": "/api/search/pinterest",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Cari gambar" }]
+                },
+                {
+                    "name": "YouTube Search",
+                    "endpoint": "/api/search/yts",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Cari video YT" }]
                 }
             ],
             "stalker": [
+                {
+                    "name": "Pinterest Stalk",
+                    "endpoint": "/api/stalker/pinterest",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Username Pinterest" }]
+                },
                 {
                     "name": "GitHub Stalk",
                     "endpoint": "/api/stalker/github",
@@ -149,11 +250,23 @@ export default function handler(req, res) {
                     "endpoint": "/api/stalker/twitter",
                     "method": "GET",
                     "params": [{ "name": "user", "required": true, "description": "Username Twitter" }]
+                },
+                {
+                    "name": "YouTube Stalk",
+                    "endpoint": "/api/stalker/youtube",
+                    "method": "GET",
+                    "params": [{ "name": "username", "required": true, "description": "Username / ID Channel" }]
+                },
+                {
+                    "name": "Threads Stalk",
+                    "endpoint": "/api/stalker/threads",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Username Threads" }]
                 }
             ],
             "tools": [
                 {
-                    "name": "SS Web (Direct Image)",
+                    "name": "SS Web (Full Page)",
                     "endpoint": "/api/tools/ssweb",
                     "method": "GET",
                     "params": [
@@ -171,13 +284,25 @@ export default function handler(req, res) {
                     "name": "Subdomain Scanner",
                     "endpoint": "/api/tools/subdomain",
                     "method": "GET",
-                    "params": [{ "name": "domain", "required": true, "description": "Domain (google.com)" }]
+                    "params": [{ "name": "domain", "required": true, "description": "Domain utama (google.com)" }]
                 },
                 {
                     "name": "Kode Pos",
                     "endpoint": "/api/tools/kodepos",
                     "method": "GET",
-                    "params": [{ "name": "query", "required": true, "description": "Nama daerah" }]
+                    "params": [{ "name": "query", "required": true, "description": "Nama daerah/desa" }]
+                },
+                {
+                    "name": "Country Info",
+                    "endpoint": "/api/tools/countryinfo",
+                    "method": "GET",
+                    "params": [{ "name": "country", "required": true, "description": "Nama negara" }]
+                },
+                {
+                    "name": "Short URL",
+                    "endpoint": "/api/tools/shorturl",
+                    "method": "GET",
+                    "params": [{ "name": "url", "required": true, "description": "Link panjang" }]
                 }
             ],
             "info": [
@@ -191,7 +316,13 @@ export default function handler(req, res) {
                     "name": "Info Cuaca",
                     "endpoint": "/api/info/cuaca",
                     "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Nama daerah" }]
+                    "params": [{ "name": "q", "required": true, "description": "Nama lokasi" }]
+                },
+                {
+                    "name": "Jadwal TV",
+                    "endpoint": "/api/info/jadwaltv",
+                    "method": "GET",
+                    "params": [{ "name": "channel", "required": true, "description": "Channel (gtv, rcti, dll)" }]
                 }
             ]
         }
