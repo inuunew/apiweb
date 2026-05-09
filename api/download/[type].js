@@ -5,21 +5,38 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     const { type, url } = req.query;
 
-    if (!url) return res.status(400).json({ status: false, message: "URL required" });
+    if (!url) return res.status(400).json({ status: false, message: "Parameter 'url' wajib diisi" });
 
     try {
-        if (type === 'tiktok') {
-            const payload = { url: url };
-            const response = await axios.post("https://api.siputzx.my.id/api/d/tiktok/v2", payload, {
-                headers: { "Content-Type": "application/json" }
-            });
+        // --- TRIK PRO: KELOMPOK API SIPUTZX ---
+        // Daftar tipe yang menggunakan jalur GET Siputzx secara langsung
+        const siputzxTypes = [
+            'twitter', 'douyin', 'fastdl', 'github', 
+            'tiktok', 'gdrive', 'snackvideo', 
+            'savefrom', 'ummy', 'capcut'
+        ];
 
+        // Jika type yang diminta ada di dalam daftar di atas, eksekusi otomatis!
+        if (siputzxTypes.includes(type)) {
+            const targetUrl = `https://api.siputzx.my.id/api/d/${type}?url=${encodeURIComponent(url)}`;
+            const response = await axios.get(targetUrl);
+            
             return res.status(200).json({ 
                 status: true, 
                 creator: "InuuTyzDev", 
-                result: response.data.data
+                result: response.data 
             });
-        } 
+        }
+        // --- TIKTOK V2 (Endpoint Khusus) ---
+        else if (type === 'tiktok_v2') {
+            const response = await axios.get(`https://api.siputzx.my.id/api/d/tiktok/v2?url=${encodeURIComponent(url)}`);
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: response.data 
+            });
+        }
+        // --- FACEBOOK (FDOWN) ---
         else if (type === 'fb') {
             const { data } = await axios.get('https://fdown.net');
             const $ = cheerio.load(data);
@@ -29,6 +46,7 @@ export default async function handler(req, res) {
             const $$ = cheerio.load(resDl.data);
             return res.json({ status: true, creator: "InuuTyzDev", result: { sd: $$('#sdlink').attr('href'), hd: $$('#hdlink').attr('href') }});
         } 
+        // --- INSTAGRAM (DOWNLOADGRAM) ---
         else if (type === 'ig') {
             const data = new URLSearchParams({ url, v: '3', lang: 'en' });
             const response = await axios.post('https://api.downloadgram.org/media', data.toString());
@@ -48,6 +66,7 @@ export default async function handler(req, res) {
             }
             return res.json({ status: true, creator: "InuuTyzDev", result });
         }
+        // --- MEDIAFIRE ---
         else if (type === 'mediafire') {
             const { data } = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }});
             const $ = cheerio.load(data);
@@ -55,6 +74,7 @@ export default async function handler(req, res) {
             if (!downloadLink) throw new Error('Gagal menemukan link download.');
             return res.json({ status: true, creator: "InuuTyzDev", result: { dl: downloadLink }});
         }
+        // --- ERROR TYPE TIDAK DITEMUKAN ---
         else {
             return res.status(400).json({ status: false, message: `Type downloader '${type}' tidak valid` });
         }
