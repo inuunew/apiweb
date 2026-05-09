@@ -284,10 +284,6 @@
                     SYSTEM ONLINE • WAITING FOR CONFIG...
                 </div>
             </div>
-
-            <a href="https://github.com/inuunew" target="_blank" class="w-10 h-10 border border-fmn-blue/50 bg-white text-fmn-dark hover:bg-fmn-blue hover:text-white flex items-center justify-center rounded-full shadow-sm transition-all">
-                <i class="fa-brands fa-github text-xl"></i>
-            </a>
         </div>
     </nav>
 
@@ -486,7 +482,7 @@
             // --- TYPING ANIMATION FOR CMD ---
             const cmdLine = document.createElement('div');
             cmdLine.className = 'text-gray-300 break-all';
-            cmdLine.innerHTML = '<span class="text-green-500">root@danzz:~/kuroneko$</span> ';
+            cmdLine.innerHTML = '<span class="text-green-500">root@inuu:~/api$</span> ';
             
             const typeSpan = document.createElement('span');
             typeSpan.className = 'text-white font-bold';
@@ -503,7 +499,7 @@
             await new Promise(r => setTimeout(r, 600));
 
             const ver = config.settings.apiVersion || '2.0.0';
-            terminalLog(`> kuroneko-v2@${ver} serverless`, 'system');
+            terminalLog(`> inuu-api-v2@${ver} serverless`, 'system');
             terminalLog(`> Initializing Vercel Edge Network...`, 'system');
             await new Promise(r => setTimeout(r, 800));
             terminalLog(``, 'system'); 
