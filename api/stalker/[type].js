@@ -27,10 +27,19 @@ export default async function handler(req, res) {
             // Eksekusi penarikan data
             const response = await axios.get(targetUrl);
             
+            // --- TRIK SAPU BERSIH WATERMARK ---
+            let cleanData = response.data.data || response.data;
+            
+            // Kita pastikan formatnya adalah objek sebelum menghapus datanya
+            if (cleanData && typeof cleanData === 'object') {
+                delete cleanData.creator;
+                delete cleanData.status;
+            }
+            
             return res.status(200).json({ 
                 status: true, 
                 creator: "InuuTyzDev", 
-                result: response.data.data || response.data // Menangkap objek data dari Siputzx
+                result: cleanData 
             });
         } 
         else {
