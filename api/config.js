@@ -6,7 +6,7 @@ export default function handler(req, res) {
         "settings": {
             "apiName": "InuuTyzDev",
             "creator": "InuuTyzDev",
-            "description": "Developer Modal AI — Masterpiece provider-api",
+            "description": "Free Provider Api By InuuTyzDev" ,
             "thumbnail": "https://files.catbox.moe/la9esc.png",
             "favicon": "https://files.catbox.moe/tv1rv6.jpeg",
             "websiteUrl": "https://social-information.inuu.my.id", 
@@ -304,6 +304,23 @@ export default function handler(req, res) {
                     "endpoint": "/api/tools/shorturl",
                     "method": "GET",
                     "params": [{ "name": "url", "required": true, "description": "Link panjang" }]
+                }, 
+                                {
+                    "name": "HTML Encryptor",
+                    "endpoint": "/api/tools?type=encrypthtml",
+                    "method": "POST",
+                    "params": [
+                        { "name": "html", "required": true, "description": "Raw HTML code (Kirim via Body JSON)" }
+                    ]
+                },
+                {
+                    "name": "JS Obfuscator & Minifier",
+                    "endpoint": "/api/tools?type=obfuscatejs",
+                    "method": "POST",
+                    "params": [
+                        { "name": "code", "required": true, "description": "Raw JavaScript code (Kirim via Body JSON)" },
+                        { "name": "download", "required": false, "description": "Isi 'true' jika ingin otomatis mengunduh file .js" }
+                    ]
                 }
             ],
             "info": [
@@ -325,7 +342,52 @@ export default function handler(req, res) {
                     "method": "GET",
                     "params": [{ "name": "channel", "required": true, "description": "Channel (gtv, rcti, dll)" }]
                 }
+            ], 
+                        "generator": [
+                {
+                    "name": "QR Code SVG",
+                    "endpoint": "/api/generator/qr",
+                    "method": "GET",
+                    "params": [
+                        { "name": "text", "required": true, "description": "Teks / URL tujuan" },
+                        { "name": "color", "required": false, "description": "Hex warna QR (tanpa #)" }
+                    ]
+                },
+                {
+                    "name": "Captcha Solver",
+                    "endpoint": "/api/generator/captcha",
+                    "method": "GET",
+                    "params": [
+                        { "name": "difficulty", "required": false, "description": "easy / medium / hard" }
+                    ]
+                },
+                {
+                    "name": "Identicon Avatar",
+                    "endpoint": "/api/generator/avatar",
+                    "method": "GET",
+                    "params": [
+                        { "name": "seed", "required": true, "description": "Username / Teks unik" }
+                    ]
+                },
+                {
+                    "name": "License Key",
+                    "endpoint": "/api/generator/license",
+                    "method": "GET",
+                    "params": [
+                        { "name": "format", "required": true, "description": "Contoh: INUU-XXXX-XXXX" }
+                    ]
+                },
+                {
+                    "name": "Cyberpunk Stat Bar",
+                    "endpoint": "/api/generator/statbar",
+                    "method": "GET",
+                    "params": [
+                        { "name": "label", "required": true, "description": "Nama Status" },
+                        { "name": "value", "required": true, "description": "Angka 0 - 100" }
+                    ]
+                }
             ]
+
         }
     });
 }
