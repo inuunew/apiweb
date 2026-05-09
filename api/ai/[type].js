@@ -1,0 +1,51 @@
+import axios from 'axios';
+
+export default async function handler(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    
+    // Mengambil semua kemungkinan parameter dari URL
+    const { type, prompt, system, temperature, q, text, cookie, promptSystem } = req.query;
+
+    try {
+        // --- KELOMPOK MODEL AI STANDAR (DeepSeek, QWQ, Phi, GLM, GPTOSS) ---
+        const standardAI = ['deepseekr1', 'qwq32b', 'phi2', 'glm47flash', 'gptoss120b'];
+
+        if (standardAI.includes(type)) {
+            if (!prompt) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
+            
+            // Membangun URL dengan parameter opsional system & temperature
+            let targetUrl = `https://api.siputzx.my.id/api/ai/${type}?prompt=${encodeURIComponent(prompt)}`;
+            if (system) targetUrl += `&system=${encodeURIComponent(system)}`;
+            if (temperature) targetUrl += `&temperature=${temperature}`;
+
+            const response = await axios.get(targetUrl);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data });
+        }
+        
+        // --- MODEL AI KHUSUS: GITA ---
+        else if (type === 'gita') {
+            if (!q) return res.status(400).json({ status: false, message: "Parameter 'q' (pertanyaan) wajib diisi!" });
+            
+            const response = await axios.get(`https://api.siputzx.my.id/api/ai/gita?q=${encodeURIComponent(q)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data });
+        }
+
+        // --- MODEL AI KHUSUS: GEMINI ---
+        else if (type === 'gemini') {
+            if (!text) return res.status(400).json({ status: false, message: "Parameter 'text' wajib diisi!" });
+            
+            let targetUrl = `https://api.siputzx.my.id/api/ai/gemini?text=${encodeURIComponent(text)}`;
+            if (cookie) targetUrl += `&cookie=${encodeURIComponent(cookie)}`;
+            if (promptSystem) targetUrl += `&promptSystem=${encodeURIComponent(promptSystem)}`;
+
+            const response = await axios.get(targetUrl);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data });
+        }
+        
+        else {
+            return res.status(400).json({ status: false, message: `Model AI '${type}' tidak ditemukan.` });
+        }
+    } catch (e) {
+        return res.status(500).json({ status: false, creator: "InuuTyzDev", message: e.message });
+    }
+}
