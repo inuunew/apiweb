@@ -4,7 +4,7 @@ export default function handler(req, res) {
 
     res.status(200).json({
         "settings": {
-            "apiName": "KuroNeko",
+            "apiName": "InuuTyzDev",
             "creator": "InuuTyzDev",
             "description": "Developer Modal AI — Masterpiece Vercel Native API Dashboard",
             "thumbnail": "https://files.catbox.moe/la9esc.png",
