@@ -334,7 +334,7 @@ export default function handler(req, res) {
                     "params": [{ "name": "channel", "required": true, "description": "Channel (gtv, rcti, dll)" }]
                 }
             ], 
-                        "generator": [
+            "generator": [
                 {
                     "name": "QR Code SVG",
                     "endpoint": "/api/generator/qr",
@@ -379,7 +379,7 @@ export default function handler(req, res) {
                         { "name": "value", "required": true, "description": "Angka 0 - 100" }
                     ]
                 }, 
-                                {
+                {
                     "name": "Placeholder Image",
                     "endpoint": "/api/generator/placeholder",
                     "method": "GET",
@@ -410,8 +410,290 @@ export default function handler(req, res) {
                         { "name": "symbols", "required": false, "description": "Gunakan true untuk menyertakan simbol" }
                     ]
                 }
+            ],
+            "canvas": [
+                {
+                    "name": "Circle Avatar",
+                    "endpoint": "/api/canvas/circle",
+                    "method": "GET",
+                    "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
+                },
+                {
+                    "name": "Beautiful Frame",
+                    "endpoint": "/api/canvas/beautiful",
+                    "method": "GET",
+                    "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
+                },
+                {
+                    "name": "Delete Trash",
+                    "endpoint": "/api/canvas/delete",
+                    "method": "GET",
+                    "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
+                },
+                {
+                    "name": "Facepalm",
+                    "endpoint": "/api/canvas/facepalm",
+                    "method": "GET",
+                    "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
+                },
+                {
+                    "name": "Blur Filter",
+                    "endpoint": "/api/canvas/blur",
+                    "method": "GET",
+                    "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
+                },
+                {
+                    "name": "Invert Color",
+                    "endpoint": "/api/canvas/invert",
+                    "method": "GET",
+                    "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
+                },
+                {
+                    "name": "Greyscale",
+                    "endpoint": "/api/canvas/greyscale",
+                    "method": "GET",
+                    "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
+                },
+                {
+                    "name": "Darkness",
+                    "endpoint": "/api/canvas/darkness",
+                    "method": "GET",
+                    "params": [
+                        { "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" },
+                        { "name": "amount", "required": true, "description": "Intensitas Gelap (1-100)" }
+                    ]
+                },
+                {
+                    "name": "Batslap",
+                    "endpoint": "/api/canvas/batslap",
+                    "method": "GET",
+                    "params": [
+                        { "name": "image1", "required": true, "description": "Gambar Penampar" },
+                        { "name": "image2", "required": true, "description": "Gambar Ditampar" }
+                    ]
+                },
+                {
+                    "name": "Kiss",
+                    "endpoint": "/api/canvas/kiss",
+                    "method": "GET",
+                    "params": [
+                        { "name": "image1", "required": true, "description": "URL Gambar 1" },
+                        { "name": "image2", "required": true, "description": "URL Gambar 2" }
+                    ]
+                },
+                {
+                    "name": "Sertifikat Tolol",
+                    "endpoint": "/api/canvas/sertifikat-tolol",
+                    "method": "GET",
+                    "params": [{ "name": "text", "required": true, "description": "Nama di sertifikat" }]
+                },
+                {
+                    "name": "Gay Frame",
+                    "endpoint": "/api/canvas/gay",
+                    "method": "GET",
+                    "params": [
+                        { "name": "nama", "required": true, "description": "Nama User" },
+                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
+                        { "name": "num", "required": true, "description": "Persentase (contoh: 87)" }
+                    ]
+                },
+                {
+                    "name": "Level Up RPG",
+                    "endpoint": "/api/canvas/level-up",
+                    "method": "GET",
+                    "params": [
+                        { "name": "backgroundURL", "required": true, "description": "URL Background / Upload" },
+                        { "name": "avatarURL", "required": true, "description": "URL Avatar / Upload" },
+                        { "name": "fromLevel", "required": true, "description": "Level Sebelumnya (Angka)" },
+                        { "name": "toLevel", "required": true, "description": "Level Baru (Angka)" },
+                        { "name": "name", "required": true, "description": "Nama Player" }
+                    ]
+                },
+                {
+                    "name": "Profile RPG",
+                    "endpoint": "/api/canvas/profile",
+                    "method": "GET",
+                    "params": [
+                        { "name": "backgroundURL", "required": true, "description": "URL Background / Upload" },
+                        { "name": "avatarURL", "required": true, "description": "URL Avatar / Upload" },
+                        { "name": "rankName", "required": true, "description": "Nama Rank (Contoh: Epik)" },
+                        { "name": "rankId", "required": true, "description": "ID Rank (Angka)" },
+                        { "name": "exp", "required": true, "description": "EXP saat ini (Angka)" },
+                        { "name": "requireExp", "required": true, "description": "EXP yang dibutuhkan (Angka)" },
+                        { "name": "level", "required": true, "description": "Level saat ini (Angka)" },
+                        { "name": "name", "required": true, "description": "Nama Player" }
+                    ]
+                },
+                {
+                    "name": "Ship Match",
+                    "endpoint": "/api/canvas/ship",
+                    "method": "GET",
+                    "params": [
+                        { "name": "avatar1", "required": true, "description": "URL Avatar 1" },
+                        { "name": "avatar2", "required": true, "description": "URL Avatar 2" },
+                        { "name": "background", "required": true, "description": "URL Background / Upload" },
+                        { "name": "persen", "required": true, "description": "Persentase Kecocokan (1-100)" }
+                    ]
+                },
+                {
+                    "name": "Twitter Card",
+                    "endpoint": "/api/canvas/tweet",
+                    "method": "GET",
+                    "params": [
+                        { "name": "displayName", "required": true, "description": "Nama Tampilan" },
+                        { "name": "username", "required": true, "description": "Username (Tanpa @)" },
+                        { "name": "comment", "required": true, "description": "Isi Tweet" },
+                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
+                        { "name": "verified", "required": false, "description": "true / false (Opsional)" },
+                        { "name": "theme", "required": false, "description": "dark / light (Opsional)" }
+                    ]
+                },
+                {
+                    "name": "Spotify Player",
+                    "endpoint": "/api/canvas/spotify",
+                    "method": "GET",
+                    "params": [
+                        { "name": "title", "required": true, "description": "Judul Lagu" },
+                        { "name": "artist", "required": true, "description": "Nama Artis" },
+                        { "name": "start", "required": true, "description": "Waktu Mulai dalam ms (Contoh: 100000)" },
+                        { "name": "end", "required": true, "description": "Total Waktu dalam ms (Contoh: 200000)" },
+                        { "name": "image", "required": true, "description": "URL Cover Album / Upload" },
+                        { "name": "border", "required": true, "description": "Warna Border (Hex: %231DB954)" }
+                    ]
+                },
+                {
+                    "name": "Security Report",
+                    "endpoint": "/api/canvas/security",
+                    "method": "GET",
+                    "params": [
+                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
+                        { "name": "background", "required": true, "description": "URL Background / Upload" },
+                        { "name": "createdTimestamp", "required": true, "description": "Timestamp Dibuat (ms)" },
+                        { "name": "suspectTimestamp", "required": true, "description": "Timestamp Suspect (ms)" },
+                        { "name": "locale", "required": true, "description": "Kode Bahasa (en / id)" }
+                    ]
+                },
+                {
+                    "name": "Welcome V1",
+                    "endpoint": "/api/canvas/welcomev1",
+                    "method": "GET",
+                    "params": [
+                        { "name": "username", "required": true, "description": "Nama User" },
+                        { "name": "guildName", "required": true, "description": "Nama Grup/Server" },
+                        { "name": "guildIcon", "required": true, "description": "URL Ikon Grup / Upload" },
+                        { "name": "memberCount", "required": true, "description": "Jumlah Member" },
+                        { "name": "avatar", "required": true, "description": "URL Avatar User / Upload" },
+                        { "name": "background", "required": true, "description": "URL Background / Upload" },
+                        { "name": "quality", "required": false, "description": "Kualitas Gambar (Opsional: 80)" }
+                    ]
+                },
+                {
+                    "name": "Welcome V2",
+                    "endpoint": "/api/canvas/welcomev2",
+                    "method": "GET",
+                    "params": [
+                        { "name": "username", "required": true, "description": "Nama User" },
+                        { "name": "guildName", "required": true, "description": "Nama Grup/Server" },
+                        { "name": "memberCount", "required": true, "description": "Jumlah Member" },
+                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
+                        { "name": "background", "required": true, "description": "URL Background / Upload" }
+                    ]
+                },
+                {
+                    "name": "Welcome V3",
+                    "endpoint": "/api/canvas/welcomev3",
+                    "method": "GET",
+                    "params": [
+                        { "name": "username", "required": true, "description": "Nama User" },
+                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" }
+                    ]
+                },
+                {
+                    "name": "Welcome V4",
+                    "endpoint": "/api/canvas/welcomev4",
+                    "method": "GET",
+                    "params": [
+                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
+                        { "name": "background", "required": true, "description": "URL Background / Upload" },
+                        { "name": "description", "required": true, "description": "Pesan Sambutan" }
+                    ]
+                },
+                {
+                    "name": "Welcome V5",
+                    "endpoint": "/api/canvas/welcomev5",
+                    "method": "GET",
+                    "params": [
+                        { "name": "username", "required": true, "description": "Nama User" },
+                        { "name": "guildName", "required": true, "description": "Nama Grup/Server" },
+                        { "name": "memberCount", "required": true, "description": "Jumlah Member" },
+                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
+                        { "name": "background", "required": true, "description": "URL Background / Upload" },
+                        { "name": "quality", "required": false, "description": "Kualitas Gambar (Opsional: 90)" }
+                    ]
+                },
+                {
+                    "name": "Goodbye V1",
+                    "endpoint": "/api/canvas/goodbyev1",
+                    "method": "GET",
+                    "params": [
+                        { "name": "username", "required": true, "description": "Nama User" },
+                        { "name": "guildName", "required": true, "description": "Nama Grup/Server" },
+                        { "name": "guildIcon", "required": true, "description": "URL Ikon Grup / Upload" },
+                        { "name": "memberCount", "required": true, "description": "Jumlah Member" },
+                        { "name": "avatar", "required": true, "description": "URL Avatar User / Upload" },
+                        { "name": "background", "required": true, "description": "URL Background / Upload" },
+                        { "name": "quality", "required": false, "description": "Kualitas Gambar (Opsional: 80)" }
+                    ]
+                },
+                {
+                    "name": "Goodbye V2",
+                    "endpoint": "/api/canvas/goodbyev2",
+                    "method": "GET",
+                    "params": [
+                        { "name": "username", "required": true, "description": "Nama User" },
+                        { "name": "guildName", "required": true, "description": "Nama Grup/Server" },
+                        { "name": "memberCount", "required": true, "description": "Jumlah Member" },
+                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
+                        { "name": "background", "required": true, "description": "URL Background / Upload" }
+                    ]
+                },
+                {
+                    "name": "Goodbye V3", 
+                    "endpoint": "/api/canvas/goodbyev3", 
+                    "method": "GET",
+                    "params": [
+                        { "name": "username", "required": true, "description": "Nama User" },
+                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" }
+                    ]
+                },
+                {
+                    "name": "Goodbye V4",
+                    "endpoint": "/api/canvas/goodbyev4",
+                    "method": "GET",
+                    "params": [
+                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
+                        { "name": "background", "required": true, "description": "URL Background / Upload" },
+                        { "name": "title", "required": true, "description": "Judul (Contoh: Goodbye)" },
+                        { "name": "description", "required": true, "description": "Pesan Perpisahan" },
+                        { "name": "border", "required": true, "description": "Warna Border" },
+                        { "name": "avatarBorder", "required": true, "description": "Warna Border Avatar" },
+                        { "name": "overlayOpacity", "required": true, "description": "Opasitas (0.1 - 1.0)" }
+                    ]
+                },
+                {
+                    "name": "Goodbye V5",
+                    "endpoint": "/api/canvas/goodbyev5", 
+                    "method": "GET",
+                    "params": [
+                        { "name": "username", "required": true, "description": "Nama User" },
+                        { "name": "guildName", "required": true, "description": "Nama Grup/Server" },
+                        { "name": "memberCount", "required": true, "description": "Jumlah Member" },
+                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
+                        { "name": "background", "required": true, "description": "URL Background / Upload" },
+                        { "name": "quality", "required": false, "description": "Kualitas Gambar (Opsional: 90)" }
+                    ]
+                }
             ]
-
         }
     });
 }
