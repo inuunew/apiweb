@@ -93,7 +93,7 @@ export default function handler(req, res) {
                 {
                     "name": "E-KTP Maker",
                     "endpoint": "/api/maker/ektp",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "provinsi", "required": true, "description": "Contoh: JAWA BARAT" },
                         { "name": "kota", "required": true, "description": "Contoh: BANDUNG" },
@@ -446,49 +446,49 @@ export default function handler(req, res) {
                 {
                     "name": "Circle Avatar",
                     "endpoint": "/api/canvas/circle",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
                 },
                 {
                     "name": "Beautiful Frame",
                     "endpoint": "/api/canvas/beautiful",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
                 },
                 {
                     "name": "Delete Trash",
                     "endpoint": "/api/canvas/delete",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
                 },
                 {
                     "name": "Facepalm",
                     "endpoint": "/api/canvas/facepalm",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
                 },
                 {
                     "name": "Blur Filter",
                     "endpoint": "/api/canvas/blur",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
                 },
                 {
                     "name": "Invert Color",
                     "endpoint": "/api/canvas/invert",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
                 },
                 {
                     "name": "Greyscale",
                     "endpoint": "/api/canvas/greyscale",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
                 },
                 {
                     "name": "Darkness",
                     "endpoint": "/api/canvas/darkness",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" },
                         { "name": "amount", "required": true, "description": "Intensitas Gelap (1-100)" }
@@ -497,7 +497,7 @@ export default function handler(req, res) {
                 {
                     "name": "Batslap",
                     "endpoint": "/api/canvas/batslap",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "image1", "required": true, "description": "Gambar Penampar" },
                         { "name": "image2", "required": true, "description": "Gambar Ditampar" }
@@ -506,7 +506,7 @@ export default function handler(req, res) {
                 {
                     "name": "Kiss",
                     "endpoint": "/api/canvas/kiss",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "image1", "required": true, "description": "URL Gambar 1" },
                         { "name": "image2", "required": true, "description": "URL Gambar 2" }
@@ -515,13 +515,13 @@ export default function handler(req, res) {
                 {
                     "name": "Sertifikat Tolol",
                     "endpoint": "/api/canvas/sertifikat-tolol",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [{ "name": "text", "required": true, "description": "Nama di sertifikat" }]
                 },
                 {
                     "name": "Gay Frame",
                     "endpoint": "/api/canvas/gay",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "nama", "required": true, "description": "Nama User" },
                         { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
@@ -531,7 +531,7 @@ export default function handler(req, res) {
                 {
                     "name": "Level Up RPG",
                     "endpoint": "/api/canvas/level-up",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "backgroundURL", "required": true, "description": "URL Background / Upload" },
                         { "name": "avatarURL", "required": true, "description": "URL Avatar / Upload" },
@@ -543,7 +543,7 @@ export default function handler(req, res) {
                 {
                     "name": "Profile RPG",
                     "endpoint": "/api/canvas/profile",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "backgroundURL", "required": true, "description": "URL Background / Upload" },
                         { "name": "avatarURL", "required": true, "description": "URL Avatar / Upload" },
@@ -558,7 +558,7 @@ export default function handler(req, res) {
                 {
                     "name": "Ship Match",
                     "endpoint": "/api/canvas/ship",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "avatar1", "required": true, "description": "URL Avatar 1" },
                         { "name": "avatar2", "required": true, "description": "URL Avatar 2" },
@@ -569,7 +569,7 @@ export default function handler(req, res) {
                 {
                     "name": "Twitter Card",
                     "endpoint": "/api/canvas/tweet",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "displayName", "required": true, "description": "Nama Tampilan" },
                         { "name": "username", "required": true, "description": "Username (Tanpa @)" },
@@ -582,7 +582,7 @@ export default function handler(req, res) {
                 {
                     "name": "Spotify Player",
                     "endpoint": "/api/canvas/spotify",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "title", "required": true, "description": "Judul Lagu" },
                         { "name": "artist", "required": true, "description": "Nama Artis" },
@@ -595,7 +595,7 @@ export default function handler(req, res) {
                 {
                     "name": "Security Report",
                     "endpoint": "/api/canvas/security",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
                         { "name": "background", "required": true, "description": "URL Background / Upload" },
@@ -607,7 +607,7 @@ export default function handler(req, res) {
                 {
                     "name": "Welcome V1",
                     "endpoint": "/api/canvas/welcomev1",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "username", "required": true, "description": "Nama User" },
                         { "name": "guildName", "required": true, "description": "Nama Grup/Server" },
@@ -621,7 +621,7 @@ export default function handler(req, res) {
                 {
                     "name": "Welcome V2",
                     "endpoint": "/api/canvas/welcomev2",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "username", "required": true, "description": "Nama User" },
                         { "name": "guildName", "required": true, "description": "Nama Grup/Server" },
@@ -633,7 +633,7 @@ export default function handler(req, res) {
                 {
                     "name": "Welcome V3",
                     "endpoint": "/api/canvas/welcomev3",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "username", "required": true, "description": "Nama User" },
                         { "name": "avatar", "required": true, "description": "URL Avatar / Upload" }
@@ -642,7 +642,7 @@ export default function handler(req, res) {
                 {
                     "name": "Welcome V4",
                     "endpoint": "/api/canvas/welcomev4",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
                         { "name": "background", "required": true, "description": "URL Background / Upload" },
@@ -652,7 +652,7 @@ export default function handler(req, res) {
                 {
                     "name": "Welcome V5",
                     "endpoint": "/api/canvas/welcomev5",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "username", "required": true, "description": "Nama User" },
                         { "name": "guildName", "required": true, "description": "Nama Grup/Server" },
@@ -665,7 +665,7 @@ export default function handler(req, res) {
                 {
                     "name": "Goodbye V1",
                     "endpoint": "/api/canvas/goodbyev1",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "username", "required": true, "description": "Nama User" },
                         { "name": "guildName", "required": true, "description": "Nama Grup/Server" },
@@ -679,7 +679,7 @@ export default function handler(req, res) {
                 {
                     "name": "Goodbye V2",
                     "endpoint": "/api/canvas/goodbyev2",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "username", "required": true, "description": "Nama User" },
                         { "name": "guildName", "required": true, "description": "Nama Grup/Server" },
@@ -691,7 +691,7 @@ export default function handler(req, res) {
                 {
                     "name": "Goodbye V3", 
                     "endpoint": "/api/canvas/goodbyev3", 
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "username", "required": true, "description": "Nama User" },
                         { "name": "avatar", "required": true, "description": "URL Avatar / Upload" }
@@ -700,7 +700,7 @@ export default function handler(req, res) {
                 {
                     "name": "Goodbye V4",
                     "endpoint": "/api/canvas/goodbyev4",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
                         { "name": "background", "required": true, "description": "URL Background / Upload" },
@@ -714,7 +714,7 @@ export default function handler(req, res) {
                 {
                     "name": "Goodbye V5",
                     "endpoint": "/api/canvas/goodbyev5", 
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
                         { "name": "username", "required": true, "description": "Nama User" },
                         { "name": "guildName", "required": true, "description": "Nama Grup/Server" },
