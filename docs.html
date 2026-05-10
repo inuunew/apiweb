@@ -367,68 +367,85 @@
         });
 
         window.testReq = async (btn, url, originalMethod, id) => {
-            if (btn.disabled) return;
-            const out = document.getElementById(`output-${id}`), status = document.getElementById(`status-${id}`), time = document.getElementById(`time-${id}`), dlBtn = document.getElementById(`dl-btn-${id}`), resArea = document.getElementById(`res-area-${id}`), statusIndicator = document.getElementById(`status-indicator-${id}`);
-            const btnInner = btn.querySelector('.soft-btn__inner'); const originalBtnText = btnInner.innerHTML;
-            btn.disabled = true; btnInner.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> PROCESSING';
-            resArea.className = 'response-area show showing success mx-4 mb-4 rounded-lg overflow-hidden bg-[#1e1e1e] border border-slate-600 shadow-inner relative max-w-[calc(100%-2rem)]';
-            statusIndicator.className = 'status-indicator status-waiting'; status.innerText = 'RUNNING...'; status.className = 'text-[10px] font-mono font-bold text-yellow-500'; out.innerHTML = '<span class="text-slate-500 italic">Establishing connection...</span>';
-            
-            let queryParams = {};
-            let bodyParams = {};
-            let forcePost = false;
+    if (btn.disabled) return;
+    const out = document.getElementById(`output-${id}`), status = document.getElementById(`status-${id}`), time = document.getElementById(`time-${id}`), dlBtn = document.getElementById(`dl-btn-${id}`), resArea = document.getElementById(`res-area-${id}`), statusIndicator = document.getElementById(`status-indicator-${id}`);
+    const btnInner = btn.querySelector('.soft-btn__inner'); const originalBtnText = btnInner.innerHTML;
+    
+    btn.disabled = true; btnInner.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> PROCESSING';
+    resArea.className = 'response-area show showing success mx-4 mb-4 rounded-lg overflow-hidden bg-[#1e1e1e] border border-slate-600 shadow-inner relative max-w-[calc(100%-2rem)]';
+    statusIndicator.className = 'status-indicator status-waiting'; status.innerText = 'RUNNING...'; status.className = 'text-[10px] font-mono font-bold text-yellow-500'; out.innerHTML = '<span class="text-slate-500 italic">Establishing connection...</span>';
+    
+    let queryParams = {};
+    let formData = new FormData(); // Kunci utamanya di sini!
+    let forcePost = false;
+    let hasFile = false;
 
-            const inputs = document.querySelectorAll(`[id^="input-${id}-"]`);
-            for (let i of inputs) {
-                const paramName = i.id.split(`input-${id}-`)[1];
-                const modeInput = document.getElementById(`mode-${id}-${paramName}`);
-                
-                if (modeInput) {
-                    if (modeInput.value === 'POST') {
-                        const fileInput = document.getElementById(`file-${id}-${paramName}`);
-                        if (fileInput && fileInput.files.length > 0) {
-                            const b64 = await toBase64(fileInput.files[0]);
-                            bodyParams[paramName] = b64;
-                            forcePost = true; // Wajib diubah jadi POST karena bawa gambar
-                        }
-                    } else {
-                        if (i.value) queryParams[paramName] = i.value;
-                    }
-                } else {
-                    if (i.value) queryParams[paramName] = i.value;
+    const inputs = document.querySelectorAll(`[id^="input-${id}-"]`);
+    for (let i of inputs) {
+        const paramName = i.id.split(`input-${id}-`)[1];
+        const modeInput = document.getElementById(`mode-${id}-${paramName}`);
+        
+        if (modeInput) {
+            if (modeInput.value === 'POST') {
+                const fileInput = document.getElementById(`file-${id}-${paramName}`);
+                if (fileInput && fileInput.files.length > 0) {
+                    // Masukkan FILE FISIK langsung, TANPA BASE64
+                    formData.append(paramName, fileInput.files[0]);
+                    forcePost = true;
+                    hasFile = true;
+                }
+            } else {
+                if (i.value) {
+                    queryParams[paramName] = i.value;
+                    formData.append(paramName, i.value);
                 }
             }
-            
-            let method = forcePost ? 'POST' : originalMethod;
-            let fetchUrl = url + (Object.keys(queryParams).length ? '?' + new URLSearchParams(queryParams) : '');
-            let opts = { method: method };
-
-            // Jika dipaksa POST (ada file) atau aslinya memang POST
-            if (method !== 'GET') {
-                opts.headers = { 'Content-Type': 'application/json' };
-                // Gabungkan query ke dalam body jika ini adalah pure POST bawaan config
-                opts.body = JSON.stringify(forcePost ? bodyParams : queryParams); 
+        } else {
+            if (i.value) {
+                queryParams[paramName] = i.value;
+                formData.append(paramName, i.value);
             }
-            
-            terminalLog(`REQ: ${method} ${fetchUrl} ${forcePost ? '(With Base64 File)' : ''}`, 'warn');
-            let startTime = Date.now();
-            try {
-                const req = await fetch(fetchUrl, opts);
-                animateCounter(`time-${id}`, 0, Date.now() - startTime, 500);
-                if (req.ok) { statusIndicator.className = 'status-indicator status-success'; status.innerText = `${req.status} ${req.statusText}`; status.className = 'text-[10px] font-mono font-bold text-green-500'; resArea.classList.add('success'); } 
-                else { statusIndicator.className = 'status-indicator status-error'; status.innerText = `${req.status} ${req.statusText}`; status.className = 'text-[10px] font-mono font-bold text-red-500'; resArea.classList.add('error'); }
+        }
+    }
+    
+    let method = forcePost ? 'POST' : originalMethod;
+    
+    // Jika ada file, JANGAN masukkan data ke URL query
+    let fetchUrl = url + (!hasFile && Object.keys(queryParams).length ? '?' + new URLSearchParams(queryParams) : '');
+    
+    let opts = { method: method };
 
-                const type = req.headers.get('content-type');
-                if (type?.includes('json')) { out.innerHTML = syntaxHighlight(await req.json()); } 
-                else if (type?.startsWith('image')) {
-                    const urlObj = URL.createObjectURL(await req.blob());
-                    dlBtn.href = urlObj; dlBtn.download = `img-${Date.now()}.png`; dlBtn.classList.remove('hidden');
-                    out.innerHTML = `<div class="flex justify-center p-2 animate-fade-in-up"><img src="${urlObj}" class="max-w-full rounded border border-gray-700 max-h-[300px] transform transition-all duration-500 hover:scale-105"></div>`;
-                } else { typewriterEffect(`output-${id}`, await req.text(), 10); }
-            } catch (err) {
-                statusIndicator.className = 'status-indicator status-error'; status.innerText = 'ERROR'; status.className = 'text-[10px] font-mono font-bold text-red-500'; resArea.classList.add('error'); out.innerHTML = `<span class="text-red-500">${err.message}</span>`;
-            } finally { btn.disabled = false; btnInner.innerHTML = originalBtnText; }
-        };
+    if (method !== 'GET') {
+        if (hasFile) {
+            // Jika bawa file, kirim formData murni. 
+            // Browser akan otomatis mengatur header Content-Type ke 'multipart/form-data' dengan sendirinya!
+            opts.body = formData;
+        } else {
+            // Jika murni POST data biasa (seperti sertifikat-tolol)
+            opts.headers = { 'Content-Type': 'application/json' };
+            opts.body = JSON.stringify(queryParams);
+        }
+    }
+    
+    terminalLog(`REQ: ${method} ${fetchUrl} ${hasFile ? '(With Binary File)' : ''}`, 'warn');
+    let startTime = Date.now();
+    try {
+        const req = await fetch(fetchUrl, opts);
+        animateCounter(`time-${id}`, 0, Date.now() - startTime, 500);
+        if (req.ok) { statusIndicator.className = 'status-indicator status-success'; status.innerText = `${req.status} ${req.statusText}`; status.className = 'text-[10px] font-mono font-bold text-green-500'; resArea.classList.add('success'); } 
+        else { statusIndicator.className = 'status-indicator status-error'; status.innerText = `${req.status} ${req.statusText}`; status.className = 'text-[10px] font-mono font-bold text-red-500'; resArea.classList.add('error'); }
+
+        const type = req.headers.get('content-type');
+        if (type?.includes('json')) { out.innerHTML = syntaxHighlight(await req.json()); } 
+        else if (type?.startsWith('image')) {
+            const urlObj = URL.createObjectURL(await req.blob());
+            dlBtn.href = urlObj; dlBtn.download = `img-${Date.now()}.png`; dlBtn.classList.remove('hidden');
+            out.innerHTML = `<div class="flex justify-center p-2 animate-fade-in-up"><img src="${urlObj}" class="max-w-full rounded border border-gray-700 max-h-[300px] transform transition-all duration-500 hover:scale-105"></div>`;
+        } else { typewriterEffect(`output-${id}`, await req.text(), 10); }
+    } catch (err) {
+        statusIndicator.className = 'status-indicator status-error'; status.innerText = 'ERROR'; status.className = 'text-[10px] font-mono font-bold text-red-500'; resArea.classList.add('error'); out.innerHTML = `<span class="text-red-500">${err.message}</span>`;
+    } finally { btn.disabled = false; btnInner.innerHTML = originalBtnText; }
+};
 
         function typewriterEffect(elId, txt, spd=20) { const el = document.getElementById(elId); el.innerHTML = ''; let i = 0; function type() { if (i < txt.length) { el.innerHTML += txt.charAt(i); i++; setTimeout(type, spd); } } type(); }
         function syntaxHighlight(json) { if (typeof json != 'string') json = JSON.stringify(json, undefined, 2); return json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) { let cls = 'json-number'; if (/^"/.test(match)) { if (/:$/.test(match)) cls = 'json-key'; else cls = 'json-string'; } else if (/true|false/.test(match)) cls = 'json-boolean'; else if (/null/.test(match)) cls = 'json-null'; return `<span class="${cls}">${match}</span>`; }); }
