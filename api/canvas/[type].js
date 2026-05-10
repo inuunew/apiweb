@@ -1,72 +1,78 @@
 import axios from 'axios';
 import FormData from 'form-data';
 
-// --- FUNGSI BANTUAN UPLOAD GAIB KE TELEGRA.PH ---
-async function uploadToTelegraph(base64Data) {
+// --- MENGAKALI BATAS UKURAN VERCEL (MAKSIMAL 10MB) ---
+export const config = {
+    api: {
+        bodyParser: {
+            sizeLimit: '10mb',
+        },
+    },
+};
+
+// --- FUNGSI BANTUAN UPLOAD GAIB KE CATBOX (LEBIH STABIL) ---
+async function uploadImage(base64Data) {
     try {
-        // Pisahkan header Base64 (misal: "data:image/png;base64,") dari data aslinya
         const base64Image = base64Data.split(';base64,').pop();
         const buffer = Buffer.from(base64Image, 'base64');
         
-        // Rakit form-data seolah-olah kita sedang mengupload file sungguhan
         const form = new FormData();
-        form.append('file', buffer, { filename: 'upload.png', contentType: 'image/png' });
+        form.append('reqtype', 'fileupload');
+        form.append('fileToUpload', buffer, { filename: 'upload.png', contentType: 'image/png' });
         
-        // Tembak ke server Telegra.ph
-        const response = await axios.post('https://telegra.ph/upload', form, {
+        const response = await axios.post('https://catbox.moe/user/api.php', form, {
             headers: form.getHeaders()
         });
         
-        // Jika sukses, kembalikan URL penuhnya
-        if (response.data && response.data[0] && response.data[0].src) {
-            return 'https://telegra.ph' + response.data[0].src;
-        }
-        return null;
-    } catch (error) {
-        console.error("Telegraph Error:", error.message);
-        return null;
+        return response.data; // Catbox langsung merespon dengan text URL
+    } catch (error) { 
+        throw new Error(error.message);
     }
 }
 
 export default async function handler(req, res) {
-    // 1. Mengatur CORS Headers (Tambahkan POST)
+    // 1. Mengatur CORS Headers
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
-
-    // Gabungkan query (dari URL) dan body (dari POST JSON)
-    let params = { ...req.query, ...(req.body || {}) };
-    const { type } = params;
-
-    // --- PENDETEKSI GAMBAR (Base64 -> URL) ---
-    // Cek semua parameter yang masuk. Jika ada yang berbentuk Base64, upload dulu!
-    for (const key of Object.keys(params)) {
-        if (typeof params[key] === 'string' && params[key].startsWith('data:image/')) {
-            const uploadedUrl = await uploadToTelegraph(params[key]);
-            if (uploadedUrl) {
-                params[key] = uploadedUrl; // Ganti teks Base64 yang panjang dengan Link Telegra.ph
-            } else {
-                return res.status(400).json({ status: false, message: `Gagal mengupload gambar untuk parameter: ${key}` });
-            }
-        }
-    }
-
-    // --- FUNGSI BANTUAN UNTUK FETCH GAMBAR KE SIPUTZX ---
-    const sendCanvas = async (targetUrl) => {
-        try {
-            const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
-            res.setHeader('Content-Type', 'image/png');
-            return res.status(200).send(response.data);
-        } catch (error) {
-            return res.status(400).json({ status: false, creator: "InuuTyzDev", message: "Gagal memproses gambar dari provider." });
-        }
-    };
+    if (req.method === 'OPTIONS') return res.status(200).end();
 
     try {
+        // --- PELINDUNG REQ.BODY ANTI CRASH ---
+        let bodyData = {};
+        if (req.body) {
+            if (typeof req.body === 'object') bodyData = req.body;
+            else try { bodyData = JSON.parse(req.body); } catch(e) {}
+        }
+
+        // Gabungkan query (GET) dan body (POST)
+        let params = { ...req.query, ...bodyData };
+        const { type } = params;
+
+        // --- PROSES UPLOAD GAMBAR BASE64 -> URL ---
+        for (const key of Object.keys(params)) {
+            if (typeof params[key] === 'string' && params[key].startsWith('data:image/')) {
+                try {
+                    const uploadedUrl = await uploadImage(params[key]);
+                    params[key] = uploadedUrl;
+                } catch (err) {
+                    return res.status(400).json({ status: false, message: `Gagal upload cloud untuk parameter '${key}': ${err.message}` });
+                }
+            }
+        }
+
+        // --- FUNGSI BANTUAN UNTUK FETCH GAMBAR KE SIPUTZX ---
+        const sendCanvas = async (targetUrl) => {
+            try {
+                const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
+                res.setHeader('Content-Type', 'image/png');
+                return res.status(200).send(response.data);
+            } catch (error) {
+                return res.status(400).json({ status: false, creator: "InuuTyzDev", message: "Gagal memproses gambar dari provider." });
+            }
+        };
+
         // ==========================================
         // 1. SINGLE IMAGE MANIPULATION
         // ==========================================
