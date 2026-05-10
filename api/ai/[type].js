@@ -20,21 +20,19 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
+    if (req.method === 'OPTIONS') return res.status(200).end();
     
-    // Gabungkan query (dari GET) dan body (dari POST JSON)
+    // Gabungkan query (GET) dan body (POST)
     let params = { ...req.query, ...(req.body || {}) };
     const { type, prompt, system, temperature, q, text, cookie, promptSystem, imageUrl } = params;
 
-    // --- PENDETEKSI GAMBAR (Base64 -> URL) KHUSUS GEMINI ---
+    // --- PROSES GAMBAR (Base64 -> URL) ---
     if (params.imageUrl && typeof params.imageUrl === 'string' && params.imageUrl.startsWith('data:image/')) {
         const uploadedUrl = await uploadToTelegraph(params.imageUrl);
         if (uploadedUrl) {
             params.imageUrl = uploadedUrl;
         } else {
-            return res.status(400).json({ status: false, message: "Gagal mengupload gambar ke cloud." });
+            return res.status(400).json({ status: false, message: "Gagal memproses unggahan gambar." });
         }
     }
 
@@ -43,15 +41,11 @@ export default async function handler(req, res) {
 
         if (standardAI.includes(type)) {
             if (!prompt) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
-            
             let targetUrl = `https://api.siputzx.my.id/api/ai/${type}?prompt=${encodeURIComponent(prompt)}`;
             if (system) targetUrl += `&system=${encodeURIComponent(system)}`;
             if (temperature) targetUrl += `&temperature=${temperature}`;
 
-            const response = await axios.get(targetUrl, {
-                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-            });
-
+            const response = await axios.get(targetUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
             let cleanData = response.data.data || response.data;
             if (cleanData && typeof cleanData === 'object') { delete cleanData.creator; delete cleanData.status; }
             return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
@@ -59,9 +53,7 @@ export default async function handler(req, res) {
         
         else if (type === 'gita') {
             if (!q) return res.status(400).json({ status: false, message: "Parameter 'q' wajib diisi!" });
-            const response = await axios.get(`https://api.siputzx.my.id/api/ai/gita?q=${encodeURIComponent(q)}`, {
-                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
-            });
+            const response = await axios.get(`https://api.siputzx.my.id/api/ai/gita?q=${encodeURIComponent(q)}`);
             let cleanData = response.data.data || response.data;
             if (cleanData && typeof cleanData === 'object') { delete cleanData.creator; delete cleanData.status; }
             return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
@@ -75,10 +67,7 @@ export default async function handler(req, res) {
             if (promptSystem) targetUrl += `&promptSystem=${encodeURIComponent(promptSystem)}`;
             if (params.imageUrl) targetUrl += `&imageUrl=${encodeURIComponent(params.imageUrl)}`;
 
-            const response = await axios.get(targetUrl, {
-                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-            });
-            
+            const response = await axios.get(targetUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
             let cleanData = response.data.data || response.data;
             if (cleanData && typeof cleanData === 'object') { delete cleanData.creator; delete cleanData.status; }
             return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
@@ -88,6 +77,6 @@ export default async function handler(req, res) {
             return res.status(400).json({ status: false, message: `Model AI '${type}' tidak ditemukan.` });
         }
     } catch (e) {
-        return res.status(500).json({ status: false, creator: "InuuTyzDev", message: "API Target Error/Timeout: " + e.message });
+        return res.status(500).json({ status: false, creator: "InuuTyzDev", message: "API Target Error: " + e.message });
     }
 }
