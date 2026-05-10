@@ -358,7 +358,9 @@ export default function handler(req, res) {
                     "endpoint": "/api/generator/captcha",
                     "method": "GET",
                     "params": [
-                        { "name": "difficulty", "required": false, "description": "easy / medium / hard" }
+                        { "name": "difficulty", "required": false, "description": "easy / medium / hard (Opsional)" },
+                        { "name": "color", "required": false, "description": "Warna garis noise (Opsional)" },
+                        { "name": "view", "required": false, "description": "Pilih format output (Opsional)" }
                     ]
                 },
                 {
