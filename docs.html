@@ -667,16 +667,48 @@
                         copyUrl = `${route.endpoint}?${paramsList}`;
                     }
 
-                    if (route.params?.length) {
+                                        if (route.params?.length) {
                         inputs = `<div class="bg-fmn-bg/50 p-4 border-y border-fmn-blue/20 grid gap-3 w-full animate-fade-in-up">` + 
-                        route.params.map(p => `
-                        <div class="min-w-0 transform transition-all duration-300 hover:scale-[1.02]">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">${p.name} ${p.required?'<span class="text-red-400">*</span>':''}</label>
-                            <input type="text" id="input-${id}-${p.name}" 
-                                placeholder="${p.description ? p.description : 'Value...'}" 
-                                class="w-full min-w-0 border border-slate-300 p-2 text-xs rounded-lg focus:border-fmn-blue focus:ring-1 focus:ring-fmn-blue focus:outline-none bg-white shadow-sm max-w-full transition-all hover:shadow-neon">
-                        </div>`).join('') + `</div>`;
+                        route.params.map(p => {
+                            
+                            // --- LOGIKA KHUSUS UNTUK PARAMETER 'view' ---
+                            if (p.name.toLowerCase() === 'view') {
+                                return `
+                                <div class="min-w-0 transform transition-all duration-300 hover:scale-[1.02]">
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">${p.name} ${p.required?'<span class="text-red-400">*</span>':''}</label>
+                                    
+                                    <input type="hidden" id="input-${id}-${p.name}" value="">
+                                    
+                                    <div class="flex gap-2">
+                                        <button type="button" onclick="
+                                            document.getElementById('input-${id}-${p.name}').value=''; 
+                                            this.className='flex-1 py-2 text-xs font-bold rounded-lg border-2 border-fmn-blue bg-fmn-blue text-white shadow-md transition-all duration-300'; 
+                                            this.nextElementSibling.className='flex-1 py-2 text-xs font-bold rounded-lg border-2 border-slate-200 bg-white text-slate-500 hover:border-fmn-blue hover:text-fmn-blue transition-all duration-300';
+                                        " class="flex-1 py-2 text-xs font-bold rounded-lg border-2 border-fmn-blue bg-fmn-blue text-white shadow-md transition-all duration-300">
+                                            <i class="fa-solid fa-code"></i> JSON
+                                        </button>
+                                        <button type="button" onclick="
+                                            document.getElementById('input-${id}-${p.name}').value='image'; 
+                                            this.className='flex-1 py-2 text-xs font-bold rounded-lg border-2 border-fmn-blue bg-fmn-blue text-white shadow-md transition-all duration-300'; 
+                                            this.previousElementSibling.className='flex-1 py-2 text-xs font-bold rounded-lg border-2 border-slate-200 bg-white text-slate-500 hover:border-fmn-blue hover:text-fmn-blue transition-all duration-300';
+                                        " class="flex-1 py-2 text-xs font-bold rounded-lg border-2 border-slate-200 bg-white text-slate-500 hover:border-fmn-blue hover:text-fmn-blue transition-all duration-300">
+                                            <i class="fa-regular fa-image"></i> IMAGE
+                                        </button>
+                                    </div>
+                                </div>`;
+                            }
+
+                            // --- LOGIKA DEFAULT UNTUK KOTAK TEKS BIASA ---
+                            return `
+                            <div class="min-w-0 transform transition-all duration-300 hover:scale-[1.02]">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">${p.name} ${p.required?'<span class="text-red-400">*</span>':''}</label>
+                                <input type="text" id="input-${id}-${p.name}" 
+                                    placeholder="${p.description ? p.description : 'Value...'}" 
+                                    class="w-full min-w-0 border border-slate-300 p-2 text-xs rounded-lg focus:border-fmn-blue focus:ring-1 focus:ring-fmn-blue focus:outline-none bg-white shadow-sm max-w-full transition-all hover:shadow-neon">
+                            </div>`;
+                        }).join('') + `</div>`;
                     }
+
 
                     const card = document.createElement('div');
                     card.className = 'api-card-wrapper w-full bg-white border border-slate-300 rounded-lg hover:border-fmn-blue transition-all duration-300 overflow-hidden shadow-sm hover:shadow-md';
