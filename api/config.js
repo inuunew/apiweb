@@ -21,16 +21,19 @@ export default function handler(req, res) {
                     "method": "GET",
                     "params": [
                         { "name": "prompt", "required": true, "description": "Tanyakan apa saja ke DeepSeek R1" },
-                        { "name": "system", "required": false, "description": "Instruksi sistem (opsional)" }
+                        { "name": "system", "required": false, "description": "Instruksi sistem (opsional)" },
+                        { "name": "temperature", "required": false, "description": "Kreativitas (Contoh: 0.7)" }
                     ]
                 },
                 {
-                    "name": "Gemini AI",
+                    "name": "Gemini AI (Vision)",
                     "endpoint": "/api/ai/gemini",
                     "method": "GET",
                     "params": [
                         { "name": "text", "required": true, "description": "Pesan untuk Gemini" },
-                        { "name": "promptSystem", "required": false, "description": "Persona/Peran AI" }
+                        { "name": "cookie", "required": false, "description": "Isi dengan: smart" },
+                        { "name": "promptSystem", "required": false, "description": "Persona/Peran AI" },
+                        { "name": "imageUrl", "required": false, "description": "URL Gambar / Upload Galeri" }
                     ]
                 },
                 {
@@ -40,16 +43,44 @@ export default function handler(req, res) {
                     "params": [{ "name": "q", "required": true, "description": "Ask about Karma/Spirituality" }]
                 },
                 {
-                    "name": "QWQ 32B",
+                    "name": "QwQ 32B",
                     "endpoint": "/api/ai/qwq32b",
                     "method": "GET",
-                    "params": [{ "name": "prompt", "required": true, "description": "Chat dengan model QWQ" }]
+                    "params": [
+                        { "name": "prompt", "required": true, "description": "Chat dengan model QWQ" },
+                        { "name": "system", "required": false, "description": "Instruksi sistem (opsional)" },
+                        { "name": "temperature", "required": false, "description": "Kreativitas (Contoh: 0.7)" }
+                    ]
+                },
+                {
+                    "name": "Phi-2",
+                    "endpoint": "/api/ai/phi2",
+                    "method": "GET",
+                    "params": [
+                        { "name": "prompt", "required": true, "description": "Pertanyaan untuk AI" },
+                        { "name": "system", "required": false, "description": "Instruksi Sistem (Opsional)" },
+                        { "name": "temperature", "required": false, "description": "Kreativitas (Contoh: 0.7)" }
+                    ]
+                },
+                {
+                    "name": "GLM 4.7 Flash",
+                    "endpoint": "/api/ai/glm47flash",
+                    "method": "GET",
+                    "params": [
+                        { "name": "prompt", "required": true, "description": "Pertanyaan untuk AI" },
+                        { "name": "system", "required": false, "description": "Instruksi Sistem (Opsional)" },
+                        { "name": "temperature", "required": false, "description": "Kreativitas (Contoh: 0.7)" }
+                    ]
                 },
                 {
                     "name": "GPT-OSS 120B",
                     "endpoint": "/api/ai/gptoss120b",
                     "method": "GET",
-                    "params": [{ "name": "prompt", "required": true, "description": "Model GPT open-source 120B" }]
+                    "params": [
+                        { "name": "prompt", "required": true, "description": "Model GPT open-source 120B" },
+                        { "name": "system", "required": false, "description": "Instruksi sistem (opsional)" },
+                        { "name": "temperature", "required": false, "description": "Kreativitas (Contoh: 0.7)" }
+                    ]
                 }
             ],
             "maker": [
