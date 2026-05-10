@@ -273,7 +273,7 @@
                         route.params.map(p => {
                             
                             // LOGIKA SAKELAR GET / POST UNTUK GAMBAR
-                            if (['image', 'avatar', 'background', 'icon', 'ppurl'].some(k => p.name.toLowerCase().includes(k))) {
+                            if (['image', 'avatar', 'background', 'icon', 'ppurl', 'html'].some(k => p.name.toLowerCase().includes(k))) {
                                 return `
                                 <div class="min-w-0 transform transition-all duration-300 hover:scale-[1.02] bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
                                     <label class="text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-2 block border-b border-slate-100 pb-1">${p.name} ${p.required?'<span class="text-red-500">*</span>':''}</label>
@@ -358,13 +358,6 @@
         window.copyRes = (id) => { const out = document.getElementById(`output-${id}`); if (out.innerText) { navigator.clipboard.writeText(out.innerText); messeg("RESPONSE COPIED"); } };
         window.reset = (id) => { document.getElementById(`res-area-${id}`).className = 'response-area hidden mx-4 mb-4 rounded-lg overflow-hidden bg-[#1e1e1e] border border-slate-600 shadow-inner relative max-w-[calc(100%-2rem)]'; document.getElementById(`output-${id}`).innerHTML = ''; document.getElementById(`status-indicator-${id}`).className = 'status-indicator status-waiting'; };
 
-        // Helper untuk mengubah File menjadi Base64
-        window.toBase64 = file => new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
-        });
 
         window.testReq = async (btn, url, originalMethod, id) => {
     if (btn.disabled) return;
@@ -428,7 +421,7 @@
     }
     
     terminalLog(`REQ: ${method} ${fetchUrl} ${hasFile ? '(With Binary File)' : ''}`, 'warn');
-    let startTime = Date.now();
+        let startTime = Date.now();
     try {
         const req = await fetch(fetchUrl, opts);
         animateCounter(`time-${id}`, 0, Date.now() - startTime, 500);
@@ -441,14 +434,21 @@
             const urlObj = URL.createObjectURL(await req.blob());
             dlBtn.href = urlObj; dlBtn.download = `img-${Date.now()}.png`; dlBtn.classList.remove('hidden');
             out.innerHTML = `<div class="flex justify-center p-2 animate-fade-in-up"><img src="${urlObj}" class="max-w-full rounded border border-gray-700 max-h-[300px] transform transition-all duration-500 hover:scale-105"></div>`;
-        } else { typewriterEffect(`output-${id}`, await req.text(), 10); }
+        } else { 
+            // Langsung tempel teksnya tanpa animasi ketik lambat
+            out.textContent = await req.text(); 
+        }
+    // 👇👇 BAGIAN INI YANG SEMPAT TERHAPUS 👇👇
     } catch (err) {
         statusIndicator.className = 'status-indicator status-error'; status.innerText = 'ERROR'; status.className = 'text-[10px] font-mono font-bold text-red-500'; resArea.classList.add('error'); out.innerHTML = `<span class="text-red-500">${err.message}</span>`;
-    } finally { btn.disabled = false; btnInner.innerHTML = originalBtnText; }
-};
+    } finally { 
+        btn.disabled = false; btnInner.innerHTML = originalBtnText; 
+    }
+}; // <--- Penutup fungsi window.testReq
 
-        function typewriterEffect(elId, txt, spd=20) { const el = document.getElementById(elId); el.innerHTML = ''; let i = 0; function type() { if (i < txt.length) { el.innerHTML += txt.charAt(i); i++; setTimeout(type, spd); } } type(); }
-        function syntaxHighlight(json) { if (typeof json != 'string') json = JSON.stringify(json, undefined, 2); return json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) { let cls = 'json-number'; if (/^"/.test(match)) { if (/:$/.test(match)) cls = 'json-key'; else cls = 'json-string'; } else if (/true|false/.test(match)) cls = 'json-boolean'; else if (/null/.test(match)) cls = 'json-null'; return `<span class="${cls}">${match}</span>`; }); }
-    </script>
+function typewriterEffect(elId, txt, spd=20) { const el = document.getElementById(elId); el.innerHTML = ''; let i = 0; function type() { if (i < txt.length) { el.innerHTML += txt.charAt(i); i++; setTimeout(type, spd); } } type(); }
+function syntaxHighlight(json) { if (typeof json != 'string') json = JSON.stringify(json, undefined, 2); return json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) { let cls = 'json-number'; if (/^"/.test(match)) { if (/:$/.test(match)) cls = 'json-key'; else cls = 'json-string'; } else if (/true|false/.test(match)) cls = 'json-boolean'; else if (/null/.test(match)) cls = 'json-null'; return `<span class="${cls}">${match}</span>`; }); }
+</script>
 </body>
 </html>
+
