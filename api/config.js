@@ -307,7 +307,7 @@ export default function handler(req, res) {
                 }, 
                 {
                     "name": "HTML Encryptor",
-                    "endpoint": "/api/tools?type=encrypthtml",
+                    "endpoint": "/api/tools/encrypthtml",
                     "method": "GET",
                     "params": [
                         { "name": "html", "required": true, "description": "Raw HTML code (Masukkan langsung ke URL)" }
@@ -315,7 +315,7 @@ export default function handler(req, res) {
                 },
                 {
                     "name": "JS Obfuscator & Minifier",
-                    "endpoint": "/api/tools?type=obfuscatejs",
+                    "endpoint": "/api/tools/obfuscatejs",
                     "method": "GET",
                     "params": [
                         { "name": "code", "required": true, "description": "Raw JavaScript code (Masukkan langsung ke URL)" },
@@ -350,7 +350,7 @@ export default function handler(req, res) {
                     "method": "GET",
                     "params": [
                         { "name": "text", "required": true, "description": "Teks / URL tujuan" },
-                        { "name": "color", "required": false, "description": "Hex warna QR (tanpa #)" }
+                        { "name": "color", "required": false, "description": "Hex warna (contoh: putih atau fff)" }
                     ]
                 },
                 {
@@ -394,8 +394,8 @@ export default function handler(req, res) {
                         { "name": "w", "required": false, "description": "Lebar gambar (Contoh: 800)" },
                         { "name": "h", "required": false, "description": "Tinggi gambar (Contoh: 400)" },
                         { "name": "text", "required": false, "description": "Teks di tengah gambar" },
-                        { "name": "bg", "required": false, "description": "Warna background (Hex tanpa #)" },
-                        { "name": "color", "required": false, "description": "Warna teks (Hex tanpa #)" }
+                        { "name": "bg", "required": false, "description": "Warna background (contoh: putih atau fff)" },
+                        { "name": "color", "required": false, "description": "Warna teks (contoh: putih atau fff)" }
                     ]
                 },
                 {
@@ -403,9 +403,9 @@ export default function handler(req, res) {
                     "endpoint": "/api/generator/wave",
                     "method": "GET",
                     "params": [
-                        { "name": "color1", "required": false, "description": "Warna gradasi 1 (Hex tanpa #)" },
-                        { "name": "color2", "required": false, "description": "Warna gradasi 2 (Hex tanpa #)" },
-                        { "name": "bg", "required": false, "description": "Warna background (Hex tanpa #)" }
+                        { "name": "color1", "required": false, "description": "Warna gradasi 1 contoh: putih atau fff" },
+                        { "name": "color2", "required": false, "description": "Warna gradasi 2 (contoh: putih atau fff)" },
+                        { "name": "bg", "required": false, "description": "Warna background (contoh: putih atau fff)" }
                     ]
                 },
                 {
