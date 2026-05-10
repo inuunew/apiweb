@@ -308,18 +308,9 @@ export default function handler(req, res) {
                 {
                     "name": "HTML Encryptor",
                     "endpoint": "/api/tools/encrypthtml",
-                    "method": "GET",
+                    "method": "POST",
                     "params": [
-                        { "name": "html", "required": true, "description": "Raw HTML code (Masukkan langsung ke URL)" }
-                    ]
-                },
-                {
-                    "name": "JS Obfuscator & Minifier",
-                    "endpoint": "/api/tools/obfuscatejs",
-                    "method": "GET",
-                    "params": [
-                        { "name": "code", "required": true, "description": "Raw JavaScript code (Masukkan langsung ke URL)" },
-                        { "name": "download", "required": false, "description": "Isi 'true' jika ingin output berupa file .js" }
+                        { "name": "html", "required": true, "description": "Source Code HTML lengkap (Mendukung teks sangat panjang)" }
                     ]
                 }
             ],
