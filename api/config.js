@@ -6,7 +6,7 @@ export default function handler(req, res) {
         "settings": {
             "apiName": "InuuTyzDev",
             "creator": "InuuTyzDev",
-            "description": "Developer Modal AI - Masterpiece provider-api" ,
+            "description": "Developer Modal AI\nMasterpiece provider-api" ,
             "thumbnail": "https://files.catbox.moe/la9esc.png",
             "favicon": "https://files.catbox.moe/tv1rv6.jpeg",
             "websiteUrl": "https://social-information.inuu.my.id", 
