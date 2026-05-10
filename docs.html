@@ -13,222 +13,36 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        mono: ['"JetBrains Mono"', 'monospace'],
-                        sans: ['"Quicksand"', 'sans-serif'],
-                    },
-                    colors: {
-                        'fmn-blue': '#89CFF0',
-                        'fmn-dark': '#6495ED',
-                        'fmn-purple': '#B39DDB',
-                        'fmn-bg': '#F0F8FF',
-                        'term-bg': '#1e1e1e', 
-                        'term-text': '#d4d4d4',
-                        'success-glow': '#10b981',
-                        'error-glow': '#ef4444',
-                    },
-                    boxShadow: {
-                        'soft': '4px 4px 10px rgba(137, 207, 240, 0.4)',
-                        'glow-success': '0 0 15px rgba(16, 185, 129, 0.5)',
-                        'glow-error': '0 0 15px rgba(239, 68, 68, 0.5)',
-                        'neon': '0 0 20px rgba(137, 207, 240, 0.6)',
-                    },
-                    animation: {
-                        'blink': 'blink 1s step-end infinite',
-                        'slide-down': 'slideDown 0.3s ease-out forwards',
-                        'marquee': 'marquee 15s linear infinite',
-                        'slide-in-right': 'slideInRight 0.5s ease-out forwards',
-                        'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
-                    },
-                    keyframes: {
-                        blink: { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0' } },
-                        slideDown: { '0%': { opacity: '0', transform: 'translateY(-10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-                        marquee: { '0%': { transform: 'translateX(100%)' }, '100%': { transform: 'translateX(-150%)' } },
-                        slideInRight: { '0%': { opacity: '0', transform: 'translateX(20px)' }, '100%': { opacity: '1', transform: 'translateX(0)' } },
-                        fadeInUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-                    },
+                    fontFamily: { mono: ['"JetBrains Mono"', 'monospace'], sans: ['"Quicksand"', 'sans-serif'], },
+                    colors: { 'fmn-blue': '#89CFF0', 'fmn-dark': '#6495ED', 'fmn-purple': '#B39DDB', 'fmn-bg': '#F0F8FF', 'term-bg': '#1e1e1e', 'term-text': '#d4d4d4', 'success-glow': '#10b981', 'error-glow': '#ef4444', },
+                    boxShadow: { 'soft': '4px 4px 10px rgba(137, 207, 240, 0.4)', 'glow-success': '0 0 15px rgba(16, 185, 129, 0.5)', 'glow-error': '0 0 15px rgba(239, 68, 68, 0.5)', 'neon': '0 0 20px rgba(137, 207, 240, 0.6)', },
+                    animation: { 'blink': 'blink 1s step-end infinite', 'slide-down': 'slideDown 0.3s ease-out forwards', 'marquee': 'marquee 15s linear infinite', 'slide-in-right': 'slideInRight 0.5s ease-out forwards', 'fade-in-up': 'fadeInUp 0.6s ease-out forwards', },
+                    keyframes: { blink: { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0' } }, slideDown: { '0%': { opacity: '0', transform: 'translateY(-10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }, marquee: { '0%': { transform: 'translateX(100%)' }, '100%': { transform: 'translateX(-150%)' } }, slideInRight: { '0%': { opacity: '0', transform: 'translateX(20px)' }, '100%': { opacity: '1', transform: 'translateX(0)' } }, fadeInUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }, },
                 }
             }
         }
     </script>
     <style>
-        html, body {
-            max-width: 100vw;
-            overflow-x: hidden;
-            width: 100%;
-            position: relative;
-        }
-
-        #fixed-bg {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -50;
-            background-color: #F0F8FF;
-            background-image: url('https://c.termai.cc/i181/aGwK.png'), url('https://c.termai.cc/i155/wbV.jpg');
-            background-position: bottom right, center center;
-            background-size: 85% auto, cover;
-            background-repeat: no-repeat;
-            opacity: 0.8;
-        }
-        @media (max-width: 768px) {
-            #fixed-bg { background-size: 110% auto, cover; }
-        }
-
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #89CFF0; border-radius: 4px; border: 2px solid #fff; }
-        
-        .json-key { color: #f87171; font-weight: bold; }
-        .json-string { color: #a3e635; }
-        .json-number { color: #60a5fa; font-weight: bold; }
-        .json-boolean { color: #c084fc; font-style: italic; }
-        .json-null { color: #94a3b8; }
-        
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #444; border: none; border-radius: 2px; }
-        
-        .response-area {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            transform-origin: top center;
-        }
-        
-        .response-area.showing {
-            animation: slideInRight 0.5s ease-out, fadeInUp 0.6s ease-out;
-        }
-        
-        .response-area.success {
-            border-color: #10b981 !important;
-        }
-        
-        .response-area.error {
-            border-color: #ef4444 !important;
-        }
-        
-        .json-key, .json-string, .json-number, .json-boolean, .json-null {
-            transition: all 0.3s ease;
-        }
-        
-        .status-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-        }
-        
-        .status-success {
-            background-color: #10b981;
-            box-shadow: 0 0 10px #10b981;
-            animation: blink 1.5s infinite;
-        }
-        
-        .status-error {
-            background-color: #ef4444;
-            box-shadow: 0 0 10px #ef4444;
-            animation: blink 1.5s infinite;
-        }
-        
-        .status-waiting {
-            background-color: #f59e0b;
-            box-shadow: 0 0 10px #f59e0b;
-            animation: blink 1.5s infinite;
-        }
-
-        /* --- SOFT BUTTON CSS START --- */
-        .soft-btn {
-            --button-raise-level: 6px;
-            --press-inset: 3px;
-            --press-compensated: 0px;
-            --button-hover-pressure: 1.5;
-            --transform-speed: 160ms;
-            --radius: 12px;
-            --glare-rgb: 255, 255, 255;
-            --glare-alpha: 0.2;
-            --glare-width: 20;
-
-            position: relative;
-            border: none;
-            background: transparent;
-            padding: 0;
-            cursor: pointer;
-            user-select: none;
-            outline: none;
-            -webkit-tap-highlight-color: transparent;
-            display: block;
-        }
-
-        .soft-btn__wrapper {
-            position: relative;
-            display: block;
-            width: 100%;
-            height: 100%;
-            transform-style: preserve-3d;
-        }
-
-        .soft-btn__wrapper::before {
-            content: '';
-            position: absolute;
-            left: 0; right: 0; bottom: 0;
-            height: calc(100% - var(--button-raise-level));
-            background: var(--side-color);
-            border-radius: var(--radius);
-            z-index: 1;
-        }
-
-        .soft-btn__content {
-            position: relative;
-            width: 100%;
-            height: calc(100% - var(--button-raise-level));
-            background: var(--surface-color);
-            color: var(--text-color);
-            border-radius: var(--radius);
-            display: flex; align-items: center; justify-content: center;
-            transform: translateY(0);
-            transition: transform var(--transform-speed) ease-out;
-            will-change: transform;
-            backface-visibility: hidden;
-            transform-origin: center;
-            z-index: 2;
-            border: var(--border-width) solid var(--border-color);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2);
-        }
-
-        .soft-btn__inner {
-            display: inline-flex; align-items: center; justify-content: center;
-            gap: 8px; z-index: 4; width: 100%; height: 100%; pointer-events: none;
-        }
-
-        .soft-btn--middle .soft-btn__content { transform: translateY(calc(1px * var(--button-hover-pressure))); }
-        .soft-btn--left .soft-btn__content { transform: skewY(calc(-1deg * var(--button-hover-pressure))); }
-        .soft-btn--right .soft-btn__content { transform: skewY(calc(1deg * var(--button-hover-pressure))); }
-        .soft-btn--active .soft-btn__content { transform: translateY(var(--press-inset)); transition: transform calc(var(--transform-speed) * 0.8) ease-out; }
-        .soft-btn--active.soft-btn--left .soft-btn__content { transform: skewY(calc(-1deg * var(--button-hover-pressure))) translateY(var(--press-inset)); }
-        .soft-btn--active.soft-btn--right .soft-btn__content { transform: skewY(calc(1deg * var(--button-hover-pressure))) translateY(var(--press-inset)); }
-
-        .variant-lavender {
-            --surface-color: #cec3fd;
-            --side-color: #b489ff;
-            --text-color: #2e1065;
-            --border-color: #a36eff;
-            --border-width: 2px;
-        }
-
-        @keyframes outlineSpin {
-            100% { transform: rotate(360deg); }
-        }
-
-        .category-btn {
-            position: relative; z-index: 1; overflow: hidden; transition: background-color 0.3s;
-        }
-
-        .category-btn.animating { border-color: transparent !important; }
-        .category-btn.animating::before {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: conic-gradient(transparent 0%, #89CFF0 25%, transparent 50%, #B39DDB 75%, transparent 100%);
-            z-index: -2; animation: outlineSpin 0.5s linear infinite;
-        }
-        .category-btn.animating::after {
-            content: ''; position: absolute; inset: 3px; background: white; border-radius: 0.6rem; z-index: -1;
-        }
-
+        html, body { max-width: 100vw; overflow-x: hidden; width: 100%; position: relative; }
+        #fixed-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -50; background-color: #F0F8FF; background-image: url('https://c.termai.cc/i181/aGwK.png'), url('https://c.termai.cc/i155/wbV.jpg'); background-position: bottom right, center center; background-size: 85% auto, cover; background-repeat: no-repeat; opacity: 0.8; }
+        @media (max-width: 768px) { #fixed-bg { background-size: 110% auto, cover; } }
+        ::-webkit-scrollbar { width: 8px; height: 8px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #89CFF0; border-radius: 4px; border: 2px solid #fff; }
+        .json-key { color: #f87171; font-weight: bold; } .json-string { color: #a3e635; } .json-number { color: #60a5fa; font-weight: bold; } .json-boolean { color: #c084fc; font-style: italic; } .json-null { color: #94a3b8; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; } .custom-scrollbar::-webkit-scrollbar-thumb { background: #444; border: none; border-radius: 2px; }
+        .response-area { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: top center; }
+        .response-area.showing { animation: slideInRight 0.5s ease-out, fadeInUp 0.6s ease-out; }
+        .response-area.success { border-color: #10b981 !important; } .response-area.error { border-color: #ef4444 !important; }
+        .json-key, .json-string, .json-number, .json-boolean, .json-null { transition: all 0.3s ease; }
+        .status-indicator { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .status-success { background-color: #10b981; box-shadow: 0 0 10px #10b981; animation: blink 1.5s infinite; } .status-error { background-color: #ef4444; box-shadow: 0 0 10px #ef4444; animation: blink 1.5s infinite; } .status-waiting { background-color: #f59e0b; box-shadow: 0 0 10px #f59e0b; animation: blink 1.5s infinite; }
+        .soft-btn { --button-raise-level: 6px; --press-inset: 3px; --press-compensated: 0px; --button-hover-pressure: 1.5; --transform-speed: 160ms; --radius: 12px; --glare-rgb: 255, 255, 255; --glare-alpha: 0.2; --glare-width: 20; position: relative; border: none; background: transparent; padding: 0; cursor: pointer; user-select: none; outline: none; -webkit-tap-highlight-color: transparent; display: block; }
+        .soft-btn__wrapper { position: relative; display: block; width: 100%; height: 100%; transform-style: preserve-3d; } .soft-btn__wrapper::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: calc(100% - var(--button-raise-level)); background: var(--side-color); border-radius: var(--radius); z-index: 1; }
+        .soft-btn__content { position: relative; width: 100%; height: calc(100% - var(--button-raise-level)); background: var(--surface-color); color: var(--text-color); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; transform: translateY(0); transition: transform var(--transform-speed) ease-out; will-change: transform; backface-visibility: hidden; transform-origin: center; z-index: 2; border: var(--border-width) solid var(--border-color); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2); }
+        .soft-btn__inner { display: inline-flex; align-items: center; justify-content: center; gap: 8px; z-index: 4; width: 100%; height: 100%; pointer-events: none; }
+        .soft-btn--middle .soft-btn__content { transform: translateY(calc(1px * var(--button-hover-pressure))); } .soft-btn--left .soft-btn__content { transform: skewY(calc(-1deg * var(--button-hover-pressure))); } .soft-btn--right .soft-btn__content { transform: skewY(calc(1deg * var(--button-hover-pressure))); } .soft-btn--active .soft-btn__content { transform: translateY(var(--press-inset)); transition: transform calc(var(--transform-speed) * 0.8) ease-out; } .soft-btn--active.soft-btn--left .soft-btn__content { transform: skewY(calc(-1deg * var(--button-hover-pressure))) translateY(var(--press-inset)); } .soft-btn--active.soft-btn--right .soft-btn__content { transform: skewY(calc(1deg * var(--button-hover-pressure))) translateY(var(--press-inset)); }
+        .variant-lavender { --surface-color: #cec3fd; --side-color: #b489ff; --text-color: #2e1065; --border-color: #a36eff; --border-width: 2px; }
+        @keyframes outlineSpin { 100% { transform: rotate(360deg); } }
+        .category-btn { position: relative; z-index: 1; overflow: hidden; transition: background-color 0.3s; } .category-btn.animating { border-color: transparent !important; } .category-btn.animating::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(transparent 0%, #89CFF0 25%, transparent 50%, #B39DDB 75%, transparent 100%); z-index: -2; animation: outlineSpin 0.5s linear infinite; } .category-btn.animating::after { content: ''; position: absolute; inset: 3px; background: white; border-radius: 0.6rem; z-index: -1; }
     </style>
 </head>
 <body class="text-slate-700 min-h-screen flex flex-col font-sans selection:bg-fmn-blue selection:text-white">
@@ -278,8 +92,7 @@
             </div>
 
             <div class="relative group">
-                <input type="text" id="search-input" placeholder="Search Endpoint..." 
-                    class="w-full h-12 border-2 border-fmn-blue/60 px-5 pl-12 font-bold text-sm text-slate-600 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-fmn-blue/50 focus:border-fmn-dark transition-all placeholder:text-slate-400 bg-white/90 backdrop-blur hover:shadow-neon hover:border-fmn-blue">
+                <input type="text" id="search-input" placeholder="Search Endpoint..." class="w-full h-12 border-2 border-fmn-blue/60 px-5 pl-12 font-bold text-sm text-slate-600 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-fmn-blue/50 focus:border-fmn-dark transition-all placeholder:text-slate-400 bg-white/90 backdrop-blur hover:shadow-neon hover:border-fmn-blue">
                 <i class="fa-solid fa-magnifying-glass absolute left-4 top-4 text-fmn-blue"></i>
             </div>
 
@@ -287,16 +100,13 @@
                 <div class="absolute -right-4 -top-4 w-20 h-20 bg-fmn-blue/10 rounded-full blur-xl"></div>
                 <div class="space-y-3 relative z-10">
                     <div class="flex justify-between text-xs font-bold bg-fmn-bg p-3 rounded-xl text-slate-600 border border-fmn-blue/10 hover:shadow-neon transition-all duration-300">
-                        <span>TIME (WIB)</span>
-                        <span id="server-time" class="text-fmn-dark font-mono">--:--:--</span>
+                        <span>TIME (WIB)</span><span id="server-time" class="text-fmn-dark font-mono">--:--:--</span>
                     </div>
                     <div class="flex justify-between text-xs font-bold bg-fmn-bg p-3 rounded-xl text-slate-600 border border-fmn-blue/10 hover:shadow-neon transition-all duration-300">
-                        <span>DATE</span>
-                        <span id="server-date" class="font-mono">--/--/----</span>
+                        <span>DATE</span><span id="server-date" class="font-mono">--/--/----</span>
                     </div>
                     <div class="flex justify-between text-xs font-bold bg-fmn-bg p-3 rounded-xl text-slate-600 border border-fmn-blue/10 hover:shadow-neon transition-all duration-300">
-                        <span>VISITOR</span>
-                        <span id="stat-visitors" class="text-fmn-purple">0</span>
+                        <span>VISITOR</span><span id="stat-visitors" class="text-fmn-purple">0</span>
                     </div>
                 </div>
             </div>
@@ -304,10 +114,8 @@
 
         <section class="lg:col-span-8 min-h-[50vh] w-full max-w-full">
             <div id="api-container" class="space-y-4 opacity-0 translate-y-4 transition-all duration-700 w-full"></div>
-            
             <div id="no-results" class="hidden flex-col items-center justify-center py-20 text-center opacity-70">
-                <i class="fa-solid fa-box-open text-5xl mb-3 text-fmn-blue"></i>
-                <p class="font-bold text-lg text-slate-400">No Data Found</p>
+                <i class="fa-solid fa-box-open text-5xl mb-3 text-fmn-blue"></i><p class="font-bold text-lg text-slate-400">No Data Found</p>
             </div>
         </section>
 
@@ -322,8 +130,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', init);
-        let globalConfig = null;
-        let toastTimeout;
+        let globalConfig = null, toastTimeout;
 
         function isMobileDevice() { return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); }
 
@@ -333,12 +140,7 @@
                 try {
                     const response = await fetch('/api/config');
                     globalConfig = await response.json();
-                    setUi(globalConfig);
-                    loadEnd(globalConfig.tags);
-                    startWIBClock();
-                    await kuroneko(globalConfig);
-                    loadReminder();
-                    setSearch();
+                    setUi(globalConfig); loadEnd(globalConfig.tags); startWIBClock(); await kuroneko(globalConfig); loadReminder(); setSearch();
                 } catch (e) {
                     document.getElementById('term-logs').innerHTML = `<span class="text-red-400 font-bold px-1">SYSTEM FAILURE</span><br>${e.message}`;
                 }
@@ -354,114 +156,56 @@
                         try { btn.releasePointerCapture(e.pointerId); } catch(err){}
                         return;
                     }
-                    const rect = btn.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const w = rect.width;
-                    if(e.type === 'pointerdown') {
-                        btn.classList.add('soft-btn--active');
-                        try { btn.setPointerCapture(e.pointerId); } catch(err){}
-                    }
+                    const x = e.clientX - btn.getBoundingClientRect().left, w = btn.getBoundingClientRect().width;
+                    if(e.type === 'pointerdown') { btn.classList.add('soft-btn--active'); try { btn.setPointerCapture(e.pointerId); } catch(err){} }
                     btn.classList.remove('soft-btn--left', 'soft-btn--right', 'soft-btn--middle');
-                    if (x < w * 0.33) btn.classList.add('soft-btn--left');
-                    else if (x > w * 0.66) btn.classList.add('soft-btn--right');
-                    else btn.classList.add('soft-btn--middle');
+                    if (x < w * 0.33) btn.classList.add('soft-btn--left'); else if (x > w * 0.66) btn.classList.add('soft-btn--right'); else btn.classList.add('soft-btn--middle');
                 };
-                btn.addEventListener('pointerdown', handlePointer);
-                btn.addEventListener('pointermove', (e) => { if(btn.classList.contains('soft-btn--active')) handlePointer(e); });
-                btn.addEventListener('pointerup', handlePointer);
-                btn.addEventListener('pointerleave', handlePointer);
-                btn.addEventListener('pointercancel', handlePointer);
+                btn.addEventListener('pointerdown', handlePointer); btn.addEventListener('pointermove', (e) => { if(btn.classList.contains('soft-btn--active')) handlePointer(e); });
+                btn.addEventListener('pointerup', handlePointer); btn.addEventListener('pointerleave', handlePointer); btn.addEventListener('pointercancel', handlePointer);
             });
         }
 
         function messeg(msg) {
-            const toast = document.getElementById('custom-toast');
-            const msgBox = document.getElementById('toast-message');
-            if(!toast || !msgBox) return;
-            msgBox.innerText = msg;
-            toast.classList.remove('translate-y-32', 'opacity-0');
-            toast.classList.add('animate-fade-in-up');
-            
+            const toast = document.getElementById('custom-toast'), msgBox = document.getElementById('toast-message');
+            if(!toast || !msgBox) return; msgBox.innerText = msg;
+            toast.classList.remove('translate-y-32', 'opacity-0'); toast.classList.add('animate-fade-in-up');
             if (toastTimeout) clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => { 
-                toast.classList.add('translate-y-32', 'opacity-0');
-                toast.classList.remove('animate-fade-in-up');
-            }, 3000);
+            toastTimeout = setTimeout(() => { toast.classList.add('translate-y-32', 'opacity-0'); toast.classList.remove('animate-fade-in-up'); }, 3000);
         }
 
         function startWIBClock() {
-            const timeEl = document.getElementById('server-time');
-            const dateEl = document.getElementById('server-date');
+            const timeEl = document.getElementById('server-time'), dateEl = document.getElementById('server-date');
             updateTime(); setInterval(updateTime, 1000);
-            function updateTime() {
-                const now = new Date();
-                if(timeEl) timeEl.innerText = now.toLocaleTimeString('id-ID', {timeZone: 'Asia/Jakarta', hour12: false});
-                if(dateEl) dateEl.innerText = now.toLocaleDateString('id-ID', {timeZone: 'Asia/Jakarta', day: 'numeric', month: 'long', year: 'numeric'});
-            }
+            function updateTime() { const now = new Date(); if(timeEl) timeEl.innerText = now.toLocaleTimeString('id-ID', {timeZone: 'Asia/Jakarta', hour12: false}); if(dateEl) dateEl.innerText = now.toLocaleDateString('id-ID', {timeZone: 'Asia/Jakarta', day: 'numeric', month: 'long', year: 'numeric'}); }
         }
 
-        async function loadReminder() {
-            try {
-                const req = await fetch('/api/reminder');
-                const data = await req.json();
-                if(data?.message) {
-                    document.getElementById('running-text').innerText = data.message.toUpperCase();
-                }
-            } catch (e) {}
-        }
+        async function loadReminder() { try { const data = await (await fetch('/api/reminder')).json(); if(data?.message) document.getElementById('running-text').innerText = data.message.toUpperCase(); } catch (e) {} }
 
         function terminalLog(message, type = 'info') {
-            const logs = document.getElementById('term-logs');
-            if(!logs) return;
+            const logs = document.getElementById('term-logs'); if(!logs) return;
             const line = document.createElement('div');
-            let color = type === 'error' ? "text-red-400" : type === 'success' ? "text-green-400" : type === 'warn' ? "text-yellow-400" : type === 'system' ? "text-gray-500" : "text-gray-300";
-            line.className = `${color} break-all`;
-            line.innerHTML = message;
-            logs.appendChild(line);
-            logs.scrollTop = logs.scrollHeight;
+            line.className = `${type === 'error' ? "text-red-400" : type === 'success' ? "text-green-400" : type === 'warn' ? "text-yellow-400" : type === 'system' ? "text-gray-500" : "text-gray-300"} break-all`;
+            line.innerHTML = message; logs.appendChild(line); logs.scrollTop = logs.scrollHeight;
         }
 
         async function kuroneko(config) {
-            const logs = document.getElementById('term-logs');
-            if(!logs) return;
-            
-            const cmdLine = document.createElement('div');
-            cmdLine.className = 'text-gray-300 break-all';
-            cmdLine.innerHTML = '<span class="text-green-500">root@inuu:~/api$</span> ';
-            const typeSpan = document.createElement('span');
-            typeSpan.className = 'text-white font-bold';
-            cmdLine.appendChild(typeSpan);
-            logs.appendChild(cmdLine);
-
+            const logs = document.getElementById('term-logs'); if(!logs) return;
+            const cmdLine = document.createElement('div'); cmdLine.className = 'text-gray-300 break-all'; cmdLine.innerHTML = '<span class="text-green-500">root@inuu:~/api$</span> ';
+            const typeSpan = document.createElement('span'); typeSpan.className = 'text-white font-bold'; cmdLine.appendChild(typeSpan); logs.appendChild(cmdLine);
             const commandText = "vercel deploy";
-            for(let i=0; i < commandText.length; i++) {
-                typeSpan.textContent += commandText.charAt(i);
-                await new Promise(r => setTimeout(r, 80));
-            }
-
+            for(let i=0; i < commandText.length; i++) { typeSpan.textContent += commandText.charAt(i); await new Promise(r => setTimeout(r, 80)); }
             await new Promise(r => setTimeout(r, 600));
-            terminalLog(`> inuu-api-v2@${config.settings.apiVersion || '2.0.0'} serverless`, 'system');
-            terminalLog(`> Initializing Vercel Edge Network...`, 'system');
-            await new Promise(r => setTimeout(r, 800));
-            
-            const allRoutes = [];
-            for (const cat in config.tags) { config.tags[cat].forEach(r => allRoutes.push({cat, ...r})); }
-
+            terminalLog(`> inuu-api-v2@${config.settings.apiVersion || '2.0.0'} serverless`, 'system'); terminalLog(`> Initializing Vercel Edge Network...`, 'system'); await new Promise(r => setTimeout(r, 800));
+            const allRoutes = []; for (const cat in config.tags) { config.tags[cat].forEach(r => allRoutes.push({cat, ...r})); }
             for(const route of allRoutes) {
-                const methodColor = route.method === 'GET' ? 'text-blue-400' : route.method === 'POST' ? 'text-green-400' : 'text-yellow-400';
-                terminalLog(`[+] <span class="${methodColor}">${route.method}</span> ${route.endpoint} <span class="text-gray-500">✓</span>`, 'info');
+                terminalLog(`[+] <span class="${route.method === 'GET' ? 'text-blue-400' : route.method === 'POST' ? 'text-green-400' : 'text-yellow-400'}">${route.method}</span> ${route.endpoint} <span class="text-gray-500">✓</span>`, 'info');
                 await new Promise(r => setTimeout(r, 20)); 
             }
-            
             await new Promise(r => setTimeout(r, 500));
-            terminalLog(`[✓] Server running on Vercel Native`, 'success');
-            terminalLog(`[WATCH] Online and Ready...`, 'warn');
-            
+            terminalLog(`[✓] Server running on Vercel Native`, 'success'); terminalLog(`[WATCH] Online and Ready...`, 'warn');
             const container = document.getElementById('api-container');
-            if(container) {
-                container.classList.remove('opacity-0', 'translate-y-4');
-                container.classList.add('animate-fade-in-up');
-            }
+            if(container) { container.classList.remove('opacity-0', 'translate-y-4'); container.classList.add('animate-fade-in-up'); }
             document.getElementById('term-input-line').classList.remove('hidden');
         }
 
@@ -469,293 +213,204 @@
             const s = config.settings;
             if(document.getElementById('nav-title')) document.getElementById('nav-title').innerText = s.apiName || 'API';
             if(document.getElementById('stat-visitors')) document.getElementById('stat-visitors').innerText = s.visitors || 'Online';
-            if (s.favicon) {
-                let link = document.querySelector("link[rel~='icon']") || document.createElement('link');
-                link.rel = 'icon'; link.href = s.favicon;
-                document.head.appendChild(link);
-            }
+            if (s.favicon) { let link = document.querySelector("link[rel~='icon']") || document.createElement('link'); link.rel = 'icon'; link.href = s.favicon; document.head.appendChild(link); }
         }
 
         function animateCounter(elementId, start, end, duration) {
-            const element = document.getElementById(elementId);
-            if (!element) return;
+            const element = document.getElementById(elementId); if (!element) return;
             let startTimestamp = null;
             const step = (timestamp) => {
                 if (!startTimestamp) startTimestamp = timestamp;
                 const progress = Math.min((timestamp - startTimestamp) / duration, 1);
                 element.innerText = Math.floor(progress * (end - start) + start);
                 if (progress < 1) window.requestAnimationFrame(step);
-            };
-            window.requestAnimationFrame(step);
+            }; window.requestAnimationFrame(step);
         }
 
         function setSearch() {
-            const input = document.getElementById('search-input');
-            const noResults = document.getElementById('no-results');
-            if(!input) return;
-
+            const input = document.getElementById('search-input'), noResults = document.getElementById('no-results'); if(!input) return;
             input.addEventListener('input', (e) => {
                 const val = e.target.value.toLowerCase();
                 if (val === '') {
-                    document.querySelectorAll('.api-section').forEach(section => {
-                        section.classList.remove('hidden'); 
-                        section.querySelector('.api-section-grid').classList.add('hidden'); 
-                        section.querySelector('.cat-arrow').classList.remove('rotate-180'); 
-                        section.querySelectorAll('.api-card-wrapper').forEach(c => c.classList.remove('hidden')); 
-                    });
-                    if(noResults) noResults.classList.add('hidden');
-                    return;
+                    document.querySelectorAll('.api-section').forEach(section => { section.classList.remove('hidden'); section.querySelector('.api-section-grid').classList.add('hidden'); section.querySelector('.cat-arrow').classList.remove('rotate-180'); section.querySelectorAll('.api-card-wrapper').forEach(c => c.classList.remove('hidden')); });
+                    if(noResults) noResults.classList.add('hidden'); return;
                 }
-
                 let anyVisible = false;
                 document.querySelectorAll('.api-section').forEach(section => {
-                    const grid = section.querySelector('.api-section-grid');
-                    let match = 0;
+                    const grid = section.querySelector('.api-section-grid'); let match = 0;
                     section.querySelectorAll('.api-card-wrapper').forEach(card => {
-                        if (card.getAttribute('data-search').toLowerCase().includes(val)) { 
-                            card.classList.remove('hidden'); match++; 
-                        } else { card.classList.add('hidden'); }
+                        if (card.getAttribute('data-search').toLowerCase().includes(val)) { card.classList.remove('hidden'); match++; } else { card.classList.add('hidden'); }
                     });
-
-                    if (match > 0) {
-                        section.classList.remove('hidden');
-                        grid.classList.remove('hidden'); 
-                        section.querySelector('.cat-arrow').classList.add('rotate-180');
-                        anyVisible = true;
-                    } else {
-                        section.classList.add('hidden');
-                    }
+                    if (match > 0) { section.classList.remove('hidden'); grid.classList.remove('hidden'); section.querySelector('.cat-arrow').classList.add('rotate-180'); anyVisible = true; } else { section.classList.add('hidden'); }
                 });
-                if(noResults) {
-                    noResults.classList.toggle('hidden', anyVisible);
-                    noResults.classList.toggle('flex', !anyVisible);
-                }
+                if(noResults) { noResults.classList.toggle('hidden', anyVisible); noResults.classList.toggle('flex', !anyVisible); }
             });
         }
 
-        // ====================================================
-        // FUNGSI UPLOAD GAMBAR OTOMATIS KE CLOUD (CATBOX.MOE)
-        // ====================================================
-        window.uploadToCloud = async (fileInput, targetInputId, statusId) => {
-            const file = fileInput.files[0];
-            if (!file) return;
-
-            const targetInput = document.getElementById(targetInputId);
-            const statusDiv = document.getElementById(statusId);
-
-            targetInput.disabled = true;
-            statusDiv.classList.remove('hidden');
-
-            const formData = new FormData();
-            formData.append('reqtype', 'fileupload');
-            formData.append('fileToUpload', file);
-
-            try {
-                const res = await fetch('https://catbox.moe/user/api.php', { method: 'POST', body: formData });
-                if (res.ok) {
-                    const url = await res.text();
-                    targetInput.value = url;
-                    messeg("GAMBAR BERHASIL DIUPLOAD!");
-                    targetInput.classList.add('border-green-400', 'bg-green-50');
-                    setTimeout(() => targetInput.classList.remove('border-green-400', 'bg-green-50'), 2000);
-                } else { throw new Error("Upload Failed"); }
-            } catch (err) {
-                alert("Gagal mengunggah gambar. Silakan coba lagi atau masukkan URL gambar secara manual.");
-            } finally {
-                targetInput.disabled = false;
-                statusDiv.classList.add('hidden');
-                fileInput.value = ''; // Reset input agar bisa dipakai lagi
-            }
-        };
-
         function loadEnd(tags) {
-            const container = document.getElementById('api-container');
-            if(!container) return;
-            container.innerHTML = '';
-
+            const container = document.getElementById('api-container'); if(!container) return; container.innerHTML = '';
             for (const [cat, routes] of Object.entries(tags)) {
-                const catId = `cat-${cat.replace(/\s+/g, '-')}`;
-                const section = document.createElement('div');
-                section.className = "api-section w-full animate-fade-in-up";
-                section.style.animationDelay = `${Object.keys(tags).indexOf(cat) * 0.1}s`;
-                
+                const catId = `cat-${cat.replace(/\s+/g, '-')}`, section = document.createElement('div');
+                section.className = "api-section w-full animate-fade-in-up"; section.style.animationDelay = `${Object.keys(tags).indexOf(cat) * 0.1}s`;
                 section.innerHTML = `
                     <button id="btn-${catId}" onclick="toggleCategory('${catId}')" class="category-btn w-full flex items-center justify-between bg-white text-slate-700 p-4 rounded-xl shadow-sm border-2 border-fmn-blue hover:bg-slate-50 transition-all duration-300 group mb-3">
                         <div class="relative z-10 flex items-center gap-4 w-full">
-                            <div class="w-10 h-10 bg-slate-100 text-fmn-blue rounded-lg flex items-center justify-center text-lg group-hover:bg-fmn-blue group-hover:text-white transition-colors border-2 border-fmn-purple">
-                                <i class="fa-solid fa-folder"></i>
-                            </div>
+                            <div class="w-10 h-10 bg-slate-100 text-fmn-blue rounded-lg flex items-center justify-center text-lg group-hover:bg-fmn-blue group-hover:text-white transition-colors border-2 border-fmn-purple"><i class="fa-solid fa-folder"></i></div>
                             <h2 class="text-lg font-bold tracking-wide text-fmn-dark flex-1 text-left">${cat}</h2>
-                            <div class="flex items-center gap-3">
-                                <span class="text-[10px] font-mono bg-fmn-dark text-white px-2 py-1 rounded-md font-bold">${routes.length} EPS</span>
-                                <i id="arrow-${catId}" class="cat-arrow fa-solid fa-chevron-down transition-transform duration-300 text-fmn-blue"></i>
-                            </div>
+                            <div class="flex items-center gap-3"><span class="text-[10px] font-mono bg-fmn-dark text-white px-2 py-1 rounded-md font-bold">${routes.length} EPS</span><i id="arrow-${catId}" class="cat-arrow fa-solid fa-chevron-down transition-transform duration-300 text-fmn-blue"></i></div>
                         </div>
                     </button>
                     <div id="grid-${catId}" class="api-section-grid grid grid-cols-1 gap-1 hidden mb-6 pl-2 w-full"></div>
                 `;
-                
                 const grid = section.querySelector('.api-section-grid');
-                
                 routes.forEach((route, idx) => {
-                    const id = `${cat}-${idx}`.replace(/\s+/g, '-');
-                    const methodColor = route.method === 'GET' ? 'bg-sky-500' : route.method === 'POST' ? 'bg-emerald-500' : 'bg-rose-500';
-                    
-                    let inputs = '';
-                    let copyUrl = route.endpoint;
-                    if (route.method === 'GET' && route.params && route.params.length > 0) {
-                        const paramsList = route.params.map(p => `${p.name}=`).join('&');
-                        copyUrl = `${route.endpoint}?${paramsList}`;
-                    }
+                    const id = `${cat}-${idx}`.replace(/\s+/g, '-'), methodColor = route.method === 'GET' ? 'bg-sky-500' : route.method === 'POST' ? 'bg-emerald-500' : 'bg-rose-500';
+                    let inputs = '', copyUrl = route.endpoint;
+                    if (route.method === 'GET' && route.params && route.params.length > 0) { copyUrl = `${route.endpoint}?${route.params.map(p => `${p.name}=`).join('&')}`; }
 
                     if (route.params?.length) {
                         inputs = `<div class="bg-fmn-bg/50 p-4 border-y border-fmn-blue/20 grid gap-3 w-full animate-fade-in-up">` + 
                         route.params.map(p => {
                             
-                            // 1. LOGIKA KHUSUS UNTUK TOMBOL VIEW (JSON/IMAGE)
-                            if (p.name.toLowerCase() === 'view') {
+                            // LOGIKA SAKELAR GET / POST UNTUK GAMBAR
+                            if (['image', 'avatar', 'background', 'icon', 'ppurl'].some(k => p.name.toLowerCase().includes(k))) {
                                 return `
-                                <div class="min-w-0 transform transition-all duration-300 hover:scale-[1.02]">
-                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">${p.name} ${p.required?'<span class="text-red-400">*</span>':''}</label>
-                                    <input type="hidden" id="input-${id}-${p.name}" value="">
-                                    <div class="flex gap-2">
-                                        <button type="button" onclick="document.getElementById('input-${id}-${p.name}').value=''; this.className='flex-1 py-2 text-xs font-bold rounded-lg border-2 border-fmn-blue bg-fmn-blue text-white shadow-md transition-all duration-300'; this.nextElementSibling.className='flex-1 py-2 text-xs font-bold rounded-lg border-2 border-slate-200 bg-white text-slate-500 hover:border-fmn-blue hover:text-fmn-blue transition-all duration-300';" class="flex-1 py-2 text-xs font-bold rounded-lg border-2 border-fmn-blue bg-fmn-blue text-white shadow-md transition-all duration-300"><i class="fa-solid fa-code"></i> JSON</button>
-                                        <button type="button" onclick="document.getElementById('input-${id}-${p.name}').value='image'; this.className='flex-1 py-2 text-xs font-bold rounded-lg border-2 border-fmn-blue bg-fmn-blue text-white shadow-md transition-all duration-300'; this.previousElementSibling.className='flex-1 py-2 text-xs font-bold rounded-lg border-2 border-slate-200 bg-white text-slate-500 hover:border-fmn-blue hover:text-fmn-blue transition-all duration-300';" class="flex-1 py-2 text-xs font-bold rounded-lg border-2 border-slate-200 bg-white text-slate-500 hover:border-fmn-blue hover:text-fmn-blue transition-all duration-300"><i class="fa-regular fa-image"></i> IMAGE</button>
+                                <div class="min-w-0 transform transition-all duration-300 hover:scale-[1.02] bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                                    <label class="text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-2 block border-b border-slate-100 pb-1">${p.name} ${p.required?'<span class="text-red-500">*</span>':''}</label>
+                                    
+                                    <input type="hidden" id="mode-${id}-${p.name}" value="GET">
+                                    
+                                    <div class="flex gap-2 mb-3">
+                                        <button type="button" onclick="
+                                            document.getElementById('mode-${id}-${p.name}').value='GET';
+                                            this.className='flex-1 py-1.5 text-[10px] font-bold rounded-lg border-2 border-fmn-blue bg-fmn-blue text-white shadow-sm transition-all duration-300';
+                                            this.nextElementSibling.className='flex-1 py-1.5 text-[10px] font-bold rounded-lg border-2 border-slate-200 bg-slate-50 text-slate-500 hover:border-rose-400 hover:text-rose-500 transition-all duration-300';
+                                            document.getElementById('wrap-url-${id}-${p.name}').classList.remove('hidden');
+                                            document.getElementById('wrap-file-${id}-${p.name}').classList.add('hidden');
+                                        " class="flex-1 py-1.5 text-[10px] font-bold rounded-lg border-2 border-fmn-blue bg-fmn-blue text-white shadow-sm transition-all duration-300">GET (URL)</button>
+
+                                        <button type="button" onclick="
+                                            document.getElementById('mode-${id}-${p.name}').value='POST';
+                                            this.className='flex-1 py-1.5 text-[10px] font-bold rounded-lg border-2 border-rose-500 bg-rose-500 text-white shadow-sm transition-all duration-300';
+                                            this.previousElementSibling.className='flex-1 py-1.5 text-[10px] font-bold rounded-lg border-2 border-slate-200 bg-slate-50 text-slate-500 hover:border-fmn-blue hover:text-fmn-blue transition-all duration-300';
+                                            document.getElementById('wrap-url-${id}-${p.name}').classList.add('hidden');
+                                            document.getElementById('wrap-file-${id}-${p.name}').classList.remove('hidden');
+                                        " class="flex-1 py-1.5 text-[10px] font-bold rounded-lg border-2 border-slate-200 bg-slate-50 text-slate-500 hover:border-rose-400 hover:text-rose-500 transition-all duration-300">POST (FILE)</button>
+                                    </div>
+
+                                    <div id="wrap-url-${id}-${p.name}" class="animate-fade-in-up">
+                                        <input type="text" id="input-${id}-${p.name}" placeholder="Masukkan Link / URL Gambar..." class="w-full min-w-0 border border-slate-300 p-2 text-xs rounded-lg focus:border-fmn-blue focus:ring-1 focus:ring-fmn-blue focus:outline-none bg-white shadow-sm transition-all">
+                                    </div>
+
+                                    <div id="wrap-file-${id}-${p.name}" class="hidden animate-fade-in-up">
+                                        <input type="file" id="file-${id}-${p.name}" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-rose-50 file:text-rose-600 hover:file:bg-rose-100 border border-slate-300 rounded-lg bg-white shadow-sm cursor-pointer">
                                     </div>
                                 </div>`;
                             }
 
-                            // 2. LOGIKA KHUSUS UNTUK PARAMETER GAMBAR (TOMBOL UPLOAD CLOUD)
-                            else if (['image', 'avatar', 'background', 'icon', 'ppurl'].some(k => p.name.toLowerCase().includes(k))) {
-                                return `
-                                <div class="min-w-0 transform transition-all duration-300 hover:scale-[1.02]">
-                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">${p.name} ${p.required?'<span class="text-red-400">*</span>':''}</label>
-                                    <div class="flex gap-2 items-center">
-                                        <input type="text" id="input-${id}-${p.name}" placeholder="URL Gambar / Klik ikon awan 👉" class="w-full min-w-0 border border-slate-300 p-2 text-xs rounded-lg focus:border-fmn-blue focus:ring-1 focus:ring-fmn-blue focus:outline-none bg-white shadow-sm max-w-full transition-all hover:shadow-neon">
-                                        <input type="file" id="file-${id}-${p.name}" accept="image/*" class="hidden" onchange="uploadToCloud(this, 'input-${id}-${p.name}', 'status-${id}-${p.name}')">
-                                        <button type="button" onclick="document.getElementById('file-${id}-${p.name}').click()" class="shrink-0 w-10 h-10 bg-slate-700 text-white rounded-lg hover:bg-fmn-blue transition-all shadow-md flex items-center justify-center" title="Upload Gambar dari Galeri">
-                                            <i class="fa-solid fa-cloud-arrow-up"></i>
-                                        </button>
-                                    </div>
-                                    <div id="status-${id}-${p.name}" class="hidden mt-1 text-[10px] font-bold text-fmn-blue animate-pulse">
-                                        <i class="fa-solid fa-circle-notch fa-spin"></i> Sedang mengunggah ke Cloud...
-                                    </div>
-                                </div>`;
-                            }
-
-                            // 3. LOGIKA DEFAULT UNTUK KOTAK TEKS BIASA
+                            // LOGIKA DEFAULT KOTAK TEKS
                             return `
                             <div class="min-w-0 transform transition-all duration-300 hover:scale-[1.02]">
                                 <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">${p.name} ${p.required?'<span class="text-red-400">*</span>':''}</label>
-                                <input type="text" id="input-${id}-${p.name}" 
-                                    placeholder="${p.description ? p.description : 'Value...'}" 
-                                    class="w-full min-w-0 border border-slate-300 p-2 text-xs rounded-lg focus:border-fmn-blue focus:ring-1 focus:ring-fmn-blue focus:outline-none bg-white shadow-sm max-w-full transition-all hover:shadow-neon">
+                                <input type="text" id="input-${id}-${p.name}" placeholder="${p.description ? p.description : 'Value...'}" class="w-full min-w-0 border border-slate-300 p-2 text-xs rounded-lg focus:border-fmn-blue focus:ring-1 focus:ring-fmn-blue focus:outline-none bg-white shadow-sm max-w-full transition-all hover:shadow-neon">
                             </div>`;
                         }).join('') + `</div>`;
                     }
 
-                    const card = document.createElement('div');
-                    card.className = 'api-card-wrapper w-full bg-white border border-slate-300 rounded-lg hover:border-fmn-blue transition-all duration-300 overflow-hidden shadow-sm hover:shadow-md';
-                    card.setAttribute('data-search', `${route.name} ${route.endpoint} ${cat}`);
-                    
+                    const card = document.createElement('div'); card.className = 'api-card-wrapper w-full bg-white border border-slate-300 rounded-lg hover:border-fmn-blue transition-all duration-300 overflow-hidden shadow-sm hover:shadow-md'; card.setAttribute('data-search', `${route.name} ${route.endpoint} ${cat}`);
                     card.innerHTML = `
                         <div class="p-2 cursor-pointer select-none hover:bg-slate-50 transition-colors" onclick="toggle('${id}')">
                             <div class="flex justify-between items-center gap-3">
                                 <div class="flex items-center gap-3 overflow-hidden">
                                     <span class="px-2.5 py-1 text-[10px] font-bold text-white ${methodColor} rounded-md font-mono tracking-wide w-14 text-center shadow-sm border border-black/10 shrink-0">${route.method}</span>
-                                    <div class="flex flex-col min-w-0">
-                                        <code class="font-bold text-xs sm:text-sm truncate font-mono text-slate-700 hover:text-fmn-dark transition-colors">${route.endpoint}</code>
-                                        <span class="text-[10px] text-slate-500 mt-0.5 font-bold truncate">${route.name}</span>
-                                    </div>
-                                </div>
-                                <i id="icon-${id}" class="fa-solid fa-plus text-[10px] text-slate-400 transition-transform duration-300 shrink-0"></i>
+                                    <div class="flex flex-col min-w-0"><code class="font-bold text-xs sm:text-sm truncate font-mono text-slate-700 hover:text-fmn-dark transition-colors">${route.endpoint}</code><span class="text-[10px] text-slate-500 mt-0.5 font-bold truncate">${route.name}</span></div>
+                                </div><i id="icon-${id}" class="fa-solid fa-plus text-[10px] text-slate-400 transition-transform duration-300 shrink-0"></i>
                             </div>
                         </div>
-                        
                         <div id="body-${id}" class="hidden animate-slide-down w-full">
                             ${inputs}
                             <div class="p-4 flex gap-3 bg-white w-full items-center">
-                                
-                                <button id="btn-exec-${id}" onclick="testReq(this, '${route.endpoint}', '${route.method}', '${id}')" class="soft-btn variant-lavender flex-1 h-10 w-full">
-                                    <span class="soft-btn__wrapper">
-                                        <span class="soft-btn__content">
-                                            <span class="soft-btn__inner text-xs font-bold tracking-widest">
-                                                <i class="fa-solid fa-bolt"></i> EXECUTE
-                                            </span>
-                                        </span>
-                                    </span>
-                                </button>
-
+                                <button id="btn-exec-${id}" onclick="testReq(this, '${route.endpoint}', '${route.method}', '${id}')" class="soft-btn variant-lavender flex-1 h-10 w-full"><span class="soft-btn__wrapper"><span class="soft-btn__content"><span class="soft-btn__inner text-xs font-bold tracking-widest"><i class="fa-solid fa-bolt"></i> EXECUTE</span></span></span></button>
                                 <button onclick="copy('${copyUrl}')" class="px-4 h-10 border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 rounded-lg transition-all shadow-sm hover:shadow-neon transform hover:scale-110" title="Copy Full URL"><i class="fa-regular fa-copy"></i></button>
                             </div>
-
                             <div id="res-area-${id}" class="response-area hidden mx-4 mb-4 rounded-lg overflow-hidden bg-[#1e1e1e] border border-slate-600 shadow-inner relative max-w-[calc(100%-2rem)]">
                                 <div class="bg-[#2d2d2d] px-3 py-2 flex items-center justify-between border-b border-gray-700">
-                                    <div class="flex gap-1.5">
-                                        <div class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
-                                        <div class="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
-                                        <div class="w-2.5 h-2.5 rounded-full bg-green-500"></div>
-                                    </div>
-                                    <div class="flex items-center gap-3">
-                                        <div id="status-indicator-${id}" class="status-indicator status-waiting"></div>
-                                        <span id="status-${id}" class="text-[10px] font-mono font-bold text-slate-500">IDLE</span>
-                                        <span id="time-${id}" class="text-[10px] font-mono text-slate-500">0ms</span>
-                                    </div>
+                                    <div class="flex gap-1.5"><div class="w-2.5 h-2.5 rounded-full bg-red-500"></div><div class="w-2.5 h-2.5 rounded-full bg-yellow-500"></div><div class="w-2.5 h-2.5 rounded-full bg-green-500"></div></div>
+                                    <div class="flex items-center gap-3"><div id="status-indicator-${id}" class="status-indicator status-waiting"></div><span id="status-${id}" class="text-[10px] font-mono font-bold text-slate-500">IDLE</span><span id="time-${id}" class="text-[10px] font-mono text-slate-500">0ms</span></div>
                                     <div class="flex gap-2">
                                          <a id="dl-btn-${id}" class="hidden text-slate-500 hover:text-white cursor-pointer transform hover:scale-125 transition-transform"><i class="fa-solid fa-download text-[10px]"></i></a>
                                          <button onclick="copyRes('${id}')" class="text-slate-500 hover:text-white transform hover:scale-125 transition-transform"><i class="fa-regular fa-clone text-[10px]"></i></button>
                                          <button onclick="reset('${id}')" class="text-slate-500 hover:text-red-400 transform hover:scale-125 transition-transform"><i class="fa-solid fa-xmark text-[10px]"></i></button>
                                     </div>
                                 </div>
-                                <div class="p-3 font-mono text-[11px] min-h-[100px] max-h-[400px] overflow-y-auto custom-scrollbar bg-[#1e1e1e] break-all whitespace-pre-wrap">
-                                    <div class="flex items-center gap-2 mb-2 text-slate-500 select-none border-b border-gray-800 pb-2 flex-wrap animate-slide-in-right">
-                                        <span class="text-green-500 font-bold">➜</span>
-                                        <span class="text-blue-400">~</span>
-                                        <span class="text-gray-400 break-all">curl -X ${route.method} ${route.endpoint}</span>
-                                    </div>
-                                    <div id="output-${id}" class="text-gray-300 break-all whitespace-pre-wrap leading-relaxed"></div>
-                                </div>
+                                <div class="p-3 font-mono text-[11px] min-h-[100px] max-h-[400px] overflow-y-auto custom-scrollbar bg-[#1e1e1e] break-all whitespace-pre-wrap"><div class="flex items-center gap-2 mb-2 text-slate-500 select-none border-b border-gray-800 pb-2 flex-wrap animate-slide-in-right"><span class="text-green-500 font-bold">➜</span><span class="text-blue-400">~</span><span class="text-gray-400 break-all">curl -X ${route.method} ${route.endpoint}</span></div><div id="output-${id}" class="text-gray-300 break-all whitespace-pre-wrap leading-relaxed"></div></div>
                             </div>
                         </div>`;
                     grid.appendChild(card);
                 });
                 container.appendChild(section);
-            }
-            initSoftButtons();
+            } initSoftButtons();
         }
 
-        window.toggleCategory = (catId) => {
-            const grid = document.getElementById(`grid-${catId}`);
-            const arrow = document.getElementById(`arrow-${catId}`);
-            if(grid.classList.contains('hidden')) { 
-                grid.classList.remove('hidden'); grid.classList.add('animate-fade-in-up'); arrow.classList.add('rotate-180');
-            } else { grid.classList.add('hidden'); arrow.classList.remove('rotate-180'); }
-        };
-        
-        window.toggle = (id) => {
-            const b = document.getElementById(`body-${id}`), i = document.getElementById(`icon-${id}`);
-            if (b.classList.contains('hidden')) { b.classList.remove('hidden'); b.classList.add('animate-slide-down'); i.classList.remove('fa-plus'); i.classList.add('fa-minus', 'text-fmn-blue', 'rotate-180');
-            } else { b.classList.add('hidden'); i.classList.remove('fa-minus', 'text-fmn-blue', 'rotate-180'); i.classList.add('fa-plus'); }
-        };
-        
+        window.toggleCategory = (catId) => { const grid = document.getElementById(`grid-${catId}`), arrow = document.getElementById(`arrow-${catId}`); if(grid.classList.contains('hidden')) { grid.classList.remove('hidden'); grid.classList.add('animate-fade-in-up'); arrow.classList.add('rotate-180'); } else { grid.classList.add('hidden'); arrow.classList.remove('rotate-180'); } };
+        window.toggle = (id) => { const b = document.getElementById(`body-${id}`), i = document.getElementById(`icon-${id}`); if (b.classList.contains('hidden')) { b.classList.remove('hidden'); b.classList.add('animate-slide-down'); i.classList.remove('fa-plus'); i.classList.add('fa-minus', 'text-fmn-blue', 'rotate-180'); } else { b.classList.add('hidden'); i.classList.remove('fa-minus', 'text-fmn-blue', 'rotate-180'); i.classList.add('fa-plus'); } };
         window.copy = (txt) => { navigator.clipboard.writeText(window.location.origin + txt); messeg("URL COPIED"); };
         window.copyRes = (id) => { const out = document.getElementById(`output-${id}`); if (out.innerText) { navigator.clipboard.writeText(out.innerText); messeg("RESPONSE COPIED"); } };
         window.reset = (id) => { document.getElementById(`res-area-${id}`).className = 'response-area hidden mx-4 mb-4 rounded-lg overflow-hidden bg-[#1e1e1e] border border-slate-600 shadow-inner relative max-w-[calc(100%-2rem)]'; document.getElementById(`output-${id}`).innerHTML = ''; document.getElementById(`status-indicator-${id}`).className = 'status-indicator status-waiting'; };
 
-        window.testReq = async (btn, url, method, id) => {
+        // Helper untuk mengubah File menjadi Base64
+        window.toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+
+        window.testReq = async (btn, url, originalMethod, id) => {
             if (btn.disabled) return;
             const out = document.getElementById(`output-${id}`), status = document.getElementById(`status-${id}`), time = document.getElementById(`time-${id}`), dlBtn = document.getElementById(`dl-btn-${id}`), resArea = document.getElementById(`res-area-${id}`), statusIndicator = document.getElementById(`status-indicator-${id}`);
-            const btnInner = btn.querySelector('.soft-btn__inner');
-            const originalBtnText = btnInner.innerHTML;
+            const btnInner = btn.querySelector('.soft-btn__inner'); const originalBtnText = btnInner.innerHTML;
             btn.disabled = true; btnInner.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> PROCESSING';
             resArea.className = 'response-area show showing success mx-4 mb-4 rounded-lg overflow-hidden bg-[#1e1e1e] border border-slate-600 shadow-inner relative max-w-[calc(100%-2rem)]';
             statusIndicator.className = 'status-indicator status-waiting'; status.innerText = 'RUNNING...'; status.className = 'text-[10px] font-mono font-bold text-yellow-500'; out.innerHTML = '<span class="text-slate-500 italic">Establishing connection...</span>';
             
-            const params = {};
-            document.querySelectorAll(`[id^="input-${id}-"]`).forEach(i => { if(i.value && i.type !== 'file') params[i.id.split(`input-${id}-`)[1]] = i.value; });
+            let queryParams = {};
+            let bodyParams = {};
+            let forcePost = false;
+
+            const inputs = document.querySelectorAll(`[id^="input-${id}-"]`);
+            for (let i of inputs) {
+                const paramName = i.id.split(`input-${id}-`)[1];
+                const modeInput = document.getElementById(`mode-${id}-${paramName}`);
+                
+                if (modeInput) {
+                    if (modeInput.value === 'POST') {
+                        const fileInput = document.getElementById(`file-${id}-${paramName}`);
+                        if (fileInput && fileInput.files.length > 0) {
+                            const b64 = await toBase64(fileInput.files[0]);
+                            bodyParams[paramName] = b64;
+                            forcePost = true; // Wajib diubah jadi POST karena bawa gambar
+                        }
+                    } else {
+                        if (i.value) queryParams[paramName] = i.value;
+                    }
+                } else {
+                    if (i.value) queryParams[paramName] = i.value;
+                }
+            }
             
-            let fetchUrl = url + (method === 'GET' && Object.keys(params).length ? '?' + new URLSearchParams(params) : '');
-            let opts = { method, ...(method !== 'GET' ? { headers: {'Content-Type': 'application/json'}, body: JSON.stringify(params) } : {}) };
+            let method = forcePost ? 'POST' : originalMethod;
+            let fetchUrl = url + (Object.keys(queryParams).length ? '?' + new URLSearchParams(queryParams) : '');
+            let opts = { method: method };
+
+            // Jika dipaksa POST (ada file) atau aslinya memang POST
+            if (method !== 'GET') {
+                opts.headers = { 'Content-Type': 'application/json' };
+                // Gabungkan query ke dalam body jika ini adalah pure POST bawaan config
+                opts.body = JSON.stringify(forcePost ? bodyParams : queryParams); 
+            }
+            
+            terminalLog(`REQ: ${method} ${fetchUrl} ${forcePost ? '(With Base64 File)' : ''}`, 'warn');
             let startTime = Date.now();
             try {
                 const req = await fetch(fetchUrl, opts);
@@ -775,17 +430,8 @@
             } finally { btn.disabled = false; btnInner.innerHTML = originalBtnText; }
         };
 
-        function typewriterEffect(elId, txt, spd=20) {
-            const el = document.getElementById(elId); el.innerHTML = ''; let i = 0;
-            function type() { if (i < txt.length) { el.innerHTML += txt.charAt(i); i++; setTimeout(type, spd); } } type();
-        }
-
-        function syntaxHighlight(json) {
-            if (typeof json != 'string') json = JSON.stringify(json, undefined, 2);
-            return json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-                let cls = 'json-number'; if (/^"/.test(match)) { if (/:$/.test(match)) cls = 'json-key'; else cls = 'json-string'; } else if (/true|false/.test(match)) cls = 'json-boolean'; else if (/null/.test(match)) cls = 'json-null'; return `<span class="${cls}">${match}</span>`;
-            });
-        }
+        function typewriterEffect(elId, txt, spd=20) { const el = document.getElementById(elId); el.innerHTML = ''; let i = 0; function type() { if (i < txt.length) { el.innerHTML += txt.charAt(i); i++; setTimeout(type, spd); } } type(); }
+        function syntaxHighlight(json) { if (typeof json != 'string') json = JSON.stringify(json, undefined, 2); return json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) { let cls = 'json-number'; if (/^"/.test(match)) { if (/:$/.test(match)) cls = 'json-key'; else cls = 'json-string'; } else if (/true|false/.test(match)) cls = 'json-boolean'; else if (/null/.test(match)) cls = 'json-null'; return `<span class="${cls}">${match}</span>`; }); }
     </script>
 </body>
 </html>
