@@ -163,20 +163,16 @@
             transform-style: preserve-3d;
         }
 
-        /* Side wall */
         .soft-btn__wrapper::before {
             content: '';
             position: absolute;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            left: 0; right: 0; bottom: 0;
             height: calc(100% - var(--button-raise-level));
             background: var(--side-color);
             border-radius: var(--radius);
             z-index: 1;
         }
 
-        /* Face */
         .soft-btn__content {
             position: relative;
             width: 100%;
@@ -184,9 +180,7 @@
             background: var(--surface-color);
             color: var(--text-color);
             border-radius: var(--radius);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             transform: translateY(0);
             transition: transform var(--transform-speed) ease-out;
             will-change: transform;
@@ -198,36 +192,17 @@
         }
 
         .soft-btn__inner {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            z-index: 4;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 8px; z-index: 4; width: 100%; height: 100%; pointer-events: none;
         }
 
-        /* Hover deformation */
         .soft-btn--middle .soft-btn__content { transform: translateY(calc(1px * var(--button-hover-pressure))); }
         .soft-btn--left .soft-btn__content { transform: skewY(calc(-1deg * var(--button-hover-pressure))); }
         .soft-btn--right .soft-btn__content { transform: skewY(calc(1deg * var(--button-hover-pressure))); }
+        .soft-btn--active .soft-btn__content { transform: translateY(var(--press-inset)); transition: transform calc(var(--transform-speed) * 0.8) ease-out; }
+        .soft-btn--active.soft-btn--left .soft-btn__content { transform: skewY(calc(-1deg * var(--button-hover-pressure))) translateY(var(--press-inset)); }
+        .soft-btn--active.soft-btn--right .soft-btn__content { transform: skewY(calc(1deg * var(--button-hover-pressure))) translateY(var(--press-inset)); }
 
-        /* Pressed */
-        .soft-btn--active .soft-btn__content {
-            transform: translateY(var(--press-inset));
-            transition: transform calc(var(--transform-speed) * 0.8) ease-out;
-        }
-        
-        .soft-btn--active.soft-btn--left .soft-btn__content {
-            transform: skewY(calc(-1deg * var(--button-hover-pressure))) translateY(var(--press-inset));
-        }
-        
-        .soft-btn--active.soft-btn--right .soft-btn__content {
-            transform: skewY(calc(1deg * var(--button-hover-pressure))) translateY(var(--press-inset));
-        }
-
-        /* LAVENDER VARIANT */
         .variant-lavender {
             --surface-color: #cec3fd;
             --side-color: #b489ff;
@@ -235,28 +210,21 @@
             --border-color: #a36eff;
             --border-width: 2px;
         }
-        /* --- SOFT BUTTON CSS END --- */
 
-        /* --- LOGIKA OUTLINE BERPUTAR --- */
         @keyframes outlineSpin {
             100% { transform: rotate(360deg); }
         }
 
         .category-btn {
-            position: relative;
-            z-index: 1;
-            overflow: hidden;
-            transition: background-color 0.3s;
+            position: relative; z-index: 1; overflow: hidden; transition: background-color 0.3s;
         }
 
         .category-btn.animating { border-color: transparent !important; }
-
         .category-btn.animating::before {
             content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
             background: conic-gradient(transparent 0%, #89CFF0 25%, transparent 50%, #B39DDB 75%, transparent 100%);
             z-index: -2; animation: outlineSpin 0.5s linear infinite;
         }
-
         .category-btn.animating::after {
             content: ''; position: absolute; inset: 3px; background: white; border-radius: 0.6rem; z-index: -1;
         }
@@ -377,10 +345,8 @@
             }
         }
 
-        // --- BUTTON PHYSICS LOGIC START ---
         function initSoftButtons() {
             const buttons = document.querySelectorAll('.soft-btn');
-
             buttons.forEach(btn => {
                 const handlePointer = (e) => {
                     if (e.type === 'pointerleave' || e.type === 'pointercancel' || e.type === 'pointerup') {
@@ -388,34 +354,25 @@
                         try { btn.releasePointerCapture(e.pointerId); } catch(err){}
                         return;
                     }
-
                     const rect = btn.getBoundingClientRect();
                     const x = e.clientX - rect.left;
                     const w = rect.width;
-
-                    // Set capture on down
                     if(e.type === 'pointerdown') {
                         btn.classList.add('soft-btn--active');
                         try { btn.setPointerCapture(e.pointerId); } catch(err){}
                     }
-
-                    // Calculate direction
                     btn.classList.remove('soft-btn--left', 'soft-btn--right', 'soft-btn--middle');
                     if (x < w * 0.33) btn.classList.add('soft-btn--left');
                     else if (x > w * 0.66) btn.classList.add('soft-btn--right');
                     else btn.classList.add('soft-btn--middle');
                 };
-
                 btn.addEventListener('pointerdown', handlePointer);
-                btn.addEventListener('pointermove', (e) => {
-                    if(btn.classList.contains('soft-btn--active')) handlePointer(e);
-                });
+                btn.addEventListener('pointermove', (e) => { if(btn.classList.contains('soft-btn--active')) handlePointer(e); });
                 btn.addEventListener('pointerup', handlePointer);
                 btn.addEventListener('pointerleave', handlePointer);
                 btn.addEventListener('pointercancel', handlePointer);
             });
         }
-        // --- BUTTON PHYSICS LOGIC END ---
 
         function messeg(msg) {
             const toast = document.getElementById('custom-toast');
@@ -438,21 +395,17 @@
             updateTime(); setInterval(updateTime, 1000);
             function updateTime() {
                 const now = new Date();
-                if(timeEl) {
-                    timeEl.innerText = now.toLocaleTimeString('id-ID', {timeZone: 'Asia/Jakarta', hour12: false});
-                }
+                if(timeEl) timeEl.innerText = now.toLocaleTimeString('id-ID', {timeZone: 'Asia/Jakarta', hour12: false});
                 if(dateEl) dateEl.innerText = now.toLocaleDateString('id-ID', {timeZone: 'Asia/Jakarta', day: 'numeric', month: 'long', year: 'numeric'});
             }
         }
 
         async function loadReminder() {
             try {
-                // Diperbarui ke path root untuk v2
                 const req = await fetch('/api/reminder');
                 const data = await req.json();
                 if(data?.message) {
-                    const runningText = document.getElementById('running-text');
-                    runningText.innerText = data.message.toUpperCase();
+                    document.getElementById('running-text').innerText = data.message.toUpperCase();
                 }
             } catch (e) {}
         }
@@ -461,14 +414,7 @@
             const logs = document.getElementById('term-logs');
             if(!logs) return;
             const line = document.createElement('div');
-            
-            let color = "text-gray-300";
-            if(type === 'error') color = "text-red-400";
-            else if(type === 'success') color = "text-green-400";
-            else if(type === 'warn') color = "text-yellow-400";
-            else if(type === 'cmd') color = "text-white font-bold";
-            else if(type === 'system') color = "text-gray-500";
-            
+            let color = type === 'error' ? "text-red-400" : type === 'success' ? "text-green-400" : type === 'warn' ? "text-yellow-400" : type === 'system' ? "text-gray-500" : "text-gray-300";
             line.className = `${color} break-all`;
             line.innerHTML = message;
             logs.appendChild(line);
@@ -479,11 +425,9 @@
             const logs = document.getElementById('term-logs');
             if(!logs) return;
             
-            // --- TYPING ANIMATION FOR CMD ---
             const cmdLine = document.createElement('div');
             cmdLine.className = 'text-gray-300 break-all';
             cmdLine.innerHTML = '<span class="text-green-500">root@inuu:~/api$</span> ';
-            
             const typeSpan = document.createElement('span');
             typeSpan.className = 'text-white font-bold';
             cmdLine.appendChild(typeSpan);
@@ -492,28 +436,16 @@
             const commandText = "vercel deploy";
             for(let i=0; i < commandText.length; i++) {
                 typeSpan.textContent += commandText.charAt(i);
-                await new Promise(r => setTimeout(r, 80)); // Typing delay
+                await new Promise(r => setTimeout(r, 80));
             }
-            // ---------------------------------
 
             await new Promise(r => setTimeout(r, 600));
-
-            const ver = config.settings.apiVersion || '2.0.0';
-            terminalLog(`> inuu-api-v2@${ver} serverless`, 'system');
+            terminalLog(`> inuu-api-v2@${config.settings.apiVersion || '2.0.0'} serverless`, 'system');
             terminalLog(`> Initializing Vercel Edge Network...`, 'system');
             await new Promise(r => setTimeout(r, 800));
-            terminalLog(``, 'system'); 
-
-            terminalLog(`[INFO] Starting Serverless Instance...`, 'info');
-            await new Promise(r => setTimeout(r, 400));
-            terminalLog(`[INFO] Environment: Production`, 'info');
-            terminalLog(`[API] Routes automatically mapped`, 'success');
-            await new Promise(r => setTimeout(r, 400));
-
+            
             const allRoutes = [];
-            for (const cat in config.tags) {
-                config.tags[cat].forEach(r => allRoutes.push({cat, ...r}));
-            }
+            for (const cat in config.tags) { config.tags[cat].forEach(r => allRoutes.push({cat, ...r})); }
 
             for(const route of allRoutes) {
                 const methodColor = route.method === 'GET' ? 'text-blue-400' : route.method === 'POST' ? 'text-green-400' : 'text-yellow-400';
@@ -522,7 +454,6 @@
             }
             
             await new Promise(r => setTimeout(r, 500));
-            terminalLog(``, 'system');
             terminalLog(`[✓] Server running on Vercel Native`, 'success');
             terminalLog(`[WATCH] Online and Ready...`, 'warn');
             
@@ -536,13 +467,8 @@
 
         function setUi(config) {
             const s = config.settings;
-            if(document.getElementById('nav-title')) {
-                document.getElementById('nav-title').innerText = s.apiName || 'API';
-            }
-            if(document.getElementById('stat-visitors')) {
-                // Tampilan dummy untuk Vercel Native jika tidak ada database pengunjung
-                document.getElementById('stat-visitors').innerText = s.visitors || 'Online';
-            }
+            if(document.getElementById('nav-title')) document.getElementById('nav-title').innerText = s.apiName || 'API';
+            if(document.getElementById('stat-visitors')) document.getElementById('stat-visitors').innerText = s.visitors || 'Online';
             if (s.favicon) {
                 let link = document.querySelector("link[rel~='icon']") || document.createElement('link');
                 link.rel = 'icon'; link.href = s.favicon;
@@ -553,17 +479,12 @@
         function animateCounter(elementId, start, end, duration) {
             const element = document.getElementById(elementId);
             if (!element) return;
-            
             let startTimestamp = null;
             const step = (timestamp) => {
                 if (!startTimestamp) startTimestamp = timestamp;
                 const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                const value = Math.floor(progress * (end - start) + start);
-                element.innerText = value;
-                
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                }
+                element.innerText = Math.floor(progress * (end - start) + start);
+                if (progress < 1) window.requestAnimationFrame(step);
             };
             window.requestAnimationFrame(step);
         }
@@ -575,7 +496,6 @@
 
             input.addEventListener('input', (e) => {
                 const val = e.target.value.toLowerCase();
-                
                 if (val === '') {
                     document.querySelectorAll('.api-section').forEach(section => {
                         section.classList.remove('hidden'); 
@@ -590,41 +510,63 @@
                 let anyVisible = false;
                 document.querySelectorAll('.api-section').forEach(section => {
                     const grid = section.querySelector('.api-section-grid');
-                    const arrow = section.querySelector('.cat-arrow');
-                    
                     let match = 0;
                     section.querySelectorAll('.api-card-wrapper').forEach(card => {
-                        const txt = card.getAttribute('data-search').toLowerCase();
-                        if (txt.includes(val)) { 
-                            card.classList.remove('hidden');
-                            card.classList.add('animate-slide-in-right');
-                            setTimeout(() => card.classList.remove('animate-slide-in-right'), 500);
-                            match++; 
-                        } else { 
-                            card.classList.add('hidden'); 
-                        }
+                        if (card.getAttribute('data-search').toLowerCase().includes(val)) { 
+                            card.classList.remove('hidden'); match++; 
+                        } else { card.classList.add('hidden'); }
                     });
 
                     if (match > 0) {
                         section.classList.remove('hidden');
                         grid.classList.remove('hidden'); 
-                        grid.classList.add('animate-fade-in-up');
-                        arrow.classList.add('rotate-180');
+                        section.querySelector('.cat-arrow').classList.add('rotate-180');
                         anyVisible = true;
                     } else {
                         section.classList.add('hidden');
                     }
                 });
-
                 if(noResults) {
                     noResults.classList.toggle('hidden', anyVisible);
                     noResults.classList.toggle('flex', !anyVisible);
-                    if(!anyVisible) {
-                        noResults.classList.add('animate-fade-in-up');
-                    }
                 }
             });
         }
+
+        // ====================================================
+        // FUNGSI UPLOAD GAMBAR OTOMATIS KE CLOUD (CATBOX.MOE)
+        // ====================================================
+        window.uploadToCloud = async (fileInput, targetInputId, statusId) => {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const targetInput = document.getElementById(targetInputId);
+            const statusDiv = document.getElementById(statusId);
+
+            targetInput.disabled = true;
+            statusDiv.classList.remove('hidden');
+
+            const formData = new FormData();
+            formData.append('reqtype', 'fileupload');
+            formData.append('fileToUpload', file);
+
+            try {
+                const res = await fetch('https://catbox.moe/user/api.php', { method: 'POST', body: formData });
+                if (res.ok) {
+                    const url = await res.text();
+                    targetInput.value = url;
+                    messeg("GAMBAR BERHASIL DIUPLOAD!");
+                    targetInput.classList.add('border-green-400', 'bg-green-50');
+                    setTimeout(() => targetInput.classList.remove('border-green-400', 'bg-green-50'), 2000);
+                } else { throw new Error("Upload Failed"); }
+            } catch (err) {
+                alert("Gagal mengunggah gambar. Silakan coba lagi atau masukkan URL gambar secara manual.");
+            } finally {
+                targetInput.disabled = false;
+                statusDiv.classList.add('hidden');
+                fileInput.value = ''; // Reset input agar bisa dipakai lagi
+            }
+        };
 
         function loadEnd(tags) {
             const container = document.getElementById('api-container');
@@ -644,7 +586,6 @@
                                 <i class="fa-solid fa-folder"></i>
                             </div>
                             <h2 class="text-lg font-bold tracking-wide text-fmn-dark flex-1 text-left">${cat}</h2>
-                            
                             <div class="flex items-center gap-3">
                                 <span class="text-[10px] font-mono bg-fmn-dark text-white px-2 py-1 rounded-md font-bold">${routes.length} EPS</span>
                                 <i id="arrow-${catId}" class="cat-arrow fa-solid fa-chevron-down transition-transform duration-300 text-fmn-blue"></i>
@@ -667,38 +608,42 @@
                         copyUrl = `${route.endpoint}?${paramsList}`;
                     }
 
-                                        if (route.params?.length) {
+                    if (route.params?.length) {
                         inputs = `<div class="bg-fmn-bg/50 p-4 border-y border-fmn-blue/20 grid gap-3 w-full animate-fade-in-up">` + 
                         route.params.map(p => {
                             
-                            // --- LOGIKA KHUSUS UNTUK PARAMETER 'view' ---
+                            // 1. LOGIKA KHUSUS UNTUK TOMBOL VIEW (JSON/IMAGE)
                             if (p.name.toLowerCase() === 'view') {
                                 return `
                                 <div class="min-w-0 transform transition-all duration-300 hover:scale-[1.02]">
                                     <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">${p.name} ${p.required?'<span class="text-red-400">*</span>':''}</label>
-                                    
                                     <input type="hidden" id="input-${id}-${p.name}" value="">
-                                    
                                     <div class="flex gap-2">
-                                        <button type="button" onclick="
-                                            document.getElementById('input-${id}-${p.name}').value=''; 
-                                            this.className='flex-1 py-2 text-xs font-bold rounded-lg border-2 border-fmn-blue bg-fmn-blue text-white shadow-md transition-all duration-300'; 
-                                            this.nextElementSibling.className='flex-1 py-2 text-xs font-bold rounded-lg border-2 border-slate-200 bg-white text-slate-500 hover:border-fmn-blue hover:text-fmn-blue transition-all duration-300';
-                                        " class="flex-1 py-2 text-xs font-bold rounded-lg border-2 border-fmn-blue bg-fmn-blue text-white shadow-md transition-all duration-300">
-                                            <i class="fa-solid fa-code"></i> JSON
-                                        </button>
-                                        <button type="button" onclick="
-                                            document.getElementById('input-${id}-${p.name}').value='image'; 
-                                            this.className='flex-1 py-2 text-xs font-bold rounded-lg border-2 border-fmn-blue bg-fmn-blue text-white shadow-md transition-all duration-300'; 
-                                            this.previousElementSibling.className='flex-1 py-2 text-xs font-bold rounded-lg border-2 border-slate-200 bg-white text-slate-500 hover:border-fmn-blue hover:text-fmn-blue transition-all duration-300';
-                                        " class="flex-1 py-2 text-xs font-bold rounded-lg border-2 border-slate-200 bg-white text-slate-500 hover:border-fmn-blue hover:text-fmn-blue transition-all duration-300">
-                                            <i class="fa-regular fa-image"></i> IMAGE
-                                        </button>
+                                        <button type="button" onclick="document.getElementById('input-${id}-${p.name}').value=''; this.className='flex-1 py-2 text-xs font-bold rounded-lg border-2 border-fmn-blue bg-fmn-blue text-white shadow-md transition-all duration-300'; this.nextElementSibling.className='flex-1 py-2 text-xs font-bold rounded-lg border-2 border-slate-200 bg-white text-slate-500 hover:border-fmn-blue hover:text-fmn-blue transition-all duration-300';" class="flex-1 py-2 text-xs font-bold rounded-lg border-2 border-fmn-blue bg-fmn-blue text-white shadow-md transition-all duration-300"><i class="fa-solid fa-code"></i> JSON</button>
+                                        <button type="button" onclick="document.getElementById('input-${id}-${p.name}').value='image'; this.className='flex-1 py-2 text-xs font-bold rounded-lg border-2 border-fmn-blue bg-fmn-blue text-white shadow-md transition-all duration-300'; this.previousElementSibling.className='flex-1 py-2 text-xs font-bold rounded-lg border-2 border-slate-200 bg-white text-slate-500 hover:border-fmn-blue hover:text-fmn-blue transition-all duration-300';" class="flex-1 py-2 text-xs font-bold rounded-lg border-2 border-slate-200 bg-white text-slate-500 hover:border-fmn-blue hover:text-fmn-blue transition-all duration-300"><i class="fa-regular fa-image"></i> IMAGE</button>
                                     </div>
                                 </div>`;
                             }
 
-                            // --- LOGIKA DEFAULT UNTUK KOTAK TEKS BIASA ---
+                            // 2. LOGIKA KHUSUS UNTUK PARAMETER GAMBAR (TOMBOL UPLOAD CLOUD)
+                            else if (['image', 'avatar', 'background', 'icon', 'ppurl'].some(k => p.name.toLowerCase().includes(k))) {
+                                return `
+                                <div class="min-w-0 transform transition-all duration-300 hover:scale-[1.02]">
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">${p.name} ${p.required?'<span class="text-red-400">*</span>':''}</label>
+                                    <div class="flex gap-2 items-center">
+                                        <input type="text" id="input-${id}-${p.name}" placeholder="URL Gambar / Klik ikon awan 👉" class="w-full min-w-0 border border-slate-300 p-2 text-xs rounded-lg focus:border-fmn-blue focus:ring-1 focus:ring-fmn-blue focus:outline-none bg-white shadow-sm max-w-full transition-all hover:shadow-neon">
+                                        <input type="file" id="file-${id}-${p.name}" accept="image/*" class="hidden" onchange="uploadToCloud(this, 'input-${id}-${p.name}', 'status-${id}-${p.name}')">
+                                        <button type="button" onclick="document.getElementById('file-${id}-${p.name}').click()" class="shrink-0 w-10 h-10 bg-slate-700 text-white rounded-lg hover:bg-fmn-blue transition-all shadow-md flex items-center justify-center" title="Upload Gambar dari Galeri">
+                                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                                        </button>
+                                    </div>
+                                    <div id="status-${id}-${p.name}" class="hidden mt-1 text-[10px] font-bold text-fmn-blue animate-pulse">
+                                        <i class="fa-solid fa-circle-notch fa-spin"></i> Sedang mengunggah ke Cloud...
+                                    </div>
+                                </div>`;
+                            }
+
+                            // 3. LOGIKA DEFAULT UNTUK KOTAK TEKS BIASA
                             return `
                             <div class="min-w-0 transform transition-all duration-300 hover:scale-[1.02]">
                                 <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">${p.name} ${p.required?'<span class="text-red-400">*</span>':''}</label>
@@ -708,7 +653,6 @@
                             </div>`;
                         }).join('') + `</div>`;
                     }
-
 
                     const card = document.createElement('div');
                     card.className = 'api-card-wrapper w-full bg-white border border-slate-300 rounded-lg hover:border-fmn-blue transition-all duration-300 overflow-hidden shadow-sm hover:shadow-md';
@@ -777,194 +721,69 @@
                 });
                 container.appendChild(section);
             }
-            
             initSoftButtons();
         }
 
         window.toggleCategory = (catId) => {
             const grid = document.getElementById(`grid-${catId}`);
             const arrow = document.getElementById(`arrow-${catId}`);
-            const btn = document.getElementById(`btn-${catId}`);
-            
-            if(btn) {
-                btn.classList.add('animating');
-                setTimeout(() => { btn.classList.remove('animating'); }, 500);
-            }
-
             if(grid.classList.contains('hidden')) { 
-                grid.classList.remove('hidden'); 
-                grid.classList.add('animate-fade-in-up');
-                arrow.classList.add('rotate-180');
-            } else { 
-                grid.classList.add('hidden'); 
-                arrow.classList.remove('rotate-180');
-            }
+                grid.classList.remove('hidden'); grid.classList.add('animate-fade-in-up'); arrow.classList.add('rotate-180');
+            } else { grid.classList.add('hidden'); arrow.classList.remove('rotate-180'); }
         };
         
         window.toggle = (id) => {
-            const b = document.getElementById(`body-${id}`);
-            const i = document.getElementById(`icon-${id}`);
-            if (b.classList.contains('hidden')) { 
-                b.classList.remove('hidden'); 
-                b.classList.add('animate-slide-down');
-                i.classList.remove('fa-plus');
-                i.classList.add('fa-minus', 'text-fmn-blue');
-                i.classList.add('rotate-180');
-            } else { 
-                b.classList.add('hidden'); 
-                i.classList.remove('fa-minus', 'text-fmn-blue', 'rotate-180');
-                i.classList.add('fa-plus');
-            }
+            const b = document.getElementById(`body-${id}`), i = document.getElementById(`icon-${id}`);
+            if (b.classList.contains('hidden')) { b.classList.remove('hidden'); b.classList.add('animate-slide-down'); i.classList.remove('fa-plus'); i.classList.add('fa-minus', 'text-fmn-blue', 'rotate-180');
+            } else { b.classList.add('hidden'); i.classList.remove('fa-minus', 'text-fmn-blue', 'rotate-180'); i.classList.add('fa-plus'); }
         };
         
-        window.copy = (txt) => { 
-            navigator.clipboard.writeText(window.location.origin + txt); 
-            messeg("URL COPIED"); 
-        };
-        
-        window.copyRes = (id) => { 
-            const out = document.getElementById(`output-${id}`); 
-            if (out.innerText) { 
-                navigator.clipboard.writeText(out.innerText); 
-                messeg("RESPONSE COPIED"); 
-            }
-        };
-        
-        window.reset = (id) => { 
-            const resArea = document.getElementById(`res-area-${id}`);
-            resArea.classList.remove('show', 'success', 'error', 'showing');
-            resArea.classList.add('hidden');
-            document.getElementById(`output-${id}`).innerHTML = ''; 
-            const statusIndicator = document.getElementById(`status-indicator-${id}`);
-            statusIndicator.className = 'status-indicator status-waiting';
-        };
+        window.copy = (txt) => { navigator.clipboard.writeText(window.location.origin + txt); messeg("URL COPIED"); };
+        window.copyRes = (id) => { const out = document.getElementById(`output-${id}`); if (out.innerText) { navigator.clipboard.writeText(out.innerText); messeg("RESPONSE COPIED"); } };
+        window.reset = (id) => { document.getElementById(`res-area-${id}`).className = 'response-area hidden mx-4 mb-4 rounded-lg overflow-hidden bg-[#1e1e1e] border border-slate-600 shadow-inner relative max-w-[calc(100%-2rem)]'; document.getElementById(`output-${id}`).innerHTML = ''; document.getElementById(`status-indicator-${id}`).className = 'status-indicator status-waiting'; };
 
         window.testReq = async (btn, url, method, id) => {
             if (btn.disabled) return;
-            const out = document.getElementById(`output-${id}`);
-            const status = document.getElementById(`status-${id}`);
-            const time = document.getElementById(`time-${id}`);
-            const dlBtn = document.getElementById(`dl-btn-${id}`);
-            const resArea = document.getElementById(`res-area-${id}`);
-            const statusIndicator = document.getElementById(`status-indicator-${id}`);
-            
+            const out = document.getElementById(`output-${id}`), status = document.getElementById(`status-${id}`), time = document.getElementById(`time-${id}`), dlBtn = document.getElementById(`dl-btn-${id}`), resArea = document.getElementById(`res-area-${id}`), statusIndicator = document.getElementById(`status-indicator-${id}`);
             const btnInner = btn.querySelector('.soft-btn__inner');
             const originalBtnText = btnInner.innerHTML;
-            btn.disabled = true; 
-            btnInner.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> PROCESSING';
-
-            resArea.classList.remove('hidden', 'success', 'error');
-            resArea.classList.add('show', 'showing');
-            statusIndicator.className = 'status-indicator status-waiting';
-            status.innerText = 'RUNNING...'; 
-            status.className = 'text-[10px] font-mono font-bold text-yellow-500';
-            out.innerHTML = '<span class="text-slate-500 italic">Establishing connection...</span>';
+            btn.disabled = true; btnInner.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> PROCESSING';
+            resArea.className = 'response-area show showing success mx-4 mb-4 rounded-lg overflow-hidden bg-[#1e1e1e] border border-slate-600 shadow-inner relative max-w-[calc(100%-2rem)]';
+            statusIndicator.className = 'status-indicator status-waiting'; status.innerText = 'RUNNING...'; status.className = 'text-[10px] font-mono font-bold text-yellow-500'; out.innerHTML = '<span class="text-slate-500 italic">Establishing connection...</span>';
             
             const params = {};
-            document.querySelectorAll(`[id^="input-${id}-"]`).forEach(i => { 
-                if(i.value) {
-                    params[i.id.split(`input-${id}-`)[1]] = i.value;
-                    i.classList.add('border-green-400', 'bg-green-50');
-                    setTimeout(() => {
-                        i.classList.remove('border-green-400', 'bg-green-50');
-                    }, 1000);
-                }
-            });
+            document.querySelectorAll(`[id^="input-${id}-"]`).forEach(i => { if(i.value && i.type !== 'file') params[i.id.split(`input-${id}-`)[1]] = i.value; });
             
             let fetchUrl = url + (method === 'GET' && Object.keys(params).length ? '?' + new URLSearchParams(params) : '');
-            let opts = { 
-                method, 
-                ...(method !== 'GET' ? { 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify(params) 
-                } : {}) 
-            };
-            
-            terminalLog(`REQ: ${method} ${fetchUrl}`, 'warn');
-
+            let opts = { method, ...(method !== 'GET' ? { headers: {'Content-Type': 'application/json'}, body: JSON.stringify(params) } : {}) };
             let startTime = Date.now();
             try {
                 const req = await fetch(fetchUrl, opts);
-                const duration = Date.now() - startTime;
-                
-                animateCounter(`time-${id}`, 0, duration, 500);
-                
-                if (req.ok) {
-                    statusIndicator.className = 'status-indicator status-success';
-                    status.innerText = `${req.status} ${req.statusText}`;
-                    status.className = 'text-[10px] font-mono font-bold text-green-500';
-                    resArea.classList.add('success');
-                } else {
-                    statusIndicator.className = 'status-indicator status-error';
-                    status.innerText = `${req.status} ${req.statusText}`;
-                    status.className = 'text-[10px] font-mono font-bold text-red-500';
-                    resArea.classList.add('error');
-                }
-
-                terminalLog(`RES: [${req.status}] ${fetchUrl}`, req.ok ? 'success' : 'error');
+                animateCounter(`time-${id}`, 0, Date.now() - startTime, 500);
+                if (req.ok) { statusIndicator.className = 'status-indicator status-success'; status.innerText = `${req.status} ${req.statusText}`; status.className = 'text-[10px] font-mono font-bold text-green-500'; resArea.classList.add('success'); } 
+                else { statusIndicator.className = 'status-indicator status-error'; status.innerText = `${req.status} ${req.statusText}`; status.className = 'text-[10px] font-mono font-bold text-red-500'; resArea.classList.add('error'); }
 
                 const type = req.headers.get('content-type');
-                if (type?.includes('json')) {
-                    const json = await req.json();
-                    out.innerHTML = syntaxHighlight(json);
-                    out.querySelectorAll('.json-key, .json-string, .json-number, .json-boolean, .json-null').forEach((el, idx) => {
-                        el.style.animationDelay = `${idx * 0.05}s`;
-                        el.classList.add('animate-slide-in-right');
-                    });
-                } else if (type?.startsWith('image')) {
-                    const blob = await req.blob();
-                    const urlObj = URL.createObjectURL(blob);
-                    dlBtn.href = urlObj; 
-                    dlBtn.download = `img-${Date.now()}.jpg`; 
-                    dlBtn.classList.remove('hidden');
-                    out.innerHTML = `<div class="flex justify-center p-2 animate-fade-in-up">
-                                        <img src="${urlObj}" class="max-w-full rounded border border-gray-700 max-h-[300px] transform transition-all duration-500 hover:scale-105">
-                                     </div>`;
-                } else {
-                    const text = await req.text();
-                    typewriterEffect(`output-${id}`, text, 10);
-                }
+                if (type?.includes('json')) { out.innerHTML = syntaxHighlight(await req.json()); } 
+                else if (type?.startsWith('image')) {
+                    const urlObj = URL.createObjectURL(await req.blob());
+                    dlBtn.href = urlObj; dlBtn.download = `img-${Date.now()}.png`; dlBtn.classList.remove('hidden');
+                    out.innerHTML = `<div class="flex justify-center p-2 animate-fade-in-up"><img src="${urlObj}" class="max-w-full rounded border border-gray-700 max-h-[300px] transform transition-all duration-500 hover:scale-105"></div>`;
+                } else { typewriterEffect(`output-${id}`, await req.text(), 10); }
             } catch (err) {
-                const duration = Date.now() - startTime;
-                time.innerText = `${duration}ms`;
-                statusIndicator.className = 'status-indicator status-error';
-                terminalLog(`ERR: ${err.message}`, 'error');
-                status.innerText = 'ERROR'; 
-                status.className = 'text-[10px] font-mono font-bold text-red-500';
-                resArea.classList.add('error');
-                out.innerHTML = `<span class="text-red-500">${err.message}</span>`;
-            } finally {
-                btn.disabled = false; 
-                btnInner.innerHTML = originalBtnText;
-            }
+                statusIndicator.className = 'status-indicator status-error'; status.innerText = 'ERROR'; status.className = 'text-[10px] font-mono font-bold text-red-500'; resArea.classList.add('error'); out.innerHTML = `<span class="text-red-500">${err.message}</span>`;
+            } finally { btn.disabled = false; btnInner.innerHTML = originalBtnText; }
         };
 
-        function typewriterEffect(elementId, text, speed = 20) {
-            const element = document.getElementById(elementId);
-            element.innerHTML = '';
-            let i = 0;
-            
-            function typeWriter() {
-                if (i < text.length) {
-                    element.innerHTML += text.charAt(i);
-                    i++;
-                    setTimeout(typeWriter, speed);
-                }
-            }
-            typeWriter();
+        function typewriterEffect(elId, txt, spd=20) {
+            const el = document.getElementById(elId); el.innerHTML = ''; let i = 0;
+            function type() { if (i < txt.length) { el.innerHTML += txt.charAt(i); i++; setTimeout(type, spd); } } type();
         }
 
         function syntaxHighlight(json) {
             if (typeof json != 'string') json = JSON.stringify(json, undefined, 2);
-            return json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-            .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-                let cls = 'json-number';
-                if (/^"/.test(match)) {
-                    if (/:$/.test(match)) cls = 'json-key';
-                    else cls = 'json-string';
-                } else if (/true|false/.test(match)) cls = 'json-boolean';
-                else if (/null/.test(match)) cls = 'json-null';
-                return `<span class="${cls}">${match}</span>`;
+            return json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'json-number'; if (/^"/.test(match)) { if (/:$/.test(match)) cls = 'json-key'; else cls = 'json-string'; } else if (/true|false/.test(match)) cls = 'json-boolean'; else if (/null/.test(match)) cls = 'json-null'; return `<span class="${cls}">${match}</span>`;
             });
         }
     </script>
