@@ -78,7 +78,7 @@ export default async function handler(req, res) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Secured by NuuTools API</title>
+<title>Encrypt HTML</title>
 </head>
 <body>
 <script>
