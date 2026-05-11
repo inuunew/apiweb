@@ -108,7 +108,8 @@ export default function handler(req, res) {
                         { "name": "agama", "required": true, "description": "Agama" },
                         { "name": "status", "required": true, "description": "Contoh: Belum Kawin" },
                         { "name": "pekerjaan", "required": true, "description": "Pekerjaan" },
-                        { "name": "pas_photo", "required": true, "description": "Link Foto (URL)" }
+                        // 👇 KUNCI PERUBAHAN: pas_photo diubah jadi image 👇
+                        { "name": "image", "required": true, "description": "Link Foto (URL) / Upload Galeri" }
                     ]
                 },
                 {
