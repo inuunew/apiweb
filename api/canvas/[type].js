@@ -3,11 +3,8 @@ import FormData from 'form-data';
 import formidable from 'formidable';
 import fs from 'fs';
 
-// Wajib dimatikan agar Vercel bisa menerima unggahan file gambar (multipart/form-data)
 export const config = {
-    api: {
-        bodyParser: false,
-    },
+    api: { bodyParser: false },
 };
 
 export default async function handler(req, res) {
@@ -45,44 +42,32 @@ export default async function handler(req, res) {
                             return resolve();
                         }
 
-                        const hasFiles = Object.keys(files).length > 0;
-                        let response;
+                        // JALUR PINTAR UNIVERSAL: Selalu POST file fisik ke Siputzx
+                        const axiosData = new FormData();
+                        const imageParamsList = ['image', 'image1', 'image2', 'avatar', 'avatar1', 'avatar2', 'background', 'guildIcon'];
 
-                        if (hasFiles) {
-                            // JALUR POST (FILE FISIK)
-                            const axiosData = new FormData();
-                            for (const key in params) {
-                                if (key === 'type') continue;
-                                if (files[key]) {
-                                    const file = Array.isArray(files[key]) ? files[key][0] : files[key];
-                                    axiosData.append(key, fs.createReadStream(file.filepath), {
-                                        filename: file.originalFilename || `${key}.png`,
-                                        contentType: file.mimetype || 'image/png'
-                                    });
-                                } else if (params[key]) {
-                                    axiosData.append(key, params[key]);
-                                }
+                        for (const key in params) {
+                            if (key === 'type') continue;
+
+                            if (files[key]) {
+                                // Jika upload file fisik
+                                const file = Array.isArray(files[key]) ? files[key][0] : files[key];
+                                axiosData.append(key, fs.createReadStream(file.filepath), { filename: file.originalFilename || `${key}.png` });
+                            } else if (params[key] && typeof params[key] === 'string' && params[key].startsWith('http') && imageParamsList.includes(key)) {
+                                // Jika URL teks, Vercel download otomatis menjadi file (Buffer)!
+                                const imgRes = await axios.get(params[key], { responseType: 'arraybuffer' });
+                                axiosData.append(key, Buffer.from(imgRes.data), { filename: `${key}.png` });
+                            } else {
+                                // Data teks biasa
+                                axiosData.append(key, params[key]);
                             }
-                            response = await axios.post(`https://api.siputzx.my.id/api/canvas/${canvasType}`, axiosData, {
-                                headers: axiosData.getHeaders(),
-                                responseType: 'arraybuffer' 
-                            });
-                        } else {
-                            // JALUR GET (URL TEKS) - MAPPING 'image' -> 'url'
-                            const queryString = new URLSearchParams();
-                            for (const key in params) {
-                                if (key === 'type') continue;
-                                
-                                let providerKey = key;
-                                if (key === 'image') providerKey = 'url';
-                                if (key === 'image1') providerKey = 'url1';
-                                if (key === 'image2') providerKey = 'url2';
-                                
-                                queryString.append(providerKey, params[key]);
-                            }
-                            const targetUrl = `https://api.siputzx.my.id/api/canvas/${canvasType}?${queryString.toString()}`;
-                            response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
                         }
+
+                        // Selalu POST agar bebas 503
+                        const response = await axios.post(`https://api.siputzx.my.id/api/canvas/${canvasType}`, axiosData, {
+                            headers: axiosData.getHeaders(),
+                            responseType: 'arraybuffer' 
+                        });
 
                         res.setHeader('Content-Type', 'image/png');
                         res.status(200).send(response.data);
@@ -92,7 +77,7 @@ export default async function handler(req, res) {
                         res.status(400).json({ 
                             status: false, 
                             creator: "InuuTyzDev", 
-                            message: "Gagal memproses gambar dari provider: " + (error.response?.data?.message || error.message) 
+                            message: "Provider Error: " + (error.response?.data?.message || error.message) 
                         });
                         return resolve();
                     }
