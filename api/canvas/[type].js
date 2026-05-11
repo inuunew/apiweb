@@ -3,7 +3,6 @@ import FormData from 'form-data';
 import formidable from 'formidable';
 import fs from 'fs';
 
-// --- MATIKAN BODY PARSER BAWAAN NEXT.JS ---
 // Wajib dimatikan agar Vercel bisa menerima unggahan file gambar (multipart/form-data)
 export const config = {
     api: {
@@ -12,15 +11,12 @@ export const config = {
 };
 
 export default async function handler(req, res) {
-    // 1. Mengatur CORS Headers & Preflight
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
 
-    // 2. WAJIB BUNGKUS DENGAN PROMISE UNTUK VERCEL
-    // Agar serverless tidak mati sebelum proses selesai
     return new Promise((resolve) => {
         const form = formidable({ multiples: true, keepExtensions: true });
 
@@ -31,17 +27,14 @@ export default async function handler(req, res) {
             }
 
             try {
-                // --- GABUNGKAN DATA QUERY, TEKS, DAN FILE ---
                 let params = { ...req.query };
                 for (const key in fields) params[key] = Array.isArray(fields[key]) ? fields[key][0] : fields[key];
                 for (const key in files) params[key] = Array.isArray(files[key]) ? files[key][0] : files[key];
 
                 const { type } = params;
 
-                // --- FUNGSI BANTUAN UNTUK FETCH KE SIPUTZX ---
                 const sendCanvas = async (canvasType) => {
                     try {
-                        // Khusus sertifikat-tolol (harus JSON)
                         if (canvasType === 'sertifikat-tolol') {
                             const response = await axios.post(`https://api.siputzx.my.id/api/canvas/${canvasType}`, 
                                 { text: params.text }, 
@@ -52,26 +45,38 @@ export default async function handler(req, res) {
                             return resolve();
                         }
 
-                        // Selain itu, gunakan FormData untuk gambar
-                        const axiosData = new FormData();
-                        for (const key in params) {
-                            if (key === 'type') continue;
+                        // 👇 KUNCI PERUBAHAN: Cek apakah pengguna mengunggah file fisik
+                        const hasFiles = Object.keys(files).length > 0;
+                        let response;
 
-                            if (files[key]) {
-                                const file = Array.isArray(files[key]) ? files[key][0] : files[key];
-                                axiosData.append(key, fs.createReadStream(file.filepath), {
-                                    filename: file.originalFilename || `${key}.png`,
-                                    contentType: file.mimetype || 'image/png'
-                                });
-                            } else if (params[key]) {
-                                axiosData.append(key, params[key]);
+                        if (hasFiles) {
+                            // JIKA MENGUNGGAH FILE: Gunakan POST + FormData
+                            const axiosData = new FormData();
+                            for (const key in params) {
+                                if (key === 'type') continue;
+                                if (files[key]) {
+                                    const file = Array.isArray(files[key]) ? files[key][0] : files[key];
+                                    axiosData.append(key, fs.createReadStream(file.filepath), {
+                                        filename: file.originalFilename || `${key}.png`,
+                                        contentType: file.mimetype || 'image/png'
+                                    });
+                                } else if (params[key]) {
+                                    axiosData.append(key, params[key]);
+                                }
                             }
+                            response = await axios.post(`https://api.siputzx.my.id/api/canvas/${canvasType}`, axiosData, {
+                                headers: axiosData.getHeaders(),
+                                responseType: 'arraybuffer' 
+                            });
+                        } else {
+                            // JIKA MENGGUNAKAN TEKS URL: Gunakan GET biasa agar Siputzx tidak 503
+                            const queryString = new URLSearchParams();
+                            for (const key in params) {
+                                if (key !== 'type') queryString.append(key, params[key]);
+                            }
+                            const targetUrl = `https://api.siputzx.my.id/api/canvas/${canvasType}?${queryString.toString()}`;
+                            response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
                         }
-
-                        const response = await axios.post(`https://api.siputzx.my.id/api/canvas/${canvasType}`, axiosData, {
-                            headers: axiosData.getHeaders(),
-                            responseType: 'arraybuffer' 
-                        });
 
                         res.setHeader('Content-Type', 'image/png');
                         res.status(200).send(response.data);
@@ -89,7 +94,6 @@ export default async function handler(req, res) {
 
                 // ==========================================
                 // LOGIKA VALIDASI FULL CANVAS
-                // Pastikan menggunakan resolve() pengganti return res
                 // ==========================================
 
                 if (type === 'circle' || type === 'beautiful' || type === 'delete' || type === 'facepalm' || type === 'blur' || type === 'invert' || type === 'greyscale') {
@@ -184,7 +188,6 @@ export default async function handler(req, res) {
                 
                 else if (type === 'spotify') {
                     const { title, artist, start, end, image } = params;
-                    // 'border' boleh kosong, ikut standar
                     if (!title || !artist || !image) { res.status(400).json({ status: false, message: "Data tidak lengkap!" }); return resolve(); }
                     return await sendCanvas(type);
                 }
@@ -195,9 +198,6 @@ export default async function handler(req, res) {
                     return await sendCanvas(type);
                 }
 
-                // ==========================================
-                // ERROR HANDLER DEFAULT
-                // ==========================================
                 else {
                     res.status(400).json({ 
                         status: false, 
