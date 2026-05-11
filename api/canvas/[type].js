@@ -45,12 +45,11 @@ export default async function handler(req, res) {
                             return resolve();
                         }
 
-                        // 👇 KUNCI PERUBAHAN: Cek apakah pengguna mengunggah file fisik
                         const hasFiles = Object.keys(files).length > 0;
                         let response;
 
                         if (hasFiles) {
-                            // JIKA MENGUNGGAH FILE: Gunakan POST + FormData
+                            // JALUR POST (FILE FISIK)
                             const axiosData = new FormData();
                             for (const key in params) {
                                 if (key === 'type') continue;
@@ -69,10 +68,17 @@ export default async function handler(req, res) {
                                 responseType: 'arraybuffer' 
                             });
                         } else {
-                            // JIKA MENGGUNAKAN TEKS URL: Gunakan GET biasa agar Siputzx tidak 503
+                            // JALUR GET (URL TEKS) - MAPPING 'image' -> 'url'
                             const queryString = new URLSearchParams();
                             for (const key in params) {
-                                if (key !== 'type') queryString.append(key, params[key]);
+                                if (key === 'type') continue;
+                                
+                                let providerKey = key;
+                                if (key === 'image') providerKey = 'url';
+                                if (key === 'image1') providerKey = 'url1';
+                                if (key === 'image2') providerKey = 'url2';
+                                
+                                queryString.append(providerKey, params[key]);
                             }
                             const targetUrl = `https://api.siputzx.my.id/api/canvas/${canvasType}?${queryString.toString()}`;
                             response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
@@ -96,114 +102,88 @@ export default async function handler(req, res) {
                 // LOGIKA VALIDASI FULL CANVAS
                 // ==========================================
 
-                if (type === 'circle' || type === 'beautiful' || type === 'delete' || type === 'facepalm' || type === 'blur' || type === 'invert' || type === 'greyscale') {
+                if (['circle', 'beautiful', 'delete', 'facepalm', 'blur', 'invert', 'greyscale'].includes(type)) {
                     const { image } = params;
                     if (!image) { res.status(400).json({ status: false, message: "Parameter 'image' wajib diisi!" }); return resolve(); }
                     return await sendCanvas(type);
                 }
-                
                 else if (type === 'darkness') {
                     const { image, amount } = params;
                     if (!image || !amount) { res.status(400).json({ status: false, message: "Parameter 'image' dan 'amount' wajib diisi!" }); return resolve(); }
                     return await sendCanvas(type);
                 }
-
                 else if (type === 'batslap' || type === 'kiss') {
                     const { image1, image2 } = params;
                     if (!image1 || !image2) { res.status(400).json({ status: false, message: "Parameter 'image1' dan 'image2' wajib diisi!" }); return resolve(); }
                     return await sendCanvas(type);
                 }
-
                 else if (type === 'sertifikat-tolol') {
                     const { text } = params;
                     if (!text) { res.status(400).json({ status: false, message: "Parameter 'text' wajib diisi!" }); return resolve(); }
                     return await sendCanvas(type);
                 }
-                
                 else if (type === 'gay') {
                     const { nama, avatar, num } = params;
                     if (!nama || !avatar || !num) { res.status(400).json({ status: false, message: "Parameter 'nama', 'avatar', dan 'num' wajib diisi!" }); return resolve(); }
                     return await sendCanvas(type);
                 }
-
-                else if (type === 'welcomev3' || type === 'goodbyev3') {
+                else if (['welcomev3', 'goodbyev3'].includes(type)) {
                     const { username, avatar } = params;
                     if (!username || !avatar) { res.status(400).json({ status: false, message: "Parameter 'username' dan 'avatar' wajib diisi!" }); return resolve(); }
                     return await sendCanvas(type);
                 }
-                
                 else if (type === 'welcomev4') {
                     const { avatar, background, description } = params;
                     if (!avatar || !background || !description) { res.status(400).json({ status: false, message: "Parameter 'avatar', 'background', dan 'description' wajib diisi!" }); return resolve(); }
                     return await sendCanvas(type);
                 }
-                
-                else if (type === 'welcomev2' || type === 'goodbyev2') {
+                else if (['welcomev2', 'goodbyev2', 'welcomev5', 'goodbyev5'].includes(type)) {
                     const { username, guildName, memberCount, avatar, background } = params;
                     if (!username || !guildName || !avatar || !background) { res.status(400).json({ status: false, message: "Data tidak lengkap!" }); return resolve(); }
                     return await sendCanvas(type);
                 }
-                
-                else if (type === 'welcomev5' || type === 'goodbyev5') {
-                    const { username, guildName, memberCount, avatar, background } = params;
-                    if (!username || !guildName || !avatar || !background) { res.status(400).json({ status: false, message: "Data tidak lengkap!" }); return resolve(); }
-                    return await sendCanvas(type);
-                }
-                
-                else if (type === 'welcomev1' || type === 'goodbyev1') {
+                else if (['welcomev1', 'goodbyev1'].includes(type)) {
                     const { username, guildName, guildIcon, memberCount, avatar, background } = params;
                     if (!username || !guildName || !avatar || !background || !guildIcon) { res.status(400).json({ status: false, message: "Data tidak lengkap!" }); return resolve(); }
                     return await sendCanvas(type);
                 }
-                
                 else if (type === 'goodbyev4') {
                     const { avatar, background, title, description, border, avatarBorder, overlayOpacity } = params;
                     if (!avatar || !background || !title) { res.status(400).json({ status: false, message: "Data tidak lengkap!" }); return resolve(); }
                     return await sendCanvas(type);
                 }
-
                 else if (type === 'level-up') {
                     const { backgroundURL, avatarURL, fromLevel, toLevel, name } = params;
                     if (!backgroundURL || !avatarURL || !name) { res.status(400).json({ status: false, message: "Data tidak lengkap!" }); return resolve(); }
                     return await sendCanvas(type);
                 }
-                
                 else if (type === 'profile') {
                     const { backgroundURL, avatarURL, rankName, rankId, exp, requireExp, level, name } = params;
                     if (!backgroundURL || !avatarURL || !name) { res.status(400).json({ status: false, message: "Data tidak lengkap!" }); return resolve(); }
                     return await sendCanvas(type);
                 }
-                
                 else if (type === 'ship') {
                     const { avatar1, avatar2, background, persen } = params;
                     if (!avatar1 || !avatar2 || !background) { res.status(400).json({ status: false, message: "Data tidak lengkap!" }); return resolve(); }
                     return await sendCanvas(type);
                 }
-                
                 else if (type === 'tweet') {
                     const { displayName, username, comment, avatar } = params;
                     if (!displayName || !username || !comment || !avatar) { res.status(400).json({ status: false, message: "Data tidak lengkap!" }); return resolve(); }
                     return await sendCanvas(type);
                 }
-                
                 else if (type === 'spotify') {
                     const { title, artist, start, end, image } = params;
                     if (!title || !artist || !image) { res.status(400).json({ status: false, message: "Data tidak lengkap!" }); return resolve(); }
                     return await sendCanvas(type);
                 }
-                
                 else if (type === 'security') {
                     const { avatar, background, createdTimestamp, suspectTimestamp, locale } = params;
                     if (!avatar || !background) { res.status(400).json({ status: false, message: "Data tidak lengkap!" }); return resolve(); }
                     return await sendCanvas(type);
                 }
-
                 else {
-                    res.status(400).json({ 
-                        status: false, 
-                        creator: "InuuTyzDev",
-                        message: `Type canvas '${type}' tidak ditemukan di sistem.` 
-                    });
+                    res.status(400).json({ status: false, creator: "InuuTyzDev", message: `Type canvas '${type}' tidak ditemukan di sistem.` });
                     return resolve();
                 }
 
