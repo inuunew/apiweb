@@ -29,7 +29,6 @@ export default async function handler(req, res) {
             }
 
             try {
-                // Gabungkan query URL, form teks, dan file
                 let params = { ...req.query };
                 for (const key in fields) params[key] = Array.isArray(fields[key]) ? fields[key][0] : fields[key];
                 for (const key in files) params[key] = Array.isArray(files[key]) ? files[key][0] : files[key];
@@ -39,37 +38,52 @@ export default async function handler(req, res) {
                 // --- 1. BRAT GENERATOR ---
                 if (type === 'brat') {
                     if (!text) { res.status(400).json({ status: false, message: "Parameter 'text' wajib diisi" }); return resolve(); }
-                    const response = await axios.get(`https://brat.siputzx.my.id/image?text=${encodeURIComponent(text)}`, { responseType: 'arraybuffer' });
+                    const targetUrl = `https://brat.siputzx.my.id/image?text=${encodeURIComponent(text)}`;
+                    const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
                     res.setHeader('Content-Type', 'image/png');
                     res.status(200).send(response.data);
                     return resolve();
                 }
 
-                // --- 2. E-KTP MAKER (LOGIKA PINTAR: FILE/URL) ---
+                // --- 2. E-KTP MAKER ---
                 else if (type === 'ektp') {
                     const required = ['provinsi', 'kota', 'nik', 'nama', 'ttl', 'jenis_kelamin', 'alamat', 'kecamatan', 'agama', 'status', 'pekerjaan', 'image'];
                     for (const field of required) {
                         if (!params[field]) { res.status(400).json({ status: false, message: `Parameter '${field}' wajib diisi!` }); return resolve(); }
                     }
 
-                    // Cek apakah user mengunggah file fisik di parameter 'image'
+                    // Tentukan nilai default untuk param yang tidak dikirim UI
+                    const golDarah = params.golongan_darah || '-';
+                    const rtRw = params['rt/rw'] || '000/000';
+                    const kelDesa = params['kel/desa'] || 'Desa';
+                    const warganegara = params.kewarganegaraan || 'WNI';
+                    const masaBerlaku = params.masa_berlaku || 'Seumur Hidup';
+                    const terbuat = params.terbuat || '01-01-2024';
+
                     const isUploadingFile = files['image'] ? true : false;
                     let response;
 
                     if (isUploadingFile) {
                         // JALUR POST (FILE FISIK)
                         const axiosData = new FormData();
-                        // Append semua parameter teks
-                        const textFields = ['provinsi', 'kota', 'nik', 'nama', 'ttl', 'jenis_kelamin', 'alamat', 'kecamatan', 'agama', 'status', 'pekerjaan'];
-                        textFields.forEach(f => axiosData.append(f, params[f]));
-                        axiosData.append('golongan_darah', params.golongan_darah || '-');
-                        axiosData.append('rt/rw', params['rt/rw'] || "000/000");
-                        axiosData.append('kel/desa', params['kel/desa'] || "Desa");
-                        axiosData.append('kewarganegaraan', params.kewarganegaraan || 'WNI');
-                        axiosData.append('masa_berlaku', params.masa_berlaku || 'Seumur Hidup');
-                        axiosData.append('terbuat', params.terbuat || '01-01-2024');
+                        axiosData.append('provinsi', params.provinsi);
+                        axiosData.append('kota', params.kota);
+                        axiosData.append('nik', params.nik);
+                        axiosData.append('nama', params.nama);
+                        axiosData.append('ttl', params.ttl);
+                        axiosData.append('jenis_kelamin', params.jenis_kelamin);
+                        axiosData.append('golongan_darah', golDarah);
+                        axiosData.append('alamat', params.alamat);
+                        axiosData.append('rt/rw', rtRw);
+                        axiosData.append('kel/desa', kelDesa);
+                        axiosData.append('kecamatan', params.kecamatan);
+                        axiosData.append('agama', params.agama);
+                        axiosData.append('status', params.status);
+                        axiosData.append('pekerjaan', params.pekerjaan);
+                        axiosData.append('kewarganegaraan', warganegara);
+                        axiosData.append('masa_berlaku', masaBerlaku);
+                        axiosData.append('terbuat', terbuat);
 
-                        // Masukkan file fisik sebagai 'pas_photo' (nama asli di API Siputzx)
                         const file = Array.isArray(files['image']) ? files['image'][0] : files['image'];
                         axiosData.append('pas_photo', fs.createReadStream(file.filepath), {
                             filename: file.originalFilename || 'pas_photo.jpg',
@@ -81,19 +95,10 @@ export default async function handler(req, res) {
                             responseType: 'arraybuffer'
                         });
                     } else {
-                        // JALUR GET (TEKS URL)
-                        const queryParams = new URLSearchParams();
-                        for (const key in params) {
-                            if (key === 'type') continue;
-                            if (key === 'image') {
-                                queryParams.append('pas_photo', params[key]); // Map 'image' ke 'pas_photo'
-                            } else {
-                                queryParams.append(key, params[key]);
-                            }
-                        }
-                        response = await axios.get(`https://api.siputzx.my.id/api/canvas/ektp?${queryParams.toString()}`, {
-                            responseType: 'arraybuffer'
-                        });
+                        // JALUR GET (URL TEKS) - MAPPING 'image' -> 'pas_photo'
+                        const targetUrl = `https://api.siputzx.my.id/api/canvas/ektp?provinsi=${encodeURIComponent(params.provinsi)}&kota=${encodeURIComponent(params.kota)}&nik=${encodeURIComponent(params.nik)}&nama=${encodeURIComponent(params.nama)}&ttl=${encodeURIComponent(params.ttl)}&jenis_kelamin=${encodeURIComponent(params.jenis_kelamin)}&golongan_darah=${encodeURIComponent(golDarah)}&alamat=${encodeURIComponent(params.alamat)}&rt%2Frw=${encodeURIComponent(rtRw)}&kel%2Fdesa=${encodeURIComponent(kelDesa)}&kecamatan=${encodeURIComponent(params.kecamatan)}&agama=${encodeURIComponent(params.agama)}&status=${encodeURIComponent(params.status)}&pekerjaan=${encodeURIComponent(params.pekerjaan)}&kewarganegaraan=${encodeURIComponent(warganegara)}&masa_berlaku=${encodeURIComponent(masaBerlaku)}&terbuat=${encodeURIComponent(terbuat)}&pas_photo=${encodeURIComponent(params.image)}`;
+                        
+                        response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
                     }
                     
                     res.setHeader('Content-Type', 'image/jpeg');
@@ -114,9 +119,8 @@ export default async function handler(req, res) {
                     return resolve();
                 }
 
-                // --- 4, 5, 6 (FB, FAKEGROUP, ROASTING) TETAP PAKAI GET CUKI ---
+                // --- 4, 5, 6 (FB, FAKEGROUP, ROASTING) ---
                 else if (['fbcommand', 'fakegroup', 'roasting'].includes(type)) {
-                    // Logic lama kamu yang stabil...
                     let targetUrl = `https://api.cuki.biz.id/api/${type === 'fbcommand' ? 'canvas' : 'maker'}/${type}?apikey=${apiKeyCuki}`;
                     for(let key in params) if(!['type'].includes(key)) targetUrl += `&${key}=${encodeURIComponent(params[key])}`;
                     
