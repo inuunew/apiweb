@@ -265,17 +265,12 @@
                 const grid = section.querySelector('.api-section-grid');
                 routes.forEach((route, idx) => {
                     const id = `${cat}-${idx}`.replace(/\s+/g, '-'), methodColor = route.method === 'GET' ? 'bg-sky-500' : route.method === 'POST' ? 'bg-emerald-500' : 'bg-rose-500';
-                    let inputs = '', copyUrl = route.endpoint;
-                    if (route.method === 'GET' && route.params && route.params.length > 0) { copyUrl = `${route.endpoint}?${route.params.map(p => `${p.name}=`).join('&')}`; }
+                    let inputs = '';
 
                     if (route.params?.length) {
                         inputs = `<div class="bg-fmn-bg/50 p-4 border-y border-fmn-blue/20 grid gap-3 w-full animate-fade-in-up">` + 
                         route.params.map(p => {
-                            
-                            // LOGIKA SAKELAR GET / POST UNTUK GAMBAR
-                            if (['image', 'avatar', 'background', 'icon', 'ppurl', 'html'].some(k => p.name.toLowerCase().includes(k))) {
-                                
-                                // Bikin dinamis: Cek apakah parameternya untuk HTML atau Gambar
+                            if (['image', 'avatar', 'background', 'icon', 'ppurl', 'html', 'photo'].some(k => p.name.toLowerCase().includes(k))) {
                                 const isHtml = p.name.toLowerCase().includes('html');
                                 const placeholderText = isHtml ? "Masukkan Teks Kode HTML / Link..." : "Masukkan Link / URL Gambar...";
                                 const acceptType = isHtml ? ".html,text/html" : "image/*";
@@ -285,39 +280,15 @@
                                 return `
                                 <div class="min-w-0 transform transition-all duration-300 hover:scale-[1.02] bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
                                     <label class="text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-2 block border-b border-slate-100 pb-1">${p.name} ${p.required?'<span class="text-red-500">*</span>':''}</label>
-                                    
                                     <input type="hidden" id="mode-${id}-${p.name}" value="GET">
-                                    
                                     <div class="flex gap-2 mb-3">
-                                        <button type="button" onclick="
-                                            document.getElementById('mode-${id}-${p.name}').value='GET';
-                                            this.className='flex-1 py-1.5 text-[10px] font-bold rounded-lg border-2 border-fmn-blue bg-fmn-blue text-white shadow-sm transition-all duration-300';
-                                            this.nextElementSibling.className='flex-1 py-1.5 text-[10px] font-bold rounded-lg border-2 border-slate-200 bg-slate-50 text-slate-500 hover:border-rose-400 hover:text-rose-500 transition-all duration-300';
-                                            document.getElementById('wrap-url-${id}-${p.name}').classList.remove('hidden');
-                                            document.getElementById('wrap-file-${id}-${p.name}').classList.add('hidden');
-                                        " class="flex-1 py-1.5 text-[10px] font-bold rounded-lg border-2 border-fmn-blue bg-fmn-blue text-white shadow-sm transition-all duration-300">${btnText1}</button>
-
-                                        <button type="button" onclick="
-                                            document.getElementById('mode-${id}-${p.name}').value='POST';
-                                            this.className='flex-1 py-1.5 text-[10px] font-bold rounded-lg border-2 border-rose-500 bg-rose-500 text-white shadow-sm transition-all duration-300';
-                                            this.previousElementSibling.className='flex-1 py-1.5 text-[10px] font-bold rounded-lg border-2 border-slate-200 bg-slate-50 text-slate-500 hover:border-fmn-blue hover:text-fmn-blue transition-all duration-300';
-                                            document.getElementById('wrap-url-${id}-${p.name}').classList.add('hidden');
-                                            document.getElementById('wrap-file-${id}-${p.name}').classList.remove('hidden');
-                                        " class="flex-1 py-1.5 text-[10px] font-bold rounded-lg border-2 border-slate-200 bg-slate-50 text-slate-500 hover:border-rose-400 hover:text-rose-500 transition-all duration-300">${btnText2}</button>
+                                        <button type="button" onclick="document.getElementById('mode-${id}-${p.name}').value='GET'; this.className='flex-1 py-1.5 text-[10px] font-bold rounded-lg border-2 border-fmn-blue bg-fmn-blue text-white shadow-sm transition-all duration-300'; this.nextElementSibling.className='flex-1 py-1.5 text-[10px] font-bold rounded-lg border-2 border-slate-200 bg-slate-50 text-slate-500 hover:border-rose-400 hover:text-rose-500 transition-all duration-300'; document.getElementById('wrap-url-${id}-${p.name}').classList.remove('hidden'); document.getElementById('wrap-file-${id}-${p.name}').classList.add('hidden');" class="flex-1 py-1.5 text-[10px] font-bold rounded-lg border-2 border-fmn-blue bg-fmn-blue text-white shadow-sm transition-all duration-300">${btnText1}</button>
+                                        <button type="button" onclick="document.getElementById('mode-${id}-${p.name}').value='POST'; this.className='flex-1 py-1.5 text-[10px] font-bold rounded-lg border-2 border-rose-500 bg-rose-500 text-white shadow-sm transition-all duration-300'; this.previousElementSibling.className='flex-1 py-1.5 text-[10px] font-bold rounded-lg border-2 border-slate-200 bg-slate-50 text-slate-500 hover:border-fmn-blue hover:text-fmn-blue transition-all duration-300'; document.getElementById('wrap-url-${id}-${p.name}').classList.add('hidden'); document.getElementById('wrap-file-${id}-${p.name}').classList.remove('hidden');" class="flex-1 py-1.5 text-[10px] font-bold rounded-lg border-2 border-slate-200 bg-slate-50 text-slate-500 hover:border-rose-400 hover:text-rose-500 transition-all duration-300">${btnText2}</button>
                                     </div>
-
-                                    <div id="wrap-url-${id}-${p.name}" class="animate-fade-in-up">
-                                        <input type="text" id="input-${id}-${p.name}" placeholder="${placeholderText}" class="w-full min-w-0 border border-slate-300 p-2 text-xs rounded-lg focus:border-fmn-blue focus:ring-1 focus:ring-fmn-blue focus:outline-none bg-white shadow-sm transition-all">
-                                    </div>
-
-                                    <div id="wrap-file-${id}-${p.name}" class="hidden animate-fade-in-up">
-                                        <input type="file" id="file-${id}-${p.name}" accept="${acceptType}" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-rose-50 file:text-rose-600 hover:file:bg-rose-100 border border-slate-300 rounded-lg bg-white shadow-sm cursor-pointer">
-                                    </div>
+                                    <div id="wrap-url-${id}-${p.name}" class="animate-fade-in-up"><input type="text" id="input-${id}-${p.name}" placeholder="${placeholderText}" class="w-full min-w-0 border border-slate-300 p-2 text-xs rounded-lg focus:border-fmn-blue focus:ring-1 focus:ring-fmn-blue focus:outline-none bg-white shadow-sm transition-all"></div>
+                                    <div id="wrap-file-${id}-${p.name}" class="hidden animate-fade-in-up"><input type="file" id="file-${id}-${p.name}" accept="${acceptType}" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-rose-50 file:text-rose-600 hover:file:bg-rose-100 border border-slate-300 rounded-lg bg-white shadow-sm cursor-pointer"></div>
                                 </div>`;
                             }
-
-
-                            // LOGIKA DEFAULT KOTAK TEKS
                             return `
                             <div class="min-w-0 transform transition-all duration-300 hover:scale-[1.02]">
                                 <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">${p.name} ${p.required?'<span class="text-red-400">*</span>':''}</label>
@@ -327,6 +298,8 @@
                     }
 
                     const card = document.createElement('div'); card.className = 'api-card-wrapper w-full bg-white border border-slate-300 rounded-lg hover:border-fmn-blue transition-all duration-300 overflow-hidden shadow-sm hover:shadow-md'; card.setAttribute('data-search', `${route.name} ${route.endpoint} ${cat}`);
+                    
+                    // PENAMBAHAN TOMBOL CURL & COPY DINAMIS DI BAWAH EXECUTE
                     card.innerHTML = `
                         <div class="p-2 cursor-pointer select-none hover:bg-slate-50 transition-colors" onclick="toggle('${id}')">
                             <div class="flex justify-between items-center gap-3">
@@ -340,7 +313,8 @@
                             ${inputs}
                             <div class="p-4 flex gap-3 bg-white w-full items-center">
                                 <button id="btn-exec-${id}" onclick="testReq(this, '${route.endpoint}', '${route.method}', '${id}')" class="soft-btn variant-lavender flex-1 h-10 w-full"><span class="soft-btn__wrapper"><span class="soft-btn__content"><span class="soft-btn__inner text-xs font-bold tracking-widest"><i class="fa-solid fa-bolt"></i> EXECUTE</span></span></span></button>
-                                <button onclick="copy('${copyUrl}')" class="px-4 h-10 border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 rounded-lg transition-all shadow-sm hover:shadow-neon transform hover:scale-110" title="Copy Full URL"><i class="fa-regular fa-copy"></i></button>
+                                <button onclick="copyDynamicUrl('${id}', '${route.endpoint}', '${route.method}')" class="px-4 h-10 border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 rounded-lg transition-all shadow-sm hover:shadow-neon transform hover:scale-110" title="Copy Full URL Dinamis"><i class="fa-solid fa-link text-fmn-blue"></i></button>
+                                <button onclick="copyDynamicCurl('${id}', '${route.endpoint}', '${route.method}')" class="px-4 h-10 border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 rounded-lg transition-all shadow-sm hover:shadow-neon transform hover:scale-110" title="Copy cURL Command"><i class="fa-solid fa-terminal text-slate-600"></i></button>
                             </div>
                             <div id="res-area-${id}" class="response-area hidden mx-4 mb-4 rounded-lg overflow-hidden bg-[#1e1e1e] border border-slate-600 shadow-inner relative max-w-[calc(100%-2rem)]">
                                 <div class="bg-[#2d2d2d] px-3 py-2 flex items-center justify-between border-b border-gray-700">
@@ -352,7 +326,7 @@
                                          <button onclick="reset('${id}')" class="text-slate-500 hover:text-red-400 transform hover:scale-125 transition-transform"><i class="fa-solid fa-xmark text-[10px]"></i></button>
                                     </div>
                                 </div>
-                                <div class="p-3 font-mono text-[11px] min-h-[100px] max-h-[400px] overflow-y-auto custom-scrollbar bg-[#1e1e1e] break-all whitespace-pre-wrap"><div class="flex items-center gap-2 mb-2 text-slate-500 select-none border-b border-gray-800 pb-2 flex-wrap animate-slide-in-right"><span class="text-green-500 font-bold">➜</span><span class="text-blue-400">~</span><span class="text-gray-400 break-all">curl -X ${route.method} ${route.endpoint}</span></div><div id="output-${id}" class="text-gray-300 break-all whitespace-pre-wrap leading-relaxed"></div></div>
+                                <div class="p-3 font-mono text-[11px] min-h-[100px] max-h-[400px] overflow-y-auto custom-scrollbar bg-[#1e1e1e] break-all whitespace-pre-wrap"><div class="flex items-center gap-2 mb-2 text-slate-500 select-none border-b border-gray-800 pb-2 flex-wrap animate-slide-in-right"><span class="text-green-500 font-bold">➜</span><span class="text-blue-400">~</span><span id="cmd-${id}" class="text-gray-400 break-all">curl -X ${route.method} ${route.endpoint}</span></div><div id="output-${id}" class="text-gray-300 break-all whitespace-pre-wrap leading-relaxed"></div></div>
                             </div>
                         </div>`;
                     grid.appendChild(card);
@@ -363,101 +337,130 @@
 
         window.toggleCategory = (catId) => { const grid = document.getElementById(`grid-${catId}`), arrow = document.getElementById(`arrow-${catId}`); if(grid.classList.contains('hidden')) { grid.classList.remove('hidden'); grid.classList.add('animate-fade-in-up'); arrow.classList.add('rotate-180'); } else { grid.classList.add('hidden'); arrow.classList.remove('rotate-180'); } };
         window.toggle = (id) => { const b = document.getElementById(`body-${id}`), i = document.getElementById(`icon-${id}`); if (b.classList.contains('hidden')) { b.classList.remove('hidden'); b.classList.add('animate-slide-down'); i.classList.remove('fa-plus'); i.classList.add('fa-minus', 'text-fmn-blue', 'rotate-180'); } else { b.classList.add('hidden'); i.classList.remove('fa-minus', 'text-fmn-blue', 'rotate-180'); i.classList.add('fa-plus'); } };
-        window.copy = (txt) => { navigator.clipboard.writeText(window.location.origin + txt); messeg("URL COPIED"); };
         window.copyRes = (id) => { const out = document.getElementById(`output-${id}`); if (out.innerText) { navigator.clipboard.writeText(out.innerText); messeg("RESPONSE COPIED"); } };
         window.reset = (id) => { document.getElementById(`res-area-${id}`).className = 'response-area hidden mx-4 mb-4 rounded-lg overflow-hidden bg-[#1e1e1e] border border-slate-600 shadow-inner relative max-w-[calc(100%-2rem)]'; document.getElementById(`output-${id}`).innerHTML = ''; document.getElementById(`status-indicator-${id}`).className = 'status-indicator status-waiting'; };
 
+        // FUNGSI INTI: Merakit Data Secara Dinamis untuk GET / POST File / cURL
+        window.buildRequestData = (id, url, originalMethod) => {
+            let queryParams = {};
+            let formData = new FormData();
+            let forcePost = false;
+            let hasFile = false;
+            let fileNames = {}; // Untuk teks terminal cURL
+
+            const inputs = document.querySelectorAll(`[id^="input-${id}-"]`);
+            for (let i of inputs) {
+                const paramName = i.id.split(`input-${id}-`)[1];
+                const modeInput = document.getElementById(`mode-${id}-${paramName}`);
+                
+                if (modeInput && modeInput.value === 'POST') {
+                    const fileInput = document.getElementById(`file-${id}-${paramName}`);
+                    if (fileInput && fileInput.files.length > 0) {
+                        formData.append(paramName, fileInput.files[0]);
+                        fileNames[paramName] = fileInput.files[0].name;
+                        forcePost = true;
+                        hasFile = true;
+                    }
+                } else {
+                    if (i.value) {
+                        queryParams[paramName] = i.value;
+                        formData.append(paramName, i.value);
+                    }
+                }
+            }
+            
+            let method = forcePost ? 'POST' : originalMethod;
+            let baseUrl = window.location.origin + url;
+            let fetchUrl = baseUrl + (!hasFile && Object.keys(queryParams).length ? '?' + new URLSearchParams(queryParams) : '');
+            
+            return { method, baseUrl, fetchUrl, queryParams, hasFile, formData, fileNames };
+        };
+
+        // Bikin Teks cURL Buat Terminal
+        window.generateCurlHTML = (reqData) => {
+            let curl = `curl -X ${reqData.method} "${reqData.fetchUrl}"`;
+            if (reqData.method !== 'GET' && reqData.hasFile) {
+                curl = `curl -X ${reqData.method} "${reqData.baseUrl}"`;
+                for (let key in reqData.queryParams) curl += ` \\<br>&nbsp;&nbsp;-F "${key}=${reqData.queryParams[key]}"`;
+                for (let key in reqData.fileNames) curl += ` \\<br>&nbsp;&nbsp;-F "${key}=@${reqData.fileNames[key]}"`;
+            }
+            return curl;
+        };
+
+        // Bikin Teks cURL Buat Clipboard (Spasi & Baris Asli)
+        window.generateCurlPlain = (reqData) => {
+            let curl = `curl -X ${reqData.method} "${reqData.fetchUrl}"`;
+            if (reqData.method !== 'GET' && reqData.hasFile) {
+                curl = `curl -X ${reqData.method} "${reqData.baseUrl}"`;
+                for (let key in reqData.queryParams) curl += ` \\\n  -F "${key}=${reqData.queryParams[key]}"`;
+                for (let key in reqData.fileNames) curl += ` \\\n  -F "${key}=@${reqData.fileNames[key]}"`;
+            }
+            return curl;
+        };
+
+        // TOMBOL COPY URL DINAMIS
+        window.copyDynamicUrl = (id, url, originalMethod) => {
+            const req = buildRequestData(id, url, originalMethod);
+            navigator.clipboard.writeText(req.fetchUrl);
+            messeg("URL COPIED");
+        };
+
+        // TOMBOL COPY cURL DINAMIS
+        window.copyDynamicCurl = (id, url, originalMethod) => {
+            const req = buildRequestData(id, url, originalMethod);
+            navigator.clipboard.writeText(generateCurlPlain(req));
+            messeg("cURL COMMAND COPIED");
+        };
 
         window.testReq = async (btn, url, originalMethod, id) => {
-    if (btn.disabled) return;
-    const out = document.getElementById(`output-${id}`), status = document.getElementById(`status-${id}`), time = document.getElementById(`time-${id}`), dlBtn = document.getElementById(`dl-btn-${id}`), resArea = document.getElementById(`res-area-${id}`), statusIndicator = document.getElementById(`status-indicator-${id}`);
-    const btnInner = btn.querySelector('.soft-btn__inner'); const originalBtnText = btnInner.innerHTML;
-    
-    btn.disabled = true; btnInner.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> PROCESSING';
-    resArea.className = 'response-area show showing success mx-4 mb-4 rounded-lg overflow-hidden bg-[#1e1e1e] border border-slate-600 shadow-inner relative max-w-[calc(100%-2rem)]';
-    statusIndicator.className = 'status-indicator status-waiting'; status.innerText = 'RUNNING...'; status.className = 'text-[10px] font-mono font-bold text-yellow-500'; out.innerHTML = '<span class="text-slate-500 italic">Establishing connection...</span>';
-    
-    let queryParams = {};
-    let formData = new FormData(); // Kunci utamanya di sini!
-    let forcePost = false;
-    let hasFile = false;
+            if (btn.disabled) return;
+            const out = document.getElementById(`output-${id}`), status = document.getElementById(`status-${id}`), dlBtn = document.getElementById(`dl-btn-${id}`), resArea = document.getElementById(`res-area-${id}`), statusIndicator = document.getElementById(`status-indicator-${id}`), cmdView = document.getElementById(`cmd-${id}`);
+            const btnInner = btn.querySelector('.soft-btn__inner'); const originalBtnText = btnInner.innerHTML;
+            
+            btn.disabled = true; btnInner.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> PROCESSING';
+            resArea.className = 'response-area show showing success mx-4 mb-4 rounded-lg overflow-hidden bg-[#1e1e1e] border border-slate-600 shadow-inner relative max-w-[calc(100%-2rem)]';
+            statusIndicator.className = 'status-indicator status-waiting'; status.innerText = 'RUNNING...'; status.className = 'text-[10px] font-mono font-bold text-yellow-500'; out.innerHTML = '<span class="text-slate-500 italic">Establishing connection...</span>';
+            
+            // 1. RAKIT SEMUA DATA DINAMIS
+            const reqData = buildRequestData(id, url, originalMethod);
+            
+            // 2. TAMPILKAN CURL DI TERMINAL UI
+            cmdView.innerHTML = generateCurlHTML(reqData);
 
-    const inputs = document.querySelectorAll(`[id^="input-${id}-"]`);
-    for (let i of inputs) {
-        const paramName = i.id.split(`input-${id}-`)[1];
-        const modeInput = document.getElementById(`mode-${id}-${paramName}`);
-        
-        if (modeInput) {
-            if (modeInput.value === 'POST') {
-                const fileInput = document.getElementById(`file-${id}-${paramName}`);
-                if (fileInput && fileInput.files.length > 0) {
-                    // Masukkan FILE FISIK langsung, TANPA BASE64
-                    formData.append(paramName, fileInput.files[0]);
-                    forcePost = true;
-                    hasFile = true;
-                }
-            } else {
-                if (i.value) {
-                    queryParams[paramName] = i.value;
-                    formData.append(paramName, i.value);
-                }
+            let opts = { method: reqData.method };
+
+            // Selalu gunakan formData untuk method POST agar Vercel membaca multipart/form-data
+            if (reqData.method !== 'GET') {
+                opts.body = reqData.formData; 
             }
-        } else {
-            if (i.value) {
-                queryParams[paramName] = i.value;
-                formData.append(paramName, i.value);
+            
+            terminalLog(`REQ: ${reqData.method} ${reqData.fetchUrl} ${reqData.hasFile ? '(With Binary File)' : ''}`, 'warn');
+            let startTime = Date.now();
+            
+            try {
+                const req = await fetch(reqData.fetchUrl, opts);
+                animateCounter(`time-${id}`, 0, Date.now() - startTime, 500);
+                
+                if (req.ok) { statusIndicator.className = 'status-indicator status-success'; status.innerText = `${req.status} ${req.statusText}`; status.className = 'text-[10px] font-mono font-bold text-green-500'; resArea.classList.add('success'); } 
+                else { statusIndicator.className = 'status-indicator status-error'; status.innerText = `${req.status} ${req.statusText}`; status.className = 'text-[10px] font-mono font-bold text-red-500'; resArea.classList.add('error'); }
+
+                const type = req.headers.get('content-type');
+                if (type?.includes('json')) { out.innerHTML = syntaxHighlight(await req.json()); } 
+                else if (type?.startsWith('image')) {
+                    const urlObj = URL.createObjectURL(await req.blob());
+                    dlBtn.href = urlObj; dlBtn.download = `img-${Date.now()}.png`; dlBtn.classList.remove('hidden');
+                    out.innerHTML = `<div class="flex justify-center p-2 animate-fade-in-up"><img src="${urlObj}" class="max-w-full rounded border border-gray-700 max-h-[300px] transform transition-all duration-500 hover:scale-105"></div>`;
+                } else { 
+                    out.textContent = await req.text(); 
+                }
+            } catch (err) {
+                statusIndicator.className = 'status-indicator status-error'; status.innerText = 'ERROR'; status.className = 'text-[10px] font-mono font-bold text-red-500'; resArea.classList.add('error'); out.innerHTML = `<span class="text-red-500">${err.message}</span>`;
+            } finally { 
+                btn.disabled = false; btnInner.innerHTML = originalBtnText; 
             }
-        }
-    }
-    
-    let method = forcePost ? 'POST' : originalMethod;
-    
-    // Jika ada file, JANGAN masukkan data ke URL query
-    let fetchUrl = url + (!hasFile && Object.keys(queryParams).length ? '?' + new URLSearchParams(queryParams) : '');
-    
-    let opts = { method: method };
+        };
 
-    if (method !== 'GET') {
-        if (hasFile) {
-            // Jika bawa file, kirim formData murni. 
-            // Browser akan otomatis mengatur header Content-Type ke 'multipart/form-data' dengan sendirinya!
-            opts.body = formData;
-        } else {
-            // Jika murni POST data biasa (seperti sertifikat-tolol)
-            opts.headers = { 'Content-Type': 'application/json' };
-            opts.body = JSON.stringify(queryParams);
-        }
-    }
-    
-    terminalLog(`REQ: ${method} ${fetchUrl} ${hasFile ? '(With Binary File)' : ''}`, 'warn');
-        let startTime = Date.now();
-    try {
-        const req = await fetch(fetchUrl, opts);
-        animateCounter(`time-${id}`, 0, Date.now() - startTime, 500);
-        if (req.ok) { statusIndicator.className = 'status-indicator status-success'; status.innerText = `${req.status} ${req.statusText}`; status.className = 'text-[10px] font-mono font-bold text-green-500'; resArea.classList.add('success'); } 
-        else { statusIndicator.className = 'status-indicator status-error'; status.innerText = `${req.status} ${req.statusText}`; status.className = 'text-[10px] font-mono font-bold text-red-500'; resArea.classList.add('error'); }
-
-        const type = req.headers.get('content-type');
-        if (type?.includes('json')) { out.innerHTML = syntaxHighlight(await req.json()); } 
-        else if (type?.startsWith('image')) {
-            const urlObj = URL.createObjectURL(await req.blob());
-            dlBtn.href = urlObj; dlBtn.download = `img-${Date.now()}.png`; dlBtn.classList.remove('hidden');
-            out.innerHTML = `<div class="flex justify-center p-2 animate-fade-in-up"><img src="${urlObj}" class="max-w-full rounded border border-gray-700 max-h-[300px] transform transition-all duration-500 hover:scale-105"></div>`;
-        } else { 
-            // Langsung tempel teksnya tanpa animasi ketik lambat
-            out.textContent = await req.text(); 
-        }
-    // 👇👇 BAGIAN INI YANG SEMPAT TERHAPUS 👇👇
-    } catch (err) {
-        statusIndicator.className = 'status-indicator status-error'; status.innerText = 'ERROR'; status.className = 'text-[10px] font-mono font-bold text-red-500'; resArea.classList.add('error'); out.innerHTML = `<span class="text-red-500">${err.message}</span>`;
-    } finally { 
-        btn.disabled = false; btnInner.innerHTML = originalBtnText; 
-    }
-}; // <--- Penutup fungsi window.testReq
-
-function typewriterEffect(elId, txt, spd=20) { const el = document.getElementById(elId); el.innerHTML = ''; let i = 0; function type() { if (i < txt.length) { el.innerHTML += txt.charAt(i); i++; setTimeout(type, spd); } } type(); }
-function syntaxHighlight(json) { if (typeof json != 'string') json = JSON.stringify(json, undefined, 2); return json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) { let cls = 'json-number'; if (/^"/.test(match)) { if (/:$/.test(match)) cls = 'json-key'; else cls = 'json-string'; } else if (/true|false/.test(match)) cls = 'json-boolean'; else if (/null/.test(match)) cls = 'json-null'; return `<span class="${cls}">${match}</span>`; }); }
-</script>
+        function syntaxHighlight(json) { if (typeof json != 'string') json = JSON.stringify(json, undefined, 2); return json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) { let cls = 'json-number'; if (/^"/.test(match)) { if (/:$/.test(match)) cls = 'json-key'; else cls = 'json-string'; } else if (/true|false/.test(match)) cls = 'json-boolean'; else if (/null/.test(match)) cls = 'json-null'; return `<span class="${cls}">${match}</span>`; }); }
+    </script>
 </body>
 </html>
-
