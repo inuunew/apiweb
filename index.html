@@ -3,299 +3,420 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>API Dashboard - InuuTyzDev</title>
-    <link id="favicon" rel="icon" href="">
+    <title>InuuTyzDev API | Home</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Quicksand:wght@500;700;800&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: { 
-                        mono: ['"JetBrains Mono"', 'monospace'],
-                        display: ['"Space Grotesk"', 'sans-serif']
+                        mono: ['"JetBrains Mono"', 'monospace'], 
+                        sans: ['"Quicksand"', 'sans-serif'] 
+                    },
+                    colors: { 
+                        'cuki-blue': 'var(--theme-main)',
+                        'cuki-dark': 'var(--theme-dark)',
+                        'cuki-shadow': 'var(--theme-light)',
+                        'cuki-bg': '#f8fafc',
+                        'text-main': '#1e293b'
                     },
                     boxShadow: { 
-                        'neo': '4px 4px 0px 0px #0f172a',
-                        'neo-sm': '2px 2px 0px 0px #0f172a',
-                        'neo-hover': '0px 0px 0px 0px #0f172a',
+                        'soft': '4px 4px 0px 0px var(--theme-light)',
+                        'soft-sm': '2px 2px 0px 0px var(--theme-light)',
                     },
-                    colors: {
-                        'primary': '#3b82f6', /* Blue from image */
-                        'dark': '#0f172a',
-                    }
+                    animation: { 
+                        'fade-in-up': 'fadeInUp 0.3s ease-out forwards', 
+                    },
+                    keyframes: { 
+                        fadeInUp: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }
+                    },
                 }
             }
         }
     </script>
     <style>
-        /* Base Background */
-        body { 
-            background-color: #f0f4f8; 
-            transition: background-color 0.4s ease;
+        :root {
+            --theme-main: #4eb3f3; 
+            --theme-dark: #2b90d9;
+            --theme-light: #bae6fd;
         }
+        html.theme-red {
+            --theme-main: #f43f5e; 
+            --theme-dark: #e11d48;
+            --theme-light: #fecdd3;
+        }
+        html.theme-yellow {
+            --theme-main: #eab308; 
+            --theme-dark: #d97706;
+            --theme-light: #fef08a;
+        }
+        html.theme-green {
+            --theme-main: #10b981; 
+            --theme-dark: #059669;
+            --theme-light: #d1fae5;
+        }
+        html.theme-purple {
+            --theme-main: #8b5cf6; 
+            --theme-dark: #7c3aed;
+            --theme-light: #ede9fe;
+        }
+
+        body { background-color: #f8fafc; }
         
-        /* Grid Background Default (Light Blue) */
         .bg-grid {
-            background-size: 40px 40px;
+            background-size: 30px 30px;
             background-image: 
-                linear-gradient(to right, #dbeafe 1px, transparent 1px),
-                linear-gradient(to bottom, #dbeafe 1px, transparent 1px);
-            transition: background-image 0.4s ease;
+                linear-gradient(to right, var(--theme-light) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--theme-light) 1px, transparent 1px);
+        }
+        .bg-grid-overlay {
+            position: fixed; inset: 0; background: rgba(248, 250, 252, 0.5); z-index: -1; pointer-events: none;
         }
 
-        /* Yellow Theme Classes */
-        body.theme-yellow {
-            background-color: #fde047; /* Bright Golden Yellow */
-        }
-        body.theme-yellow.bg-grid {
-            background-image: 
-                linear-gradient(to right, #facc15 2px, transparent 2px),
-                linear-gradient(to bottom, #facc15 2px, transparent 2px);
-        }
-        
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; } 
+        ::-webkit-scrollbar-track { background: transparent; } 
+        ::-webkit-scrollbar-thumb { background: var(--theme-main); border-radius: 10px; }
 
-        /* Neobrutalism Button Click Effect */
-        .btn-neo {
-            transition: all 0.1s ease;
-        }
-        .btn-neo:active {
-            transform: translate(4px, 4px);
-            box-shadow: 0px 0px 0px 0px #0f172a;
-        }
-        
-        /* Smooth Sidebar Transition */
-        #sidebar {
-            transition: transform 0.3s ease-in-out;
-        }
+        .transition-theme { transition: background-color 0.5s ease, border-color 0.5s ease, color 0.5s ease; }
     </style>
 </head>
-<body class="font-display text-dark bg-grid min-h-screen relative overflow-x-hidden">
+<body class="font-sans text-text-main bg-grid min-h-screen flex flex-col relative overflow-x-hidden selection:bg-cuki-blue selection:text-white transition-theme">
+    <div class="bg-grid-overlay transition-theme"></div>
+    
+    <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 z-40 hidden backdrop-blur-sm" onclick="toggleSidebar()"></div>
 
-    <div id="sidebar-overlay" class="fixed inset-0 bg-dark/50 z-40 hidden backdrop-blur-sm" onclick="toggleSidebar()"></div>
-
-    <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-white border-r-4 border-dark z-50 transform -translate-x-full">
-        <div class="p-5 flex justify-between items-center border-b-2 border-dark">
-            <h2 class="text-xl font-bold">InuuTyzDev api</h2>
-            <button onclick="toggleSidebar()" class="w-8 h-8 flex items-center justify-center border-2 border-dark shadow-neo-sm btn-neo bg-white">
-                <i class="fa-solid fa-xmark text-primary"></i>
+    <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-white border-r-2 border-cuki-blue z-50 transform -translate-x-full transition-transform duration-300 shadow-[4px_0px_10px_rgba(0,0,0,0.05)] transition-theme">
+        <div class="p-5 flex justify-between items-center border-b-2 border-cuki-shadow bg-cuki-bg transition-theme">
+            <h2 class="text-xl font-bold tracking-tight text-cuki-dark transition-theme">InuuTyzDev API</h2>
+            <button onclick="toggleSidebar()" class="w-8 h-8 flex items-center justify-center border-2 border-cuki-blue shadow-soft-sm bg-white rounded-md text-cuki-blue transition-theme">
+                <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
         <div class="p-5 space-y-4">
-            <a href="index.html" class="block bg-blue-50 border-2 border-dark p-3 font-bold shadow-neo btn-neo flex items-center gap-3">
-                <i class="fa-solid fa-house text-primary"></i> Home
+            <a href="#" class="block bg-cuki-blue/10 border-2 border-cuki-blue p-3 font-bold shadow-soft flex items-center gap-3 rounded-md text-cuki-dark transition-theme hover:bg-cuki-blue/20">
+                <i class="fa-solid fa-house"></i> Home
             </a>
-            <a href="docs.html" class="block bg-blue-50 border-2 border-dark p-3 font-bold shadow-neo btn-neo flex items-center gap-3">
-                <i class="fa-solid fa-book text-primary"></i> Docs
+            <a href="docs.html" class="block bg-white border-2 border-cuki-blue p-3 font-bold shadow-soft flex items-center gap-3 rounded-md text-cuki-dark transition-theme hover:bg-slate-50">
+                <i class="fa-solid fa-book"></i> Docs
             </a>
-            <a href="stats.html" class="block bg-blue-50 border-2 border-dark p-3 font-bold shadow-neo btn-neo flex items-center gap-3">
+            <a href="stats.html" class="block bg-white border-2 border-cuki-blue p-3 font-bold shadow-soft flex items-center gap-3 rounded-md text-cuki-dark transition-theme hover:bg-slate-50">
                 <i class="fa-solid fa-chart-line text-primary"></i> Stats
             </a>
-            <a href="aibot.html" class="block bg-blue-50 border-2 border-dark p-3 font-bold shadow-neo btn-neo flex items-center gap-3">
+            <a href="chat.html" class="block bg-white border-2 border-cuki-blue p-3 font-bold shadow-soft flex items-center gap-3 rounded-md text-cuki-dark transition-theme hover:bg-slate-50">
                 <i class="fa-solid fa-robot"></i> Chatbot
             </a>
         </div>
     </aside>
 
-    <nav class="flex justify-between items-center p-5 max-w-3xl mx-auto relative z-10">
-        <button onclick="toggleSidebar()" class="w-12 h-12 flex items-center justify-center border-2 border-dark bg-white shadow-neo btn-neo text-xl">
-            <i class="fa-solid fa-bars text-primary"></i>
+    <nav class="bg-cuki-blue p-3 md:p-4 flex items-center justify-between gap-2 md:gap-3 sticky top-0 z-40 shadow-md transition-theme">
+        <button onclick="toggleSidebar()" class="w-10 h-10 shrink-0 bg-white text-cuki-blue flex items-center justify-center border-2 border-white/80 shadow-[2px_2px_0px_rgba(255,255,255,0.5)] rounded transition-theme">
+            <i class="fa-solid fa-bars text-lg"></i>
         </button>
         
-        <button onclick="toggleTheme()" class="w-12 h-12 flex items-center justify-center border-2 border-dark bg-white shadow-neo btn-neo text-xl text-yellow-500">
-            <i id="theme-icon" class="fa-solid fa-moon"></i>
-        </button>
+        <div class="flex-1 text-center">
+            <h1 class="font-black text-xl tracking-tight uppercase text-white drop-shadow-sm">InuuTyzDev API</h1>
+        </div>
+        
+        <div class="flex gap-2 shrink-0 relative">
+            <button onclick="toggleNotif()" class="w-10 h-10 bg-white/20 text-white flex items-center justify-center relative border border-white/30 rounded hover:bg-white/30 transition">
+                <i class="fa-solid fa-bell"></i>
+                <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white/50"></span>
+            </button>
+            <button onclick="toggleThemeModal()" class="w-10 h-10 bg-white/20 text-white flex items-center justify-center border border-white/30 rounded hover:bg-white/30 transition">
+                <i class="fa-solid fa-palette"></i>
+            </button>
+
+            <div id="notif-modal" class="hidden absolute top-14 right-0 w-[90vw] md:w-[320px] max-w-[320px] bg-white border-2 border-cuki-blue rounded-xl shadow-lg z-50 overflow-hidden flex flex-col animate-fade-in-up origin-top-right transition-theme">
+                <div class="p-4 flex items-center gap-3 text-text-main bg-slate-50">
+                    <i class="fa-solid fa-bell text-lg text-cuki-dark transition-theme"></i>
+                    <h3 class="font-bold text-lg">Notification</h3>
+                </div>
+                <div class="px-4 pb-2">
+                    <div class="border-t-2 border-dashed border-cuki-blue/40 pt-3 pb-3 transition-theme">
+                        <div class="flex justify-between items-start mb-1">
+                            <h4 class="font-bold text-sm text-text-main truncate pr-2">Awal rilis</h4>
+                            <span class="text-[10px] text-slate-400 font-mono shrink-0 pt-0.5">6 mei 2026 13:46</span>
+                        </div>
+                        <p class="text-xs text-slate-500 font-mono leading-relaxed mt-1">Kalo ada eror jangan segan hubungi owner ya :)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="theme-modal" class="hidden absolute top-14 right-0 w-[90vw] md:w-[300px] max-w-[300px] bg-white border-2 border-cuki-blue rounded-xl shadow-lg z-50 overflow-hidden flex flex-col animate-fade-in-up origin-top-right transition-theme">
+                <div class="p-4 flex items-center gap-3 text-text-main bg-slate-50">
+                    <i class="fa-solid fa-palette text-lg text-cuki-dark transition-theme"></i>
+                    <h3 class="font-bold text-lg">Theme</h3>
+                </div>
+                <div class="px-4 pb-2">
+                    <div class="border-t-2 border-dashed border-cuki-blue/40 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition" onclick="changeTheme('')">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-4 rounded-full bg-gradient-to-r from-[#4eb3f3] to-[#2b90d9] shadow-sm"></div>
+                            <div><h4 class="font-bold text-sm text-text-main font-mono">Biru (Original)</h4></div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-300 text-xs"></i>
+                    </div>
+                    <div class="border-t-2 border-dashed border-cuki-blue/40 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition" onclick="changeTheme('theme-red')">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-4 rounded-full bg-gradient-to-r from-rose-400 to-rose-600 shadow-sm"></div>
+                            <div><h4 class="font-bold text-sm text-text-main font-mono">Merah</h4></div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-300 text-xs"></i>
+                    </div>
+                    <div class="border-t-2 border-dashed border-cuki-blue/40 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition" onclick="changeTheme('theme-yellow')">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-4 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 shadow-sm"></div>
+                            <div><h4 class="font-bold text-sm text-text-main font-mono">Kuning</h4></div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-300 text-xs"></i>
+                    </div>
+                    <div class="border-t-2 border-dashed border-cuki-blue/40 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition" onclick="changeTheme('theme-green')">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-4 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 shadow-sm"></div>
+                            <div><h4 class="font-bold text-sm text-text-main font-mono">Hijau</h4></div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-300 text-xs"></i>
+                    </div>
+                    <div class="border-t-2 border-dashed border-cuki-blue/40 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition" onclick="changeTheme('theme-purple')">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-4 rounded-full bg-gradient-to-r from-violet-500 to-violet-700 shadow-sm"></div>
+                            <div><h4 class="font-bold text-sm text-text-main font-mono">Ungu</h4></div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-300 text-xs"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
     </nav>
 
-    <main class="max-w-md mx-auto px-5 pb-24 relative z-10">
+    <div id="hero-section" class="relative pt-8 pb-24 px-4 text-center text-white overflow-hidden z-10" style="background: linear-gradient(to bottom, var(--theme-main), var(--theme-dark)); transition: background 0.5s ease;">
+        <div class="absolute -top-10 -left-10 w-40 h-40 border border-white/20 rounded-full"></div>
+        <div class="absolute top-20 -right-10 w-32 h-32 border border-white/10 rounded-full"></div>
         
-        <section class="mt-8 mb-12">
+        <h1 class="text-4xl md:text-5xl font-black mb-3 tracking-tight drop-shadow-md">
+            Hello, I'm <br> InuuTyzDev
+        </h1>
+        <p class="text-sm md:text-base font-medium max-w-lg mx-auto mb-6 leading-relaxed opacity-90 font-mono">
+            Welcome to <span class="font-bold text-white">Provider-api</span>, a REST API with fairly complete and fast features.
+        </p>
+        
+        <div class="max-w-2xl mx-auto border-2 border-white/40 p-1 bg-white/10 rounded backdrop-blur-sm shadow-lg relative z-20">
+            <img src="https://files.catbox.moe/la9esc.png" alt="Banner" class="w-full object-cover aspect-[21/9] rounded-sm">
+        </div>
+        
+        <div class="absolute bottom-[-1px] left-0 w-full overflow-hidden leading-none z-10 pointer-events-none">
+            <svg viewBox="0 0 1440 320" preserveAspectRatio="none" class="w-full h-[50px] sm:h-[80px] md:h-[100px] block">
+                <path fill="#f8fafc" d="M0,160L48,144C96,128,192,96,288,106.7C384,117,480,171,576,176C672,181,768,139,864,122.7C960,107,1056,117,1152,122.7C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            </svg>
+        </div>
+    </div>
+    <div class="h-[3px] w-full bg-cuki-blue opacity-30 transition-theme relative z-10"></div>
 
-            <div class="relative w-full aspect-[16/9] border-2 border-dark bg-white shadow-neo mb-10 overflow-hidden group">
-                <img src="https://files.catbox.moe/la9esc.png" alt="Banner" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-in-out">
-                
-                <div class="absolute bottom-3 left-3 z-20">
-                    <span class="bg-white border-2 border-dark px-2 py-1 text-xs font-bold shadow-neo-sm flex items-center gap-2">
-                        <i class="fa-solid fa-server text-primary"></i> v2.0.0
-                    </span>
+    <main class="flex-grow max-w-3xl mx-auto w-full px-4 pb-12 relative z-20 mt-6">
+        
+        <div class="flex flex-col sm:flex-row gap-4 mb-10">
+            <a href="docs.html" class="flex-1 bg-cuki-blue text-white font-bold text-lg py-4 border-2 border-cuki-dark shadow-soft rounded flex justify-center items-center gap-2 transition-theme hover:bg-cuki-dark active:translate-y-1 active:shadow-soft-sm">
+                <i class="fa-solid fa-arrow-right"></i> Get Started
+            </a>
+            <a href="stats.html" class="flex-1 bg-white text-cuki-blue font-bold text-lg py-4 border-2 border-cuki-blue shadow-soft rounded flex justify-center items-center transition-theme hover:bg-slate-50 active:translate-y-1 active:shadow-soft-sm">
+                <i class="fa-solid fa-chart-line"></i> Server Status
+            </a>
+        </div>
+
+        <div class="bg-[#1e293b] rounded-xl border-2 border-slate-700 shadow-lg overflow-hidden mb-10">
+            <div class="flex justify-between items-center px-4 py-2 border-b border-slate-700 bg-[#0f172a]">
+                <div class="flex gap-2">
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
                 </div>
+                <span class="text-xs font-mono text-slate-400">InuuTyzDev | Server Logs</span>
             </div>
-                        <h1 class="text-4xl font-extrabold mb-4 tracking-tight">
-                Hi!, I'm <span class="text-primary">InuuTyzDev</span>
-            </h1>
-            <p class="text-lg text-slate-700 font-medium mb-8">
-                Welcome to <span class="text-primary font-bold">Provider-api</span>, a REST API with fairly complete and fast features.
-            </p>
-
-            <div class="flex flex-col gap-4 mb-10">
-                <a href="docs.html" class="w-full bg-primary text-white font-bold text-lg py-4 border-2 border-dark shadow-neo btn-neo flex justify-center items-center gap-2">
-                    <i class="fa-solid fa-arrow-right"></i> Get Started
-                </a>
-                <a href="stats.html" class="w-full bg-white text-primary font-bold text-lg py-4 border-2 border-dark shadow-neo btn-neo flex justify-center items-center">
-                    <i class="fa-solid fa-chart-line"></i>
-                </a>
+            <div class="p-4 font-mono text-[11px] sm:text-xs leading-relaxed text-slate-300">
+                <p><span class="text-green-400">root@inuu:~/api$</span> npm run api</p>
+                <p class="text-purple-400">[00:11:14] INFO Waking up the engine...</p>
+                <p class="text-green-400">[00:11:14] OK Neural core synced</p>
+                <p class="text-green-400">[00:11:14] OK Image forge online</p>
+                <p class="text-purple-400">[00:11:14] INFO Extra capabilities unlocked (+10)</p>
+                <p class="text-purple-400">[00:11:14] <span class="text-green-400">https://api.inuutyz.web.id online</span></p>
+                <p class="mt-4"><span class="text-green-400">root@inuu:~/api$</span> <span class="animate-pulse">_</span></p>
             </div>
-
-
-            <div class="bg-[#0f172a] rounded-sm border-2 border-dark shadow-neo overflow-hidden">
-                <div class="flex justify-between items-center px-4 py-2 border-b border-slate-700 bg-[#1e293b]">
-                    <div class="flex gap-2">
-                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
-                    </div>
-                    <span class="text-xs font-mono text-green-400">InuuTyzDev | REST API</span>
-                </div>
-                <div class="p-4 font-mono text-[11px] leading-relaxed text-slate-300">
-                    <p><span class="text-green-400">root@inuu:~/api$</span> npm run api</p>
-                    <p class="text-purple-400">[00:11:14] INFO Waking up the engine...</p>
-                    <p class="text-green-400">[00:11:14] OK Neural core synced</p>
-                    <p class="text-green-400">[00:11:14] OK Image forge online</p>
-                    <p class="text-green-400">[00:11:14] OK Text processor calibrated</p>
-                    <p class="text-purple-400">[00:11:14] INFO Extra capabilities unlocked (+10)</p>
-                    <p class="text-purple-400">[00:11:14] <span class="text-green-400">https://api.inuutyz.web.id online</span></p>
-                    <p class="mt-4"><span class="text-green-400">root@inuu:~/api$</span> <span class="animate-pulse">_</span></p>
-                </div>
-            </div>
-        </section>
+        </div>
 
         <section class="mb-12">
-            <h4 class="text-xs font-bold text-primary tracking-widest uppercase mb-2">Features</h4>
-            <h2 class="text-3xl font-extrabold mb-4">Why use this API?</h2>
-            <p class="text-slate-700 mb-6 font-medium">Core advantages that make inuu-api simple to use for bots and backend projects.</p>
-
-            <div class="space-y-4">
-                <div class="bg-white border-2 border-dark p-5 shadow-neo">
-                    <div class="w-12 h-12 bg-orange-400 border-2 border-dark shadow-neo-sm flex items-center justify-center text-white text-xl mb-4">
+            <h4 class="text-xs font-bold text-cuki-dark tracking-widest uppercase mb-2 transition-theme">Features</h4>
+            <h2 class="text-3xl font-extrabold mb-4 text-text-main">Why use this API?</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <div class="bg-white border-2 border-cuki-blue p-5 shadow-soft rounded transition-theme">
+                    <div class="w-12 h-12 bg-orange-100 border-2 border-orange-400 flex items-center justify-center text-orange-500 text-xl mb-4 rounded-lg">
                         <i class="fa-solid fa-bolt"></i>
                     </div>
                     <h3 class="text-lg font-bold mb-2">Fast Response</h3>
-                    <p class="text-slate-600 text-sm">Latency rendah, cocok buat bot dan backend real-time.</p>
+                    <p class="text-slate-500 text-sm">Latency rendah, cocok buat bot dan backend real-time.</p>
                 </div>
 
-                <div class="bg-white border-2 border-dark p-5 shadow-neo">
-                    <div class="w-12 h-12 bg-emerald-400 border-2 border-dark shadow-neo-sm flex items-center justify-center text-white text-xl mb-4">
+                <div class="bg-white border-2 border-cuki-blue p-5 shadow-soft rounded transition-theme">
+                    <div class="w-12 h-12 bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-emerald-500 text-xl mb-4 rounded-lg">
                         <i class="fa-solid fa-unlock"></i>
                     </div>
-                    <h3 class="text-lg font-bold mb-2">No Authentication</h3>
-                    <p class="text-slate-600 text-sm">Langsung hit endpoint tanpa drama.</p>
+                    <h3 class="text-lg font-bold mb-2">No Auth</h3>
+                    <p class="text-slate-500 text-sm">Langsung hit endpoint tanpa daftar atau limit ribet.</p>
                 </div>
 
-                <div class="bg-white border-2 border-dark p-5 shadow-neo">
-                    <div class="w-12 h-12 bg-blue-500 border-2 border-dark shadow-neo-sm flex items-center justify-center text-white text-xl mb-4">
+                <div class="bg-white border-2 border-cuki-blue p-5 shadow-soft rounded transition-theme">
+                    <div class="w-12 h-12 bg-purple-100 border-2 border-purple-400 flex items-center justify-center text-purple-500 text-xl mb-4 rounded-lg">
                         <i class="fa-solid fa-code"></i>
                     </div>
-                    <h3 class="text-lg font-bold mb-2">Easy Integration</h3>
-                    <p class="text-slate-600 text-sm">Response JSON rapi dan mudah dipakai.</p>
+                    <h3 class="text-lg font-bold mb-2">Easy Use</h3>
+                    <p class="text-slate-500 text-sm">Response JSON terstruktur rapi dan mudah dipakai.</p>
                 </div>
             </div>
         </section>
 
         <section class="mb-12">
-            <h4 class="text-xs font-bold text-primary tracking-widest uppercase mb-2">Credits</h4>
-            <h2 class="text-3xl font-extrabold mb-4">Contributors</h2>
-            <p class="text-slate-700 mb-6 font-medium">People behind the project, UI inspiration, and scraper support.</p>
+            <h4 class="text-xs font-bold text-cuki-dark tracking-widest uppercase mb-2 transition-theme">Credits</h4>
+            <h2 class="text-3xl font-extrabold mb-6 text-text-main">Contributors</h2>
 
             <div class="space-y-3">
-                <div class="bg-white border-2 border-dark p-4 shadow-neo flex items-center gap-4">
-                    <i class="fa-solid fa-crown text-yellow-500 text-2xl w-8 text-center"></i>
+                <div class="bg-white border-2 border-cuki-blue p-4 shadow-soft rounded flex items-center gap-4 transition-theme">
+                    <div class="w-10 h-10 bg-yellow-50 rounded flex items-center justify-center border border-yellow-200"><i class="fa-solid fa-crown text-yellow-500 text-xl"></i></div>
                     <div>
-                        <h3 class="font-bold">InuuTyzDev</h3>
-                        <p class="text-xs text-slate-500">creator</p>
+                        <h3 class="font-bold text-text-main">InuuTyzDev</h3>
+                        <p class="text-xs text-slate-500 font-mono">creator</p>
                     </div>
                 </div>
 
-                <div class="bg-white border-2 border-dark p-4 shadow-neo flex items-center gap-4">
-                    <i class="fa-solid fa-palette text-purple-500 text-2xl w-8 text-center"></i>
+                <div class="bg-white border-2 border-cuki-blue p-4 shadow-soft rounded flex items-center gap-4 transition-theme">
+                    <div class="w-10 h-10 bg-purple-50 rounded flex items-center justify-center border border-purple-200"><i class="fa-solid fa-palette text-purple-500 text-xl"></i></div>
                     <div>
-                        <h3 class="font-bold">Cuki Digital</h3>
-                        <p class="text-xs text-slate-500">ui inspiration</p>
+                        <h3 class="font-bold text-text-main">Cuki Digital</h3>
+                        <p class="text-xs text-slate-500 font-mono">ui inspiration</p>
                     </div>
                 </div>
 
-                <div class="bg-white border-2 border-dark p-4 shadow-neo flex items-center gap-4">
-                    <i class="fa-solid fa-database text-emerald-500 text-2xl w-8 text-center"></i>
+                <div class="bg-white border-2 border-cuki-blue p-4 shadow-soft rounded flex items-center gap-4 transition-theme">
+                    <div class="w-10 h-10 bg-emerald-50 rounded flex items-center justify-center border border-emerald-200"><i class="fa-solid fa-database text-emerald-500 text-xl"></i></div>
                     <div>
-                        <h3 class="font-bold">Dezz</h3>
-                        <p class="text-xs text-slate-500">donatur endpoint</p>
+                        <h3 class="font-bold text-text-main">Dezz</h3>
+                        <p class="text-xs text-slate-500 font-mono">donatur endpoint</p>
                     </div>
                 </div>
-
-                <div class="bg-white border-2 border-dark p-4 shadow-neo flex items-center gap-4">
-                    <i class="fa-solid fa-robot text-blue-500 text-2xl w-8 text-center"></i>
+                
+                <div class="bg-white border-2 border-cuki-blue p-4 shadow-soft rounded flex items-center gap-4 transition-theme">
+                    <div class="w-10 h-10 bg-blue-50 rounded flex items-center justify-center border border-blue-200"><i class="fa-solid fa-robot text-blue-500 text-xl"></i></div>
                     <div>
-                        <h3 class="font-bold">Gemini</h3>
-                        <p class="text-xs text-slate-500">ai assistant</p>
+                        <h3 class="font-bold text-text-main">Gemini</h3>
+                        <p class="text-xs text-slate-500 font-mono">ai assistant</p>
                     </div>
                 </div>
             </div>
         </section>
 
-
+        <div class="text-center text-xs font-mono text-slate-400 mt-12 mb-4 border-t border-slate-200 pt-6">
+            © 2026 InuuTyzDev API — All Rights Reserved.
+        </div>
     </main>
 
-    <button onclick="toggleSupportModal()" class="fixed bottom-6 right-6 w-14 h-14 bg-white border-2 border-dark shadow-neo btn-neo flex items-center justify-center text-primary text-2xl z-30">
+    <button onclick="toggleSupportModal()" class="fixed bottom-6 right-6 w-14 h-14 bg-white border-2 border-cuki-blue shadow-soft rounded-full flex items-center justify-center text-cuki-blue text-2xl z-30 transition-theme hover:bg-slate-50">
         <i class="fa-solid fa-headset"></i>
     </button>
 
     <div id="support-overlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden backdrop-blur-[2px]" onclick="toggleSupportModal()"></div>
 
-    <div id="support-modal" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-[340px] bg-white border-2 border-dark shadow-[6px_6px_0px_0px_#0f172a] z-50 hidden flex-col">
+    <div id="support-modal" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-[340px] bg-white border-2 border-cuki-blue shadow-[6px_6px_0px_0px_var(--theme-light)] z-50 hidden flex-col rounded-xl overflow-hidden transition-theme">
         
-        <div class="flex justify-between items-center p-4">
-            <h3 class="font-bold text-lg">Contact Support</h3>
-            <button onclick="toggleSupportModal()" class="w-7 h-7 flex items-center justify-center border-2 border-dark shadow-neo-sm btn-neo bg-white">
+        <div class="flex justify-between items-center p-4 bg-slate-50 border-b-2 border-cuki-shadow transition-theme">
+            <h3 class="font-bold text-lg text-text-main">Contact Support</h3>
+            <button onclick="toggleSupportModal()" class="w-8 h-8 flex items-center justify-center border-2 border-cuki-blue shadow-soft-sm rounded bg-white text-cuki-blue transition-theme">
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
         </div>
         
-        <div class="p-4 pt-0">
-            <div class="flex gap-2 mb-4">
-                <button onclick="switchSupportTab('support')" id="tab-btn-support" class="flex-1 bg-[#e9d5ff] border-2 border-dark py-1.5 text-xs sm:text-sm font-bold shadow-neo-sm btn-neo transition-colors">Support</button>
-                <button onclick="switchSupportTab('channel')" id="tab-btn-channel" class="flex-1 bg-white border-2 border-dark py-1.5 text-xs sm:text-sm font-bold shadow-neo-sm btn-neo transition-colors">Channel</button>
-                <button onclick="switchSupportTab('chatbot')" id="tab-btn-chatbot" class="flex-1 bg-white border-2 border-dark py-1.5 text-xs sm:text-sm font-bold shadow-neo-sm btn-neo transition-colors">Chatbot</button>
+        <div class="p-4 bg-white">
+            <div class="flex gap-2 mb-4 bg-slate-100 p-1 rounded-md">
+                <button onclick="switchSupportTab('support')" id="tab-btn-support" class="flex-1 bg-white py-1.5 text-xs sm:text-sm font-bold shadow-sm rounded text-cuki-dark transition-theme">Support</button>
+                <button onclick="switchSupportTab('channel')" id="tab-btn-channel" class="flex-1 bg-transparent text-slate-500 py-1.5 text-xs sm:text-sm font-bold rounded hover:text-slate-700 transition-colors">Channel</button>
+                <button onclick="switchSupportTab('chatbot')" id="tab-btn-chatbot" class="flex-1 bg-transparent text-slate-500 py-1.5 text-xs sm:text-sm font-bold rounded hover:text-slate-700 transition-colors">Chatbot</button>
             </div>
 
             <div id="tab-content-support" class="space-y-3">
-                <a href="https://t.me/InuuUtama" class="block bg-white border-2 border-dark p-3 shadow-neo-sm btn-neo flex items-center gap-4">
-                    <i class="fa-brands fa-telegram text-blue-500 text-xl w-6 text-center"></i>
+                <a href="https://t.me/InuuUtama" class="block bg-white border-2 border-slate-200 hover:border-cuki-blue p-3 rounded flex items-center gap-4 transition-colors">
+                    <i class="fa-brands fa-telegram text-blue-500 text-2xl w-6 text-center"></i>
                     <div>
-                        <h4 class="font-bold text-sm">Telegram</h4>
+                        <h4 class="font-bold text-sm text-text-main">Telegram</h4>
                         <p class="text-xs text-slate-500">t.me/InuuUtama</p>
                     </div>
                 </a>
-                <a href="mailto:choirulazzamibnu@gmail.com?subject=Tanya%20Seputar%20API" class="block bg-white border-2 border-dark p-3 shadow-neo-sm btn-neo flex items-center gap-4">
-                    <i class="fa-solid fa-envelope text-red-500 text-xl w-6 text-center"></i>
+                <a href="mailto:choirulazzamibnu@gmail.com?subject=Tanya%20Seputar%20API" class="block bg-white border-2 border-slate-200 hover:border-cuki-blue p-3 rounded flex items-center gap-4 transition-colors">
+                    <i class="fa-solid fa-envelope text-red-500 text-2xl w-6 text-center"></i>
                     <div>
-                        <h4 class="font-bold text-sm">Email</h4>
+                        <h4 class="font-bold text-sm text-text-main">Email</h4>
                         <p class="text-xs text-slate-500">choirulazzamibnu@gmail.com</p>
                     </div>
                 </a>
             </div>
 
             <div id="tab-content-channel" class="space-y-3 hidden">
-                <a href="https://whatsapp.com/channel/0029Vb84hZx7oQhYjly35b0V" class="block bg-white border-2 border-dark p-3 shadow-neo-sm btn-neo flex items-center gap-4">
-                    <i class="fa-brands fa-whatsapp text-green-500 text-xl w-6 text-center"></i>
-                    <h4 class="font-bold text-sm">Saluran WhatsApp</h4>
+                <a href="https://whatsapp.com/channel/0029Vb84hZx7oQhYjly35b0V" class="block bg-white border-2 border-slate-200 hover:border-cuki-blue p-3 rounded flex items-center gap-4 transition-colors">
+                    <i class="fa-brands fa-whatsapp text-green-500 text-2xl w-6 text-center"></i>
+                    <div>
+                        <h4 class="font-bold text-sm text-text-main">WhatsApp Channel</h4>
+                        <p class="text-xs text-slate-500">Info update & info down</p>
+                    </div>
                 </a>
             </div>
 
             <div id="tab-content-chatbot" class="space-y-3 hidden">
-                <a href="aibot.html" class="block bg-white border-2 border-dark p-3 shadow-neo-sm btn-neo flex items-center gap-4">
-                    <i class="fa-solid fa-robot text-purple-500 text-xl w-6 text-center"></i>
-                    <h4 class="font-bold text-sm">ai-assistant</h4>
+                <a href="aibot.html" class="block bg-white border-2 border-slate-200 hover:border-cuki-blue p-3 rounded flex items-center gap-4 transition-colors">
+                    <i class="fa-solid fa-robot text-purple-500 text-2xl w-6 text-center"></i>
+                    <div>
+                        <h4 class="font-bold text-sm text-text-main">AI Assistant</h4>
+                        <p class="text-xs text-slate-500">Tanya langsung ke bot</p>
+                    </div>
                 </a>
             </div>
         </div>
     </div>
 
     <script>
-        // Function to toggle sidebar visibility
+        // LOAD SAVED THEME
+        const savedTheme = localStorage.getItem('cuki-theme');
+        if (savedTheme) document.documentElement.className = savedTheme;
+
+        // MODAL TOGGLES
+        const notifModal = document.getElementById('notif-modal');
+        const themeModal = document.getElementById('theme-modal');
+
+        function toggleNotif() {
+            themeModal.classList.add('hidden');
+            notifModal.classList.toggle('hidden');
+        }
+
+        function toggleThemeModal() {
+            notifModal.classList.add('hidden');
+            themeModal.classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#notif-modal') && !e.target.closest('[onclick="toggleNotif()"]')) {
+                notifModal.classList.add('hidden');
+            }
+            if (!e.target.closest('#theme-modal') && !e.target.closest('[onclick="toggleThemeModal()"]')) {
+                themeModal.classList.add('hidden');
+            }
+        });
+
+        // CHANGE THEME LOGIC
+        function changeTheme(themeClass) {
+            document.documentElement.className = themeClass; 
+            localStorage.setItem('cuki-theme', themeClass);  
+            toggleThemeModal();
+        }
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
@@ -309,7 +430,6 @@
             }
         }
 
-        // Function to toggle Support Modal
         function toggleSupportModal() {
             const modal = document.getElementById('support-modal');
             const overlay = document.getElementById('support-overlay');
@@ -325,7 +445,6 @@
             }
         }
 
-        // Function to switch tabs inside Support Modal
         function switchSupportTab(tabName) {
             const tabs = ['support', 'channel', 'chatbot'];
             
@@ -334,35 +453,13 @@
                 const content = document.getElementById(`tab-content-${tab}`);
                 
                 if (tab === tabName) {
-                    btn.classList.remove('bg-white');
-                    btn.classList.add('bg-[#e9d5ff]'); // Highlight color
+                    btn.className = 'flex-1 bg-white py-1.5 text-xs sm:text-sm font-bold shadow-sm rounded text-cuki-dark transition-theme';
                     content.classList.remove('hidden');
                 } else {
-                    btn.classList.remove('bg-[#e9d5ff]');
-                    btn.classList.add('bg-white');
+                    btn.className = 'flex-1 bg-transparent text-slate-500 py-1.5 text-xs sm:text-sm font-bold rounded hover:text-slate-700 transition-colors';
                     content.classList.add('hidden');
                 }
             });
-        }
-
-        // Function to toggle Theme (Light Blue / Golden Yellow)
-        function toggleTheme() {
-            const body = document.body;
-            const themeIcon = document.getElementById('theme-icon');
-            
-            // Toggle the yellow theme class
-            body.classList.toggle('theme-yellow');
-            
-            // Toggle icon (Moon / Sun)
-            if (body.classList.contains('theme-yellow')) {
-                themeIcon.classList.remove('fa-moon');
-                themeIcon.classList.add('fa-sun');
-                themeIcon.classList.replace('text-yellow-500', 'text-orange-500'); // Make icon darker for contrast
-            } else {
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-                themeIcon.classList.replace('text-orange-500', 'text-yellow-500');
-            }
         }
     </script>
 </body>
