@@ -218,7 +218,7 @@
         </p>
         
         <div class="max-w-2xl mx-auto border-2 border-white/40 p-1 bg-white/10 rounded backdrop-blur-sm shadow-lg relative z-20">
-            <img src="https://placehold.co/800x300/1e293b/FFF?text=Frieren+Banner" alt="Banner" class="w-full object-cover aspect-[21/6] rounded-sm">
+            <img src="https://files.catbox.moe/la9esc.png" alt="Banner" class="w-full object-cover aspect-[21/6] rounded-sm">
         </div>
         
         <div class="absolute bottom-[-1px] left-0 w-full overflow-hidden leading-none z-10 pointer-events-none">
@@ -481,7 +481,7 @@
             }
         }
 
-        function loadEnd(tags) {
+                        function loadEnd(tags) {
             const container = document.getElementById('api-container'); if(!container) return; container.innerHTML = '';
             for (const [cat, routes] of Object.entries(tags)) {
                 const catId = `cat-${cat.replace(/\s+/g, '-')}`;
@@ -513,17 +513,28 @@
                         inputs = `<div class="p-4 grid gap-3 bg-slate-50 w-full border-y border-slate-200">` + 
                         route.params.map(p => {
                             if (['image', 'avatar', 'background', 'icon', 'ppurl', 'html', 'photo'].some(k => p.name.toLowerCase().includes(k))) {
-                                const placeholderText = p.name.toLowerCase().includes('html') ? "Teks HTML / Link..." : "Link Gambar...";
+                                const isHtml = p.name.toLowerCase().includes('html');
+                                const placeholderText = isHtml ? "Teks HTML / Link..." : "Link Gambar...";
+                                const acceptType = isHtml ? ".html,text/html" : "image/*";
+                                
                                 return `
                                 <div>
                                     <label class="font-bold text-xs text-slate-600 mb-1 block">${p.name} ${p.required?'<span class="text-red-500">*</span>':''}</label>
-                                    <input type="text" id="input-${id}-${p.name}" placeholder="${placeholderText}" class="w-full border border-slate-300 p-2 text-sm rounded bg-white focus:border-cuki-blue outline-none transition-theme mb-2 shadow-sm font-mono">
+                                    
+                                    <div id="wrap-url-${id}-${p.name}" class="mb-2">
+                                        <input type="text" id="input-${id}-${p.name}" placeholder="${placeholderText}" class="w-full border border-slate-300 p-2 text-sm rounded bg-white focus:border-cuki-blue outline-none transition-theme shadow-sm font-mono">
+                                    </div>
+                                    
+                                    <div id="wrap-file-${id}-${p.name}" class="hidden mb-2">
+                                        <input type="file" id="file-${id}-${p.name}" accept="${acceptType}" class="w-full border border-slate-300 p-1.5 text-sm rounded bg-white focus:border-cuki-blue outline-none transition-theme shadow-sm font-mono file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-bold file:bg-cuki-blue/10 file:text-cuki-dark hover:file:bg-cuki-blue/20 cursor-pointer">
+                                    </div>
+
                                     <input type="hidden" id="mode-${id}-${p.name}" value="GET">
                                     <div class="flex gap-2 text-[10px] font-bold">
-                                        <button type="button" onclick="document.getElementById('mode-${id}-${p.name}').value='GET'; this.className='flex-1 py-1.5 rounded bg-cuki-blue text-white shadow-sm transition-theme'; this.nextElementSibling.className='flex-1 py-1.5 rounded bg-slate-200 text-slate-600 shadow-sm transition-theme';" class="flex-1 py-1.5 rounded bg-cuki-blue text-white shadow-sm transition-theme">URL / TEKS</button>
-                                        <button type="button" onclick="document.getElementById('mode-${id}-${p.name}').value='POST'; this.className='flex-1 py-1.5 rounded bg-cuki-dark text-white shadow-sm transition-theme'; this.previousElementSibling.className='flex-1 py-1.5 rounded bg-slate-200 text-slate-600 shadow-sm transition-theme'; document.getElementById('input-${id}-${p.name}').placeholder='Pilih file saat execute';" class="flex-1 py-1.5 rounded bg-slate-200 text-slate-600 shadow-sm transition-theme">UPLOAD</button>
+                                        <button type="button" onclick="document.getElementById('mode-${id}-${p.name}').value='GET'; this.className='flex-1 py-1.5 rounded bg-cuki-blue text-white shadow-sm transition-theme'; this.nextElementSibling.className='flex-1 py-1.5 rounded bg-slate-200 text-slate-600 shadow-sm transition-theme'; document.getElementById('wrap-url-${id}-${p.name}').classList.remove('hidden'); document.getElementById('wrap-file-${id}-${p.name}').classList.add('hidden');" class="flex-1 py-1.5 rounded bg-cuki-blue text-white shadow-sm transition-theme">URL / TEKS</button>
+                                        
+                                        <button type="button" onclick="document.getElementById('mode-${id}-${p.name}').value='POST'; this.className='flex-1 py-1.5 rounded bg-cuki-dark text-white shadow-sm transition-theme'; this.previousElementSibling.className='flex-1 py-1.5 rounded bg-slate-200 text-slate-600 shadow-sm transition-theme'; document.getElementById('wrap-url-${id}-${p.name}').classList.add('hidden'); document.getElementById('wrap-file-${id}-${p.name}').classList.remove('hidden');" class="flex-1 py-1.5 rounded bg-slate-200 text-slate-600 shadow-sm transition-theme">UPLOAD</button>
                                     </div>
-                                    <input type="file" id="file-${id}-${p.name}" class="hidden">
                                 </div>`;
                             }
                             return `
@@ -538,6 +549,7 @@
                     card.className = 'api-card-wrapper w-full bg-white border border-slate-200 rounded shadow-sm overflow-hidden transition-all'; 
                     card.setAttribute('data-search', `${route.name} ${route.endpoint} ${cat}`);
                     
+                    // --- BAGIAN BACKGROUND RESPONSE (Dark Mode) ---
                     card.innerHTML = `
                         <div class="p-3 cursor-pointer select-none hover:bg-slate-50 transition-colors flex justify-between items-center" onclick="toggle('${id}')">
                             <div class="flex items-center gap-3 overflow-hidden">
@@ -559,15 +571,16 @@
                                     >_
                                 </button>
                             </div>
-                            <div id="res-area-${id}" class="hidden m-4 rounded overflow-hidden border border-slate-200 shadow-inner bg-slate-50 relative">
-                                <div class="bg-slate-100 px-3 py-2 flex items-center justify-between border-b border-slate-200">
-                                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Response</span>
+                            
+                            <div id="res-area-${id}" class="hidden m-4 rounded overflow-hidden border border-slate-700 shadow-inner bg-[#1e293b] relative">
+                                <div class="bg-[#0f172a] px-3 py-2 flex items-center justify-between border-b border-slate-700">
+                                    <span class="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Response</span>
                                     <div class="flex items-center gap-2 text-[10px] font-mono">
-                                        <span id="status-${id}" class="text-slate-500 font-bold">...</span>
+                                        <span id="status-${id}" class="text-slate-400 font-bold">...</span>
                                         <span id="time-${id}" class="text-slate-400"></span>
                                     </div>
                                 </div>
-                                <div class="p-3 font-mono text-[10px] sm:text-xs min-h-[100px] max-h-[300px] overflow-y-auto custom-scrollbar text-slate-700 break-all bg-white m-2 rounded border border-slate-100">
+                                <div class="p-3 font-mono text-[10px] sm:text-xs min-h-[100px] max-h-[300px] overflow-y-auto custom-scrollbar text-gray-300 break-all bg-[#0a0a0a] m-2 rounded border border-slate-700">
                                     <div id="output-${id}" class="leading-relaxed whitespace-pre-wrap"></div>
                                 </div>
                             </div>
@@ -577,6 +590,8 @@
                 container.appendChild(section);
             }
         }
+
+
 
         window.toggleCategory = (catId) => { 
             const grid = document.getElementById(`grid-${catId}`); 
