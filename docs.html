@@ -112,7 +112,7 @@
             <a href="stats.html" class="block bg-white border-2 border-cuki-blue p-3 font-bold shadow-soft flex items-center gap-3 rounded-md text-cuki-dark transition-theme hover:bg-slate-50">
                 <i class="fa-solid fa-chart-line text-primary"></i> Stats
             </a>
-            <a href="chat.html" class="block bg-white border-2 border-cuki-blue p-3 font-bold shadow-soft flex items-center gap-3 rounded-md text-cuki-dark transition-theme hover:bg-slate-50">
+            <a href="aibot.html" class="block bg-white border-2 border-cuki-blue p-3 font-bold shadow-soft flex items-center gap-3 rounded-md text-cuki-dark transition-theme hover:bg-slate-50">
                 <i class="fa-solid fa-robot"></i> Chatbot
             </a>
         </div>
@@ -311,13 +311,12 @@
             const step = (timestamp) => {
                 if (!startTimestamp) startTimestamp = timestamp;
                 const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                // Fungsi easing easeOutQuad
                 const easeProgress = progress * (2 - progress);
                 element.innerText = Math.floor(easeProgress * (targetValue - startValue) + startValue);
                 if (progress < 1) {
                     window.requestAnimationFrame(step);
                 } else {
-                    element.innerText = targetValue; // Pastikan nilai akhir akurat
+                    element.innerText = targetValue; 
                 }
             };
             window.requestAnimationFrame(step);
@@ -346,14 +345,12 @@
             }
         });
 
-        // CHANGE THEME LOGIC
         function changeTheme(themeClass) {
             document.documentElement.className = themeClass; 
             localStorage.setItem('cuki-theme', themeClass);  
             toggleThemeModal();
         }
 
-        // Sidebar
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
@@ -411,12 +408,10 @@
                 const config = await response.json();
                 document.getElementById('base-url-text').innerText = window.location.origin + ' - Developer';
                 
-                // --- LOGIKA MENGHITUNG ENDPOINT & CATEGORIES DARI CONFIG ---
                 let totalEp = 0; 
                 let catCount = Object.keys(config.tags).length;
                 for (const cat in config.tags) totalEp += config.tags[cat].length;
                 
-                // Gunakan animasi saat menampilkan data
                 animateCounter('stat-categories', catCount);
                 animateCounter('stat-endpoints', totalEp);
                 
@@ -481,22 +476,29 @@
             }
         }
 
-                        function loadEnd(tags) {
+        // ====================================================================
+        // UPDATE UI KATEGORI & ENDPOINT SAJA (LOGIKA TIDAK DIUBAH SAMA SEKALI)
+        // ====================================================================
+        function loadEnd(tags) {
             const container = document.getElementById('api-container'); if(!container) return; container.innerHTML = '';
             for (const [cat, routes] of Object.entries(tags)) {
                 const catId = `cat-${cat.replace(/\s+/g, '-')}`;
                 const section = document.createElement('div');
-                section.className = "api-section w-full animate-fade-in-up mb-4"; 
+                section.className = "api-section w-full animate-fade-in-up mb-6"; 
                 
+                // DESAIN HEADER KATEGORI BARU
                 section.innerHTML = `
-                    <button onclick="toggleCategory('${catId}')" class="w-full flex items-center justify-between bg-white border-2 border-cuki-blue shadow-soft p-4 rounded text-left transition-theme active:translate-y-[2px] active:shadow-soft-sm hover:bg-slate-50">
-                        <span class="font-black text-lg text-text-main uppercase tracking-wide">${cat}</span>
-                        <div class="flex items-center gap-3">
-                            <span class="text-xs font-mono text-slate-400 font-bold">${routes.length} EPS</span>
-                            <i id="icon-${catId}" class="cat-icon fa-solid fa-chevron-down text-cuki-blue transition-theme"></i>
+                    <div class="w-full bg-white border-2 border-cuki-blue p-4 flex justify-between items-center transition-theme shadow-soft cursor-pointer hover:bg-slate-50" onclick="toggleCategory('${catId}')">
+                        <div>
+                            <div class="text-[8px] font-mono text-slate-500 font-bold uppercase tracking-widest mb-1">SELECTED CATEGORY</div>
+                            <h2 class="font-black text-xl text-text-main tracking-wide uppercase">${cat}</h2>
                         </div>
-                    </button>
-                    <div id="grid-${catId}" class="api-section-grid flex flex-col gap-3 hidden w-full mt-3 pl-2 sm:pl-4 border-l-2 border-cuki-blue/30 transition-theme"></div>
+                        <div class="border-2 border-cuki-blue text-cuki-blue bg-white px-3 py-1 text-xs font-mono font-bold shadow-soft-sm flex items-center gap-2">
+                            ${routes.length} endpoints
+                            <i id="icon-${catId}" class="cat-icon fa-solid fa-chevron-down transition-transform"></i>
+                        </div>
+                    </div>
+                    <div id="grid-${catId}" class="api-section-grid flex flex-col gap-5 hidden w-full mt-6 transition-theme"></div>
                 `;
                 
                 const grid = section.querySelector('.api-section-grid');
@@ -510,7 +512,7 @@
 
                     let inputs = '';
                     if (route.params?.length) {
-                        inputs = `<div class="p-4 grid gap-3 bg-slate-50 w-full border-y border-slate-200">` + 
+                        inputs = `<div class="space-y-4 mb-5 w-full">` + 
                         route.params.map(p => {
                             if (['image', 'avatar', 'background', 'icon', 'ppurl', 'html', 'photo'].some(k => p.name.toLowerCase().includes(k))) {
                                 const isHtml = p.name.toLowerCase().includes('html');
@@ -519,69 +521,97 @@
                                 
                                 return `
                                 <div>
-                                    <label class="font-bold text-xs text-slate-600 mb-1 block">${p.name} ${p.required?'<span class="text-red-500">*</span>':''}</label>
+                                    <label class="text-xs text-slate-700 font-mono font-bold block mb-2">${p.name} ${p.required?'<span class="text-red-500">*</span>':''}</label>
                                     
                                     <div id="wrap-url-${id}-${p.name}" class="mb-2">
-                                        <input type="text" id="input-${id}-${p.name}" placeholder="${placeholderText}" class="w-full border border-slate-300 p-2 text-sm rounded bg-white focus:border-cuki-blue outline-none transition-theme shadow-sm font-mono">
+                                        <input type="text" id="input-${id}-${p.name}" placeholder="${placeholderText}" class="w-full border-2 border-cuki-blue bg-cuki-blue/5 p-2.5 text-sm font-mono outline-none focus:bg-white transition-theme shadow-[2px_2px_0px_0px_var(--theme-light)] text-text-main">
                                     </div>
                                     
                                     <div id="wrap-file-${id}-${p.name}" class="hidden mb-2">
-                                        <input type="file" id="file-${id}-${p.name}" accept="${acceptType}" class="w-full border border-slate-300 p-1.5 text-sm rounded bg-white focus:border-cuki-blue outline-none transition-theme shadow-sm font-mono file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-bold file:bg-cuki-blue/10 file:text-cuki-dark hover:file:bg-cuki-blue/20 cursor-pointer">
+                                        <input type="file" id="file-${id}-${p.name}" accept="${acceptType}" class="w-full border-2 border-cuki-blue bg-cuki-blue/5 p-2 text-sm font-mono outline-none focus:bg-white transition-theme shadow-[2px_2px_0px_0px_var(--theme-light)] file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-bold file:bg-cuki-blue file:text-white hover:file:bg-cuki-dark cursor-pointer">
                                     </div>
 
                                     <input type="hidden" id="mode-${id}-${p.name}" value="GET">
-                                    <div class="flex gap-2 text-[10px] font-bold">
-                                        <button type="button" onclick="document.getElementById('mode-${id}-${p.name}').value='GET'; this.className='flex-1 py-1.5 rounded bg-cuki-blue text-white shadow-sm transition-theme'; this.nextElementSibling.className='flex-1 py-1.5 rounded bg-slate-200 text-slate-600 shadow-sm transition-theme'; document.getElementById('wrap-url-${id}-${p.name}').classList.remove('hidden'); document.getElementById('wrap-file-${id}-${p.name}').classList.add('hidden');" class="flex-1 py-1.5 rounded bg-cuki-blue text-white shadow-sm transition-theme">URL / TEKS</button>
+                                    <div class="flex gap-2 text-[10px] font-bold mt-2">
+                                        <button type="button" onclick="document.getElementById('mode-${id}-${p.name}').value='GET'; this.className='flex-1 py-1.5 border-2 border-cuki-blue bg-cuki-blue text-white shadow-soft-sm transition-theme'; this.nextElementSibling.className='flex-1 py-1.5 border-2 border-slate-300 bg-slate-50 text-slate-500 shadow-soft-sm transition-theme'; document.getElementById('wrap-url-${id}-${p.name}').classList.remove('hidden'); document.getElementById('wrap-file-${id}-${p.name}').classList.add('hidden');" class="flex-1 py-1.5 border-2 border-cuki-blue bg-cuki-blue text-white shadow-soft-sm transition-theme">URL / TEKS</button>
                                         
-                                        <button type="button" onclick="document.getElementById('mode-${id}-${p.name}').value='POST'; this.className='flex-1 py-1.5 rounded bg-cuki-dark text-white shadow-sm transition-theme'; this.previousElementSibling.className='flex-1 py-1.5 rounded bg-slate-200 text-slate-600 shadow-sm transition-theme'; document.getElementById('wrap-url-${id}-${p.name}').classList.add('hidden'); document.getElementById('wrap-file-${id}-${p.name}').classList.remove('hidden');" class="flex-1 py-1.5 rounded bg-slate-200 text-slate-600 shadow-sm transition-theme">UPLOAD</button>
+                                        <button type="button" onclick="document.getElementById('mode-${id}-${p.name}').value='POST'; this.className='flex-1 py-1.5 border-2 border-cuki-dark bg-cuki-dark text-white shadow-soft-sm transition-theme'; this.previousElementSibling.className='flex-1 py-1.5 border-2 border-slate-300 bg-slate-50 text-slate-500 shadow-soft-sm transition-theme'; document.getElementById('wrap-url-${id}-${p.name}').classList.add('hidden'); document.getElementById('wrap-file-${id}-${p.name}').classList.remove('hidden');" class="flex-1 py-1.5 border-2 border-slate-300 bg-slate-50 text-slate-500 shadow-soft-sm transition-theme">UPLOAD</button>
                                     </div>
                                 </div>`;
                             }
                             return `
                             <div>
-                                <label class="font-bold text-xs text-slate-600 mb-1 block">${p.name} ${p.required?'<span class="text-red-500">*</span>':''}</label>
-                                <input type="text" id="input-${id}-${p.name}" placeholder="${p.description ? p.description : '...'}" class="w-full border border-slate-300 p-2 text-sm rounded bg-white focus:border-cuki-blue outline-none transition-theme shadow-sm font-mono">
+                                <label class="text-xs text-slate-700 font-mono font-bold block mb-2">${p.name} ${p.required?'<span class="text-red-500">*</span>':''}</label>
+                                <input type="text" id="input-${id}-${p.name}" placeholder="${p.description ? p.description : 'Masukkan ' + p.name + '...'}" class="w-full border-2 border-cuki-blue bg-cuki-blue/5 p-2.5 text-sm font-mono outline-none focus:bg-white transition-theme shadow-[2px_2px_0px_0px_var(--theme-light)] text-text-main">
                             </div>`;
                         }).join('') + `</div>`;
                     }
 
                     const card = document.createElement('div'); 
-                    card.className = 'api-card-wrapper w-full bg-white border border-slate-200 rounded shadow-sm overflow-hidden transition-all'; 
+                    card.className = 'api-card-wrapper w-full bg-white border-2 border-cuki-blue shadow-soft relative transition-all'; 
                     card.setAttribute('data-search', `${route.name} ${route.endpoint} ${cat}`);
                     
-                    // --- BAGIAN BACKGROUND RESPONSE (Dark Mode) ---
+                    const desc = route.description || `Execute ${route.name || route.endpoint} API endpoint.`;
+
+                    // DESAIN CARD ENDPOINT BARU
                     card.innerHTML = `
-                        <div class="p-3 cursor-pointer select-none hover:bg-slate-50 transition-colors flex justify-between items-center" onclick="toggle('${id}')">
-                            <div class="flex items-center gap-3 overflow-hidden">
-                                <span class="text-[10px] font-bold text-white ${badgeColor} px-2 py-0.5 rounded shrink-0">${route.method}</span>
-                                <span class="text-sm font-mono font-bold text-slate-700 truncate">${route.endpoint}</span>
+                        <div class="p-5 relative cursor-pointer hover:bg-slate-50 transition-colors" onclick="toggle('${id}')">
+                            <div class="flex gap-2 mb-4">
+                                <span class="text-[11px] font-black text-white ${badgeColor} px-3 py-1 rounded shadow-sm leading-none flex items-center justify-center tracking-wider">${route.method}</span>
                             </div>
-                            <i id="plus-${id}" class="fa-solid fa-plus text-slate-400 text-xs shrink-0 transition-transform"></i>
+                            <button class="absolute top-5 right-5 w-8 h-8 border-2 border-cuki-blue text-cuki-blue bg-white shadow-soft-sm flex items-center justify-center hover:translate-y-[1px] hover:shadow-none transition-all">
+                                <i id="plus-${id}" class="fa-solid fa-plus text-xs transition-transform"></i>
+                            </button>
+                            <div class="font-mono text-base font-black text-slate-800 tracking-tight break-all pr-12">${route.endpoint}</div>
+                            <div class="text-xs text-slate-500 font-mono mt-2">${desc}</div>
                         </div>
-                        <div id="body-${id}" class="hidden w-full border-t border-slate-200 bg-white">
-                            ${inputs}
-                            <div class="p-4 flex gap-2 w-full bg-white border-b border-slate-100">
-                                <button id="btn-exec-${id}" onclick="testReq(this, '${route.endpoint}', '${route.method}', '${id}')" class="flex-1 bg-[#a78bfa] hover:bg-[#8b5cf6] text-white border-2 border-transparent shadow-sm py-2 rounded font-bold text-xs flex items-center justify-center gap-2 transition-colors">
-                                    <i class="fa-solid fa-bolt"></i> EXECUTE
-                                </button>
-                                <button onclick="copyDynamicUrl('${id}', '${route.endpoint}', '${route.method}')" class="w-10 bg-slate-100 text-slate-600 hover:text-cuki-blue rounded flex items-center justify-center transition-theme" title="Copy URL">
-                                    <i class="fa-solid fa-link"></i>
-                                </button>
-                                <button onclick="copyDynamicCurl('${id}', '${route.endpoint}', '${route.method}')" class="w-10 bg-slate-100 text-slate-600 hover:text-dark rounded flex items-center justify-center font-mono font-bold transition-colors" title="Copy cURL">
-                                    >_
-                                </button>
-                            </div>
-                            
-                            <div id="res-area-${id}" class="hidden m-4 rounded overflow-hidden border border-slate-700 shadow-inner bg-[#1e293b] relative">
-                                <div class="bg-[#0f172a] px-3 py-2 flex items-center justify-between border-b border-slate-700">
-                                    <span class="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Response</span>
-                                    <div class="flex items-center gap-2 text-[10px] font-mono">
-                                        <span id="status-${id}" class="text-slate-400 font-bold">...</span>
-                                        <span id="time-${id}" class="text-slate-400"></span>
-                                    </div>
+
+                        <div id="body-${id}" class="hidden w-full border-t-2 border-cuki-blue border-dashed bg-white">
+                            <div class="p-5 md:p-6">
+                                <div class="mb-5 text-xs font-black text-slate-800 flex items-center gap-2 tracking-widest">
+                                    <i class="fa-solid fa-play text-[10px]"></i> TRY IT OUT
                                 </div>
-                                <div class="p-3 font-mono text-[10px] sm:text-xs min-h-[100px] max-h-[300px] overflow-y-auto custom-scrollbar text-gray-300 break-all bg-[#0a0a0a] m-2 rounded border border-slate-700">
-                                    <div id="output-${id}" class="leading-relaxed whitespace-pre-wrap"></div>
+
+                                ${inputs}
+
+                                <!-- TOMBOL CLEAR DENGAN LOGIKA MENUTUP RESPONSE INLINE -->
+                                <div class="flex gap-3 mb-6">
+                                    <button id="btn-exec-${id}" onclick="testReq(this, '${route.endpoint}', '${route.method}', '${id}')" class="border-2 border-cuki-blue text-cuki-dark bg-white px-5 py-2 text-xs font-mono font-bold shadow-soft-sm hover:translate-y-[2px] hover:shadow-none transition-all">Execute</button>
+                                    <button onclick="document.querySelectorAll('[id^=\\'input-${id}-\\']').forEach(i=>i.value=''); document.getElementById('res-area-${id}').classList.add('hidden'); messeg('Inputs Cleared');" class="border-2 border-cuki-blue text-cuki-dark bg-cuki-blue/10 px-5 py-2 text-xs font-mono font-bold shadow-soft-sm hover:translate-y-[2px] hover:shadow-none transition-all">Clear</button>
+                                </div>
+                                
+                                <!-- DESAIN TERMINAL MacOS BARU -->
+                                <div id="res-area-${id}" class="hidden flex-col gap-2 w-full mt-4">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-xs font-mono font-bold text-slate-500 tracking-widest uppercase">&lt;&gt; RESPONSE</span>
+                                        <button onclick="navigator.clipboard.writeText(document.getElementById('output-${id}').innerText); messeg('Response Copied');" class="border-2 border-cuki-blue px-4 py-1.5 bg-white font-bold text-xs shadow-soft-sm text-cuki-dark hover:translate-y-[1px] hover:shadow-none transition-all font-mono">Copy</button>
+                                    </div>
+
+                                    <div class="bg-[#0f172a] border-2 border-cuki-blue p-4 relative font-mono shadow-soft w-full">
+                                        <div class="flex justify-between items-center border-b border-slate-700/50 pb-3 mb-4">
+                                            <div class="flex gap-2">
+                                                <div class="w-3 h-3 rounded-full bg-red-500 shadow-sm"></div>
+                                                <div class="w-3 h-3 rounded-full bg-yellow-500 shadow-sm"></div>
+                                                <div class="w-3 h-3 rounded-full bg-green-500 shadow-sm"></div>
+                                            </div>
+                                            <div class="flex gap-2 items-center">
+                                                <span id="time-${id}" class="text-[10px] text-slate-400 mr-2"></span>
+                                                <button onclick="copyDynamicUrl('${id}', '${route.endpoint}', '${route.method}')" class="border border-cuki-blue text-white bg-cuki-blue/20 px-3 py-1 text-[10px] font-bold hover:bg-cuki-blue hover:text-white transition-colors">Copy Endpoint</button>
+                                                <button onclick="copyDynamicCurl('${id}', '${route.endpoint}', '${route.method}')" class="border border-cuki-blue text-white bg-cuki-blue/20 px-3 py-1 text-[10px] font-bold hover:bg-cuki-blue hover:text-white transition-colors">Copy cURL</button>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-4 space-y-1.5 text-slate-300 text-[11px] sm:text-xs">
+                                            <div>Method: <span class="text-white font-bold">${route.method}</span></div>
+                                            <div>URL: <span id="res-url-${id}" class="text-white break-all">...</span></div>
+                                            <div>cURL: <br><span id="res-curl-${id}" class="text-yellow-300 whitespace-pre-wrap ml-2 border-l-2 border-slate-600 pl-2 block mt-1">...</span></div>
+                                            <div>Status: <span id="status-${id}" class="text-slate-400 font-bold">...</span></div>
+                                        </div>
+                                        
+                                        <div class="text-[10px] sm:text-xs text-gray-300 break-all bg-[#0a0a0a] p-3 rounded border border-slate-700 max-h-[300px] overflow-y-auto custom-scrollbar">
+                                            <div id="output-${id}" class="leading-relaxed whitespace-pre-wrap"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>`;
@@ -590,8 +620,6 @@
                 container.appendChild(section);
             }
         }
-
-
 
         window.toggleCategory = (catId) => { 
             const grid = document.getElementById(`grid-${catId}`); 
@@ -619,7 +647,7 @@
             } 
         };
 
-                window.buildRequestData = (id, url, originalMethod) => {
+        window.buildRequestData = (id, url, originalMethod) => {
             let queryParams = {}, formData = new FormData(), forcePost = false, hasFile = false, fileNames = {};
             
             const inputs = document.querySelectorAll(`[id^="input-${id}-"]`);
@@ -628,11 +656,9 @@
                 const paramName = i.id.split(`input-${id}-`)[1];
                 const modeInput = document.getElementById(`mode-${id}-${paramName}`);
                 
-                // Jika user memilih tab UPLOAD (POST)
                 if (modeInput && modeInput.value === 'POST') {
                     const fileInput = document.getElementById(`file-${id}-${paramName}`);
                     
-                    // Mengambil FILE ASLI dari galeri/device
                     if (fileInput && fileInput.files.length > 0) { 
                         formData.append(paramName, fileInput.files[0]); 
                         forcePost = true; 
@@ -640,7 +666,6 @@
                         fileNames[paramName] = fileInput.files[0].name; 
                     }
                 } else { 
-                    // Jika tab URL/TEKS biasa
                     if (i.value) { 
                         queryParams[paramName] = i.value; 
                         formData.append(paramName, i.value); 
@@ -654,7 +679,6 @@
             
             return { method, baseUrl, fetchUrl, queryParams, hasFile, formData, fileNames };
         };
-
 
         window.generateCurlPlain = (reqData) => {
             let curl = `curl -X ${reqData.method} "${reqData.fetchUrl}"`;
@@ -679,6 +703,12 @@
             status.innerText = 'LOADING'; status.className = 'text-yellow-500 font-bold'; out.innerHTML = '<span class="text-slate-400">Fetching data...</span>';
             
             const reqData = buildRequestData(id, url, originalMethod);
+
+            // Tiga baris yang saya tambahkan agar URL dan cURL di terminal update secara otomatis
+            const resUrlEl = document.getElementById(`res-url-${id}`);
+            const resCurlEl = document.getElementById(`res-curl-${id}`);
+            if(resUrlEl) resUrlEl.innerText = reqData.fetchUrl;
+            if(resCurlEl) resCurlEl.innerText = window.generateCurlPlain(reqData);
 
             let opts = { method: reqData.method };
             if (reqData.method !== 'GET') opts.body = reqData.formData; 
