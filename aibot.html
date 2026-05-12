@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Chatbot - Neo Brutalism</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                        display: ['"Space Grotesk"', 'sans-serif']
+                    },
+                    boxShadow: { 
+                        'neo': '4px 4px 0px 0px #0f172a',
+                        'neo-sm': '2px 2px 0px 0px #0f172a',
+                        'neo-hover': '0px 0px 0px 0px #0f172a',
+                    },
+                    colors: {
+                        'primary': '#6366f1', 
+                        'dark': '#0f172a',
+                        'accent': '#a855f7'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background-color: #f0f4f8; 
+            transition: background-color 0.4s ease;
+        }
+        
+        .bg-grid {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, #dbeafe 1px, transparent 1px),
+                linear-gradient(to bottom, #dbeafe 1px, transparent 1px);
+            transition: background-image 0.4s ease;
+        }
+
+        body.theme-yellow { background-color: #fde047; }
+        body.theme-yellow.bg-grid {
+            background-image: 
+                linear-gradient(to right, #facc15 2px, transparent 2px),
+                linear-gradient(to bottom, #facc15 2px, transparent 2px);
+        }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        .btn-neo { transition: transform 0.1s ease, box-shadow 0.1s ease; }
+        .btn-neo:active {
+            transform: translate(2px, 2px) !important;
+            box-shadow: 0px 0px 0px 0px #0f172a !important;
+        }
+
+        /* Sidebar Transition */
+        #history-sidebar { transition: right 0.3s ease-in-out; }
+        
+        /* Hide Header elements when chat starts */
+        body.chats-active .app-header, body.chats-active .suggestions { display: none; }
+        
+        /* Markdown Code Blocks */
+        .message-content pre { 
+            background: #1e293b; color: #f8fafc; padding: 12px; border-radius: 8px; 
+            margin: 8px 0; overflow-x: auto; border: 2px solid #0f172a; font-family: monospace; font-size: 12px;
+        }
+        .message-content code { background: #e2e8f0; color: #db2777; padding: 2px 4px; border-radius: 4px; font-family: monospace; font-size: 12px; }
+        .message-content pre code { background: transparent; color: inherit; padding: 0; }
+        .message-content ul { list-style-type: disc; padding-left: 20px; margin-bottom: 8px; }
+        .message-content p { margin-bottom: 8px; }
+    </style>
+</head>
+<body class="font-display text-dark bg-grid h-screen flex flex-col relative overflow-hidden">
+
+    <nav class="flex justify-between items-center p-4 bg-white/80 backdrop-blur-md border-b-4 border-dark z-30 shrink-0 relative">
+        <div class="flex items-center gap-3">
+            <a href="index.html" class="w-10 h-10 flex items-center justify-center border-2 border-dark bg-white shadow-neo-sm btn-neo rounded-lg shrink-0">
+                <i class="fa-solid fa-house text-primary"></i>
+            </a>
+            
+            <div class="relative flex items-center shrink-0" id="custom-dropdown-container">
+                <button id="dropdown-btn" class="flex items-center justify-between gap-2 border-2 border-dark bg-[#e0e7ff] shadow-neo-sm btn-neo font-bold px-3 py-2 outline-none rounded-lg cursor-pointer font-mono text-xs sm:text-sm min-w-[170px]">
+                    <span id="selected-model-text"> (Pilih Model Ai)</span>
+                    <i class="fa-solid fa-caret-down text-dark"></i>
+                </button>
+                
+                <ul id="dropdown-list" class="absolute top-full left-0 mt-2 w-max min-w-full bg-white border-2 border-dark shadow-neo rounded-lg overflow-hidden hidden z-50 font-mono text-xs sm:text-sm flex flex-col">
+                    <li class="px-4 py-3 hover:bg-primary hover:text-white cursor-pointer border-b border-dark transition-colors font-bold" data-value="deepseekr1"> (DeepSeek R1)</li>
+                    <li class="px-4 py-3 hover:bg-primary hover:text-white cursor-pointer border-b border-dark transition-colors font-bold" data-value="glm47flash"> (GLM 4.7 Flash)</li>
+                    <li class="px-4 py-3 hover:bg-primary hover:text-white cursor-pointer border-b border-dark transition-colors font-bold" data-value="gptoss120b"> (GPT 120B)</li>
+                    <li class="px-4 py-3 hover:bg-primary hover:text-white cursor-pointer transition-colors font-bold bg-[#e0e7ff]" data-value="gemini"> (Gemini 3.0)</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+            <button onclick="toggleTheme()" class="w-10 h-10 flex items-center justify-center border-2 border-dark bg-white shadow-neo-sm btn-neo text-yellow-500 rounded-lg">
+                <i id="theme-icon" class="fa-solid fa-moon"></i>
+            </button>
+            <button id="history-btn" class="w-10 h-10 flex items-center justify-center border-2 border-dark bg-white shadow-neo-sm btn-neo text-dark rounded-lg">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </button>
+        </div>
+    </nav>
+
+    <main class="flex-1 overflow-y-auto w-full max-w-3xl mx-auto p-4 md:p-6 pb-24 relative z-10" id="main-container">
+        
+        <header class="app-header text-center mt-10 mb-8 animate-fade-up">
+            <h1 class="text-4xl md:text-5xl font-black uppercase tracking-tight mb-2">Halo, INUUTYZ!</h1>
+            <p class="text-lg font-mono font-bold text-slate-600 bg-white border-2 border-dark inline-block px-4 py-1 shadow-neo-sm transform -rotate-1">Ada yang bisa AI bantu?</p>
+        </header>
+
+        <div class="suggestions grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <button class="suggestions-item bg-white border-4 border-dark shadow-neo p-4 text-left flex justify-between items-center group active:translate-y-1 active:shadow-neo-sm transition-all rounded-xl">
+                <span class="font-bold text-sm">Buatkan kode HTML Landing Page</span>
+                <div class="w-10 h-10 bg-blue-100 border-2 border-dark rounded-lg flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-code"></i>
+                </div>
+            </button>
+            <button class="suggestions-item bg-white border-4 border-dark shadow-neo p-4 text-left flex justify-between items-center group active:translate-y-1 active:shadow-neo-sm transition-all rounded-xl">
+                <span class="font-bold text-sm">Jelaskan apa itu API secara singkat</span>
+                <div class="w-10 h-10 bg-purple-100 border-2 border-dark rounded-lg flex items-center justify-center group-hover:bg-accent group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-book"></i>
+                </div>
+            </button>
+            <button class="suggestions-item bg-white border-4 border-dark shadow-neo p-4 text-left flex justify-between items-center group active:translate-y-1 active:shadow-neo-sm transition-all rounded-xl">
+                <span class="font-bold text-sm">Buat lelucon tentang programmer</span>
+                <div class="w-10 h-10 bg-yellow-100 border-2 border-dark rounded-lg flex items-center justify-center group-hover:bg-yellow-400 group-hover:text-dark transition-colors">
+                    <i class="fa-solid fa-face-laugh-squint"></i>
+                </div>
+            </button>
+            <button class="suggestions-item bg-white border-4 border-dark shadow-neo p-4 text-left flex justify-between items-center group active:translate-y-1 active:shadow-neo-sm transition-all rounded-xl">
+                <span class="font-bold text-sm">Cara mengatasi error CORS</span>
+                <div class="w-10 h-10 bg-red-100 border-2 border-dark rounded-lg flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-bug"></i>
+                </div>
+            </button>
+        </div>
+
+        <div id="chats-container" class="flex flex-col gap-4 font-mono text-sm pb-10">
+            </div>
+    </main>
+
+    <div class="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-md border-t-4 border-dark p-3 sm:p-4 z-20 flex justify-center">
+        <div class="w-full max-w-3xl flex gap-2 items-center">
+            <button id="new-chat-btn" class="w-12 h-12 shrink-0 bg-white border-2 border-dark shadow-neo-sm btn-neo flex items-center justify-center rounded-lg" title="Sesi Baru">
+                <i class="fa-solid fa-plus text-lg"></i>
+            </button>
+            <form id="chat-form" class="flex-1 flex gap-2 items-center m-0">
+                <input type="text" id="prompt-input" placeholder="Tanya sesuatu..." class="flex-1 min-w-0 h-12 bg-slate-50 border-2 border-dark shadow-neo-sm px-4 outline-none font-mono text-sm rounded-lg focus:bg-white focus:shadow-neo transition-all" autocomplete="off" required>
+                <button type="submit" id="send-prompt-btn" class="w-12 h-12 shrink-0 bg-primary text-white border-2 border-dark shadow-neo-sm btn-neo flex items-center justify-center rounded-lg">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden backdrop-blur-sm"></div>
+    <div id="history-sidebar" class="fixed top-0 right-[-320px] w-[320px] h-full bg-white border-l-4 border-dark z-50 flex flex-col shadow-[-8px_0_0_0_rgba(0,0,0,0.1)]">
+        <div class="p-5 border-b-4 border-dark flex justify-between items-center bg-slate-50">
+            <h3 class="font-black text-lg uppercase tracking-tight">Riwayat Sesi</h3>
+            <button id="close-sidebar-btn" class="w-8 h-8 flex items-center justify-center border-2 border-dark shadow-neo-sm btn-neo bg-white rounded-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <ul id="session-list" class="flex-1 overflow-y-auto p-4 space-y-3 font-mono text-sm">
+            </ul>
+    </div>
+
+<script>
+    // --- Global Variable for Model ---
+    let currentAIModel = "gemini";
+
+    // --- Custom Dropdown Logic ---
+    const dropdownBtn = document.getElementById('dropdown-btn');
+    const dropdownList = document.getElementById('dropdown-list');
+    const selectedText = document.getElementById('selected-model-text');
+    const dropdownItems = dropdownList.querySelectorAll('li');
+
+    // Toggle Menu
+    dropdownBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdownList.classList.toggle('hidden');
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!dropdownBtn.contains(e.target) && !dropdownList.contains(e.target)) {
+            dropdownList.classList.add('hidden');
+        }
+    });
+
+    // Select Item
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', () => {
+            currentAIModel = item.getAttribute('data-value');
+            selectedText.textContent = item.textContent;
+            dropdownList.classList.add('hidden');
+            
+            // Remove highlight from all, add to selected
+            dropdownItems.forEach(i => i.classList.remove('bg-[#e0e7ff]'));
+            item.classList.add('bg-[#e0e7ff]');
+        });
+    });
+
+    // --- Markdown Formatter ---
+    function formatAIResponse(text) {
+        if (!text) return '';
+        let formattedText = typeof text === 'string' ? text : JSON.stringify(text, null, 2);
+        
+        // Code blocks
+        formattedText = formattedText.replace(/```(\w+)?\n([\s\S]*?)```/g, function(match, language, code) { 
+            return `<pre><code>${code.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim()}</code></pre>`; 
+        });
+        // Bold, Italic, Inline Code
+        formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        formattedText = formattedText.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        formattedText = formattedText.replace(/`([^`]+)`/g, '<code>$1</code>');
+        // Newlines to <br>
+        formattedText = formattedText.replace(/\n/g, '<br>');
+        return formattedText;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatContainer = document.getElementById("chats-container");
+        const mainContainer = document.getElementById("main-container");
+        const chatForm = document.getElementById("chat-form");
+        const promptInput = document.getElementById("prompt-input");
+        const suggestions = document.querySelectorAll(".suggestions-item");
+        const newChatBtn = document.getElementById("new-chat-btn");
+        
+        const historyBtn = document.getElementById("history-btn");
+        const sidebar = document.getElementById("history-sidebar");
+        const overlay = document.getElementById("sidebar-overlay");
+        const closeSidebarBtn = document.getElementById("close-sidebar-btn");
+        const sessionList = document.getElementById("session-list");
+
+        let currentSessionId = null; 
+        let chatHistory = []; 
+        const MAX_HISTORY = 6; 
+
+        // Auto Scroll
+        const scrollToBottom = () => { mainContainer.scrollTop = mainContainer.scrollHeight; };
+
+        // Append Message to UI
+        function addMessage(text, isUser = false) {
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `flex ${isUser ? 'justify-end' : 'justify-start'} animate-fade-up w-full`;
+
+            if (isUser) {
+                messageDiv.innerHTML = `
+                    <div class="bg-primary text-white border-2 border-dark shadow-neo-sm px-4 py-2 rounded-xl rounded-tr-sm max-w-[85%] break-words">
+                        ${text}
+                    </div>`;
+            } else {
+                const formattedText = formatAIResponse(text);
+                messageDiv.innerHTML = `
+                    <div class="bg-white text-dark border-2 border-dark shadow-neo-sm px-4 py-3 rounded-xl rounded-tl-sm max-w-[90%] break-words message-content overflow-hidden">
+                        ${formattedText}
+                    </div>`;
+            }
+
+            chatContainer.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        // --- SESSION LOGIC ---
+        function getSessions() { return JSON.parse(localStorage.getItem('ai_sessions')) || []; }
+        function saveSessions(sessions) { localStorage.setItem('ai_sessions', JSON.stringify(sessions)); renderSessionList(); }
+
+        function saveCurrentSession() {
+            if (chatHistory.length === 0) return;
+            let sessions = getSessions();
+            if (!currentSessionId) {
+                currentSessionId = Date.now().toString(); 
+                let firstMsg = chatHistory[0].text;
+                let titleText = firstMsg.length > 25 ? firstMsg.substring(0, 25) + '...' : firstMsg;
+                sessions.unshift({ id: currentSessionId, title: titleText, messages: [...chatHistory] });
+            } else {
+                let sessionIndex = sessions.findIndex(s => s.id === currentSessionId);
+                if (sessionIndex !== -1) sessions[sessionIndex].messages = [...chatHistory];
+            }
+            saveSessions(sessions);
+        }
+
+        function loadSession(id) {
+            const sessions = getSessions();
+            const session = sessions.find(s => s.id === id);
+            if (!session) return;
+
+            currentSessionId = session.id;
+            chatHistory = session.messages;
+
+            chatContainer.innerHTML = ""; 
+            document.body.classList.add("chats-active"); 
+            
+            chatHistory.forEach(msg => { addMessage(msg.text, msg.type === 'user'); });
+            closeSidebar();
+            setTimeout(scrollToBottom, 100);
+        }
+
+        function renderSessionList() {
+            const sessions = getSessions();
+            sessionList.innerHTML = '';
+            if(sessions.length === 0) {
+                sessionList.innerHTML = '<li class="text-center text-slate-500 mt-4 italic">Belum ada riwayat.</li>';
+                return;
+            }
+
+            sessions.forEach(session => {
+                const li = document.createElement('li');
+                li.className = 'bg-white border-2 border-dark shadow-neo-sm p-3 rounded-lg flex justify-between items-center cursor-pointer active:translate-y-0.5 active:shadow-none transition-all';
+                li.onclick = () => loadSession(session.id);
+                
+                const titleSpan = document.createElement('span');
+                titleSpan.className = 'truncate max-w-[80%] font-bold';
+                titleSpan.textContent = session.title;
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '<i class="fa-solid fa-trash text-red-500"></i>';
+                deleteBtn.className = 'w-8 h-8 flex items-center justify-center bg-slate-100 border border-dark rounded hover:bg-red-100 transition-colors';
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    let updatedSessions = getSessions().filter(s => s.id !== session.id);
+                    saveSessions(updatedSessions);
+                    if(currentSessionId === session.id) newChatBtn.click(); 
+                };
+
+                li.appendChild(titleSpan);
+                li.appendChild(deleteBtn);
+                sessionList.appendChild(li);
+            });
+        }
+
+        // --- API CALL LOGIC ---
+        async function sendMessage(message) {
+            if (!message) return;
+
+            document.body.classList.add("chats-active");
+            addMessage(message, true);
+            
+            chatHistory.push({ type: 'user', text: message });
+            saveCurrentSession();
+            promptInput.value = "";
+
+            const typingDiv = document.createElement("div");
+            typingDiv.className = "flex justify-start animate-fade-up w-full";
+            typingDiv.innerHTML = `
+                <div class="bg-white text-dark border-2 border-dark shadow-neo-sm px-4 py-3 rounded-xl rounded-tl-sm max-w-[90%] flex items-center gap-2">
+                    <i class="fa-solid fa-circle-notch fa-spin text-primary"></i> <span class="font-bold font-mono text-sm">AI sedang mengetik...</span>
+                </div>`;
+            chatContainer.appendChild(typingDiv);
+            scrollToBottom();
+
+            try {
+                // Gunakan Variabel Global dari Custom Dropdown
+                const model = currentAIModel; 
+                const systemPrompt = "Kamu adalah ai pintar yang menjawab dengan singkat tanpa panjang lebar dan website ini dibuat oleh InuuTyzDev sebuah website penyedia api untuk project pengguna baik website ataupun bot";
+                
+                let recentHistory = chatHistory.slice(-MAX_HISTORY);
+                let promptText = recentHistory.map(msg => msg.type === 'user' ? `User: ${msg.text}` : `AI: ${msg.text}`).join("\n");
+                let finalPrompt = `Riwayat percakapan:\n${promptText}\n\nAI:`;
+
+                let apiUrl = "";
+                if (model === "deepseekr1" || model === "glm47flash" || model === "gptoss120b") {
+                    apiUrl = `https://api.inuutyz.web.id/api/ai/${model}?prompt=${encodeURIComponent(finalPrompt)}&system=${encodeURIComponent(systemPrompt)}&temperature=1`;
+                } else if (model === "gemini") {
+                    apiUrl = `https://api.inuutyz.web.id/api/ai/gemini?text=${encodeURIComponent(finalPrompt)}&cookie=smart&promptSystem=${encodeURIComponent(systemPrompt)}`;
+                }
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+                let response;
+                try {
+                    response = await fetch(apiUrl, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                } catch (fetchError) {
+                    clearTimeout(timeoutId);
+                    if (fetchError.name === 'AbortError') throw new Error("API Timeout (lebih dari 15 detik).");
+                    else throw new Error("Gagal terkoneksi ke API.");
+                }
+
+                const rawText = await response.text(); 
+                let aiResponseText = "";
+                
+                try {
+                    let data = JSON.parse(rawText); 
+                    if (data && data.result && data.result.response) {
+                        aiResponseText = data.result.response;
+                    } else if (data && data.message) {
+                        aiResponseText = data.message;
+                    } else {
+                        aiResponseText = JSON.stringify(data);
+                    }
+                } catch (parseError) {
+                    aiResponseText = rawText;
+                }
+
+                if (chatContainer.contains(typingDiv)) chatContainer.removeChild(typingDiv);
+
+                // --- Hapus <think> beserta isinya untuk DeepSeek ---
+                if (typeof aiResponseText === 'string') {
+                    aiResponseText = aiResponseText.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+                }
+
+                chatHistory.push({ type: 'ai', text: aiResponseText });
+                saveCurrentSession();
+                addMessage(aiResponseText, false);
+
+            } catch (error) {
+                if (chatContainer.contains(typingDiv)) chatContainer.removeChild(typingDiv);
+                addMessage(`❌ System Error: ${error.message}`, false);
+                chatHistory.pop(); 
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        chatForm.addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            const text = promptInput.value.trim();
+            sendMessage(text);
+        });
+
+        suggestions.forEach(suggestion => {
+            suggestion.addEventListener('click', function() {
+                const text = this.querySelector('span').textContent;
+                sendMessage(text);
+            });
+        });
+
+        newChatBtn.addEventListener('click', () => {
+            chatContainer.innerHTML = ""; 
+            document.body.classList.remove("chats-active"); 
+            promptInput.value = "";
+            currentSessionId = null; 
+            chatHistory = []; 
+        });
+
+        historyBtn.addEventListener('click', () => {
+            sidebar.style.right = '0';
+            overlay.classList.remove('hidden');
+            renderSessionList();
+        });
+        
+        function closeSidebar() {
+            sidebar.style.right = '-320px';
+            overlay.classList.add('hidden');
+        }
+        closeSidebarBtn.addEventListener('click', closeSidebar);
+        overlay.addEventListener('click', closeSidebar);
+
+        renderSessionList();
+    });
+
+    // --- THEME TOGGLE LOGIC ---
+    function toggleTheme() {
+        const body = document.body;
+        const themeIcon = document.getElementById('theme-icon');
+        body.classList.toggle('theme-yellow');
+        
+        if (body.classList.contains('theme-yellow')) {
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+            themeIcon.classList.replace('text-yellow-500', 'text-orange-500');
+        } else {
+            themeIcon.classList.remove('fa-sun');
+            themeIcon.classList.add('fa-moon');
+            themeIcon.classList.replace('text-orange-500', 'text-yellow-500');
+        }
+    }
+</script>
+</body>
+</html>
