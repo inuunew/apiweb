@@ -619,20 +619,42 @@
             } 
         };
 
-        window.buildRequestData = (id, url, originalMethod) => {
+                window.buildRequestData = (id, url, originalMethod) => {
             let queryParams = {}, formData = new FormData(), forcePost = false, hasFile = false, fileNames = {};
+            
             const inputs = document.querySelectorAll(`[id^="input-${id}-"]`);
+            
             for (let i of inputs) {
-                const paramName = i.id.split(`input-${id}-`)[1], modeInput = document.getElementById(`mode-${id}-${paramName}`);
+                const paramName = i.id.split(`input-${id}-`)[1];
+                const modeInput = document.getElementById(`mode-${id}-${paramName}`);
+                
+                // Jika user memilih tab UPLOAD (POST)
                 if (modeInput && modeInput.value === 'POST') {
-                    if(i.value) { formData.append(paramName, i.value); forcePost = true; hasFile = true; fileNames[paramName] = "file.png"; }
-                } else { if (i.value) { queryParams[paramName] = i.value; formData.append(paramName, i.value); } }
+                    const fileInput = document.getElementById(`file-${id}-${paramName}`);
+                    
+                    // Mengambil FILE ASLI dari galeri/device
+                    if (fileInput && fileInput.files.length > 0) { 
+                        formData.append(paramName, fileInput.files[0]); 
+                        forcePost = true; 
+                        hasFile = true; 
+                        fileNames[paramName] = fileInput.files[0].name; 
+                    }
+                } else { 
+                    // Jika tab URL/TEKS biasa
+                    if (i.value) { 
+                        queryParams[paramName] = i.value; 
+                        formData.append(paramName, i.value); 
+                    } 
+                }
             }
+            
             let method = forcePost ? 'POST' : originalMethod;
             let baseUrl = window.location.origin + url;
             let fetchUrl = baseUrl + (!hasFile && Object.keys(queryParams).length ? '?' + new URLSearchParams(queryParams) : '');
+            
             return { method, baseUrl, fetchUrl, queryParams, hasFile, formData, fileNames };
         };
+
 
         window.generateCurlPlain = (reqData) => {
             let curl = `curl -X ${reqData.method} "${reqData.fetchUrl}"`;
