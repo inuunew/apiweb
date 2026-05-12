@@ -112,7 +112,7 @@
             <a href="stats.html" class="block bg-white border-2 border-cuki-blue p-3 font-bold shadow-soft flex items-center gap-3 rounded-md text-cuki-dark transition-theme hover:bg-slate-50">
                 <i class="fa-solid fa-chart-line text-primary"></i> Stats
             </a>
-            <a href="aibot.html" class="block bg-white border-2 border-cuki-blue p-3 font-bold shadow-soft flex items-center gap-3 rounded-md text-cuki-dark transition-theme hover:bg-slate-50">
+            <a href="chat.html" class="block bg-white border-2 border-cuki-blue p-3 font-bold shadow-soft flex items-center gap-3 rounded-md text-cuki-dark transition-theme hover:bg-slate-50">
                 <i class="fa-solid fa-robot"></i> Chatbot
             </a>
         </div>
@@ -476,17 +476,15 @@
             }
         }
 
-        // ====================================================================
-        // UPDATE UI KATEGORI & ENDPOINT SAJA (LOGIKA TIDAK DIUBAH SAMA SEKALI)
-        // ====================================================================
         function loadEnd(tags) {
             const container = document.getElementById('api-container'); if(!container) return; container.innerHTML = '';
             for (const [cat, routes] of Object.entries(tags)) {
                 const catId = `cat-${cat.replace(/\s+/g, '-')}`;
                 const section = document.createElement('div');
+                // PENAMBAHAN ID AGAR OPSI A BEKERJA
+                section.id = `section-${catId}`;
                 section.className = "api-section w-full animate-fade-in-up mb-6"; 
                 
-                // DESAIN HEADER KATEGORI BARU
                 section.innerHTML = `
                     <div class="w-full bg-white border-2 border-cuki-blue p-4 flex justify-between items-center transition-theme shadow-soft cursor-pointer hover:bg-slate-50" onclick="toggleCategory('${catId}')">
                         <div>
@@ -553,7 +551,6 @@
                     
                     const desc = route.description || `Execute ${route.name || route.endpoint} API endpoint.`;
 
-                    // DESAIN CARD ENDPOINT BARU
                     card.innerHTML = `
                         <div class="p-5 relative cursor-pointer hover:bg-slate-50 transition-colors" onclick="toggle('${id}')">
                             <div class="flex gap-2 mb-4">
@@ -574,13 +571,11 @@
 
                                 ${inputs}
 
-                                <!-- TOMBOL CLEAR DENGAN LOGIKA MENUTUP RESPONSE INLINE -->
                                 <div class="flex gap-3 mb-6">
                                     <button id="btn-exec-${id}" onclick="testReq(this, '${route.endpoint}', '${route.method}', '${id}')" class="border-2 border-cuki-blue text-cuki-dark bg-white px-5 py-2 text-xs font-mono font-bold shadow-soft-sm hover:translate-y-[2px] hover:shadow-none transition-all">Execute</button>
                                     <button onclick="document.querySelectorAll('[id^=\\'input-${id}-\\']').forEach(i=>i.value=''); document.getElementById('res-area-${id}').classList.add('hidden'); messeg('Inputs Cleared');" class="border-2 border-cuki-blue text-cuki-dark bg-cuki-blue/10 px-5 py-2 text-xs font-mono font-bold shadow-soft-sm hover:translate-y-[2px] hover:shadow-none transition-all">Clear</button>
                                 </div>
                                 
-                                <!-- DESAIN TERMINAL MacOS BARU -->
                                 <div id="res-area-${id}" class="hidden flex-col gap-2 w-full mt-4">
                                     <div class="flex justify-between items-center mb-1">
                                         <span class="text-xs font-mono font-bold text-slate-500 tracking-widest uppercase">&lt;&gt; RESPONSE</span>
@@ -597,14 +592,15 @@
                                             <div class="flex gap-2 items-center">
                                                 <span id="time-${id}" class="text-[10px] text-slate-400 mr-2"></span>
                                                 <button onclick="copyDynamicUrl('${id}', '${route.endpoint}', '${route.method}')" class="border border-cuki-blue text-white bg-cuki-blue/20 px-3 py-1 text-[10px] font-bold hover:bg-cuki-blue hover:text-white transition-colors">Copy Endpoint</button>
-                                                <button onclick="copyDynamicCurl('${id}', '${route.endpoint}', '${route.method}')" class="border border-cuki-blue text-white bg-cuki-blue/20 px-3 py-1 text-[10px] font-bold hover:bg-cuki-blue hover:text-white transition-colors">Copy cURL</button>
+                                                <!-- TOMBOL COPY JSON YANG BARU -->
+                                                <button onclick="navigator.clipboard.writeText(document.getElementById('output-${id}').innerText); messeg('JSON Copied');" class="border border-cuki-blue text-white bg-cuki-blue/20 px-3 py-1 text-[10px] font-bold hover:bg-cuki-blue hover:text-white transition-colors">Copy JSON</button>
                                             </div>
                                         </div>
 
                                         <div class="mb-4 space-y-1.5 text-slate-300 text-[11px] sm:text-xs">
                                             <div>Method: <span class="text-white font-bold">${route.method}</span></div>
                                             <div>URL: <span id="res-url-${id}" class="text-white break-all">...</span></div>
-                                            <div>cURL: <br><span id="res-curl-${id}" class="text-yellow-300 whitespace-pre-wrap ml-2 border-l-2 border-slate-600 pl-2 block mt-1">...</span></div>
+                                            <!-- CURL KUNING TELAH DIHAPUS DARI SINI -->
                                             <div>Status: <span id="status-${id}" class="text-slate-400 font-bold">...</span></div>
                                         </div>
                                         
@@ -621,17 +617,34 @@
             }
         }
 
+        // LOGIKA OPSI A (FILTER KATEGORI)
         window.toggleCategory = (catId) => { 
             const grid = document.getElementById(`grid-${catId}`); 
             const icon = document.getElementById(`icon-${catId}`);
-            document.getElementById('select-cat-msg')?.classList.add('hidden'); 
+            const selMsg = document.getElementById('select-cat-msg');
+            const allSections = document.querySelectorAll('.api-section');
+
+            if(selMsg) selMsg.classList.add('hidden'); 
 
             if(grid.classList.contains('hidden')) { 
+                // SAAT BUKA: Hilangkan Semua Kategori Lainnya
                 grid.classList.remove('hidden'); 
                 icon.classList.add('rotate-180');
+                
+                allSections.forEach(sec => {
+                    if (sec.id !== `section-${catId}`) {
+                        sec.classList.add('hidden');
+                    }
+                });
             } else { 
+                // SAAT TUTUP: Munculkan Semua Kategori Kembali
                 grid.classList.add('hidden'); 
                 icon.classList.remove('rotate-180');
+                
+                allSections.forEach(sec => {
+                    sec.classList.remove('hidden');
+                });
+                if(selMsg) selMsg.classList.remove('hidden');
             } 
         };
         
@@ -691,6 +704,7 @@
         };
 
         window.copyDynamicUrl = (id, url, originalMethod) => { const req = buildRequestData(id, url, originalMethod); navigator.clipboard.writeText(req.fetchUrl); messeg("URL COPIED"); };
+        // FUNGSI INI TETAP ADA UNTUK CADANGAN JIKA DIPERLUKAN
         window.copyDynamicCurl = (id, url, originalMethod) => { const req = buildRequestData(id, url, originalMethod); navigator.clipboard.writeText(generateCurlPlain(req)); messeg("CURL COPIED"); };
 
         window.testReq = async (btn, url, originalMethod, id) => {
@@ -704,11 +718,8 @@
             
             const reqData = buildRequestData(id, url, originalMethod);
 
-            // Tiga baris yang saya tambahkan agar URL dan cURL di terminal update secara otomatis
             const resUrlEl = document.getElementById(`res-url-${id}`);
-            const resCurlEl = document.getElementById(`res-curl-${id}`);
             if(resUrlEl) resUrlEl.innerText = reqData.fetchUrl;
-            if(resCurlEl) resCurlEl.innerText = window.generateCurlPlain(reqData);
 
             let opts = { method: reqData.method };
             if (reqData.method !== 'GET') opts.body = reqData.formData; 
