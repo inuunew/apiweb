@@ -125,18 +125,7 @@ const apiKeyCuki = "cuki-x";
     // 2. KATEGORI: MAKER
     // ==========================================
     else if (kategori === 'maker') {
-        
-        // --- FITUR BRAT GENERATOR ---
-        if (type === 'brat') {
-            if (!text) return res.status(400).json({ status: false, message: "Parameter 'text' wajib diisi" });
-            const targetUrl = `https://brat.siputzx.my.id/image?text=${encodeURIComponent(text)}`;
-            const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
-            res.setHeader('Content-Type', 'image/png');
-            return res.status(200).send(response.data);
-        }
-
-        // --- 2. E-KTP MAKER ---
-        else if (type === 'ektp') {
+        if (type === 'ektp') {
             const required = ['provinsi', 'kota', 'nik', 'nama', 'ttl', 'jenis_kelamin', 'alamat', 'kecamatan', 'agama', 'status', 'pekerjaan', 'pas_photo'];
             for (const field of required) {
                 if (!req.query[field]) return res.status(400).json({ status: false, message: `Parameter '${field}' wajib diisi!` });
@@ -153,17 +142,6 @@ const apiKeyCuki = "cuki-x";
         }
 
         // --- 3. EPHOTO360 GRAFFITI ---
-        else if (type === 'ephoto360') {
-            if (!text1) return res.status(400).json({ status: false, message: "Parameter 'text1' wajib diisi!" });
-            const template_url = "https://en.ephoto360.com/create-a-cartoon-style-graffiti-text-effect-online-668.html";
-            const payload = { url: template_url, text1, text2: text2 || "" };
-            const response = await axios.post("https://api.siputzx.my.id/api/m/ephoto360", payload, {
-                headers: { "Content-Type": "application/json" },
-                responseType: 'arraybuffer'
-            });
-            res.setHeader('Content-Type', 'image/jpeg');
-            return res.status(200).send(response.data);
-        }
 
         // --- 4. FB COMMAND (CANVAS) ---
         else if (type === 'fbcommand') {
@@ -210,44 +188,66 @@ const apiKeyCuki = "cuki-x";
         }
       }
      
-     else if (kategori === 'stalker') {
-    // Trik target Anda yang cerdas tadi taruh di sini
-    const target = q || user || username;
+         // ==========================================
+    // 4. KATEGORI: STALKER
+    // ==========================================
+    else if (kategori === 'stalker') {
+        const target = q || user || username;
 
-    if (!target) return res.status(400).json({ status: false, message: "Parameter username/target wajib diisi!" });
+        if (!target) return res.status(400).json({ status: false, message: "Parameter username/target wajib diisi!" });
 
-   const validTypes = ['pinterest', 'twitter', 'github', 'youtube', 'threads'];
+        // Daftar type yang menggunakan provider api.pixxxry.eu.cc
+        const pixxxryTypes = ['tiktok', 'replit', 'steam', 'reddit', 'youtube', 'twitter', 'threads', 'npm', 'roblox'];
+        
+        // Daftar type yang tetap menggunakan provider siputzx (seperti pinterest & github)
+        const siputzxTypes = ['pinterest', 'github'];
 
-        if (validTypes.includes(type)) {
-            // Menyesuaikan nama parameter (q, user, username) sesuai permintaan server Siputzx
-            let paramName = 'q';
-            if (type === 'twitter' || type === 'github') paramName = 'user';
-            if (type === 'youtube') paramName = 'username';
+        if (pixxxryTypes.includes(type)) {
+            try {
+                // Khusus youtube menggunakan parameter 'q', sisanya menggunakan 'username'
+                let paramName = (type === 'youtube') ? 'q' : 'username';
+                const targetUrl = `https://api.pixxxry.eu.cc/stalk/${type}?${paramName}=${encodeURIComponent(target)}`;
+                
+                const response = await axios.get(targetUrl);
+                
+                // --- TRIK SAPU BERSIH ---
+                let cleanData = response.data.data || response.data;
+                if (cleanData && typeof cleanData === 'object') {
+                    delete cleanData.creator;
+                    delete cleanData.status;
+                }
 
-            // Membangun URL target secara dinamis
-            const targetUrl = `https://api.siputzx.my.id/api/stalk/${type}?${paramName}=${encodeURIComponent(target)}`;
-            
-            // Eksekusi penarikan data
-            const response = await axios.get(targetUrl);
-            
-            // --- TRIK SAPU BERSIH WATERMARK ---
-            let cleanData = response.data.data || response.data;
-            
-            // Kita pastikan formatnya adalah objek sebelum menghapus datanya
-            if (cleanData && typeof cleanData === 'object') {
-                delete cleanData.creator;
-                delete cleanData.status;
+                return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+            } catch (e) {
+                return res.status(500).json({ status: false, message: `Gagal stalk ${type}: ` + e.message });
             }
-            
-            return res.status(200).json({ 
-                status: true, 
-                creator: "InuuTyzDev", 
-                result: cleanData 
-            });
-        } else {
-            return res.status(400).json({ status: false, message: `Type stalker '${type}' tidak valid` });
+        } 
+        
+        else if (siputzxTypes.includes(type)) {
+            try {
+                // Pinterest menggunakan 'q', Github menggunakan 'user'
+                let paramName = (type === 'pinterest') ? 'q' : 'user';
+                const targetUrl = `https://api.siputzx.my.id/api/stalk/${type}?${paramName}=${encodeURIComponent(target)}`;
+                
+                const response = await axios.get(targetUrl);
+                
+                let cleanData = response.data.data || response.data;
+                if (cleanData && typeof cleanData === 'object') {
+                    delete cleanData.creator;
+                    delete cleanData.status;
+                }
+
+                return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+            } catch (e) {
+                return res.status(500).json({ status: false, message: `Gagal stalk ${type}: ` + e.message });
+            }
+        } 
+        
+        else {
+            return res.status(400).json({ status: false, message: `Type stalker '${type}' tidak valid atau belum didukung` });
         }
-}
+    }
+
 
     // ==========================================
     // 5. KATEGORI: DOWNLOADER
@@ -364,6 +364,24 @@ else if (kategori === 'search') {
             return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
         }
         // --- GSM ARENA SEARCH ---
+
+   else if (type === 'lyrics') {
+        try {
+            const targetUrl = `https://api.pixxxry.eu.cc/search/lyrics?q=${encodeURIComponent(keyword)}`;
+            const response = await axios.get(targetUrl);
+            
+            let cleanData = response.data.data || response.data;
+            if (cleanData && typeof cleanData === 'object') { 
+                delete cleanData.creator; 
+                delete cleanData.status; 
+            }
+
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+        } catch (e) {
+            return res.status(500).json({ status: false, message: "Gagal mengambil lirik: " + e.message });
+        }
+    }
+
         else if (type === 'gsm') {
             const response = await axios.get(`https://www.neoapis.xyz/api/search/gsm?query=${encodeURIComponent(keyword)}`);
             const cleanData = response.data;
@@ -482,26 +500,28 @@ else if (kategori === 'search') {
     else if (kategori === 'generator') {
         
         // --- 1. QR CODE ---
-          if (type === 'qr') {
-            const text = req.query.text || 'https://api.inuutyz.web.id';
-            // Gunakan parseColor di sini
-            const color = parseColor(req.query.color, '00f3ff'); 
-            const bg = parseColor(req.query.bg, '0b0b0b');
+          // SESUDAH (Benar)
+if (type === 'qr') {
+    // Kita gunakan variabel 'text' dan 'color' yang sudah di-destructure di atas
+    const isiQR = text || q || 'https://api.inuutyz.web.id';
+    const warnaQR = parseColor(color, '00f3ff'); 
+    const backgroundQR = parseColor(bg, '0b0b0b');
 
-            const qr = new QRCode({ 
-                content: text, 
-                padding: 4, 
-                width: 256, 
-                height: 256, 
-                color: `#${color}`, 
-                background: `#${bg}`, 
-                join: true 
-            });
+    const qr = new QRCode({ 
+        content: isiQR, 
+        padding: 4, 
+        width: 256, 
+        height: 256, 
+        color: `#${warnaQR}`, 
+        background: `#${backgroundQR}`, 
+        join: true 
+    });
 
-            res.setHeader('Content-Type', 'image/svg+xml');
-            res.setHeader('Cache-Control', 'public, max-age=86400'); 
-            return res.status(200).send(qr.svg());
-        }
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'public, max-age=86400'); 
+    return res.status(200).send(qr.svg());
+}
+
         
         // ==========================================
         // 2. CAPTCHA GENERATOR (JSON + Base64 SVG / Direct Image)
@@ -701,6 +721,261 @@ else if (kategori === 'search') {
         }
         else {
             return res.status(404).json({ status: false, message: `Type generator '${type}' tidak ditemukan!` });
+        }
+    }
+
+    // ==========================================
+    // 9. KATEGORI: STIKER
+    // ==========================================
+    else if (kategori === 'stiker') {
+        const keyword = q || query || hero;
+
+        // --- 1. BRAT VIDEO STICKER ---
+        if (type === 'bratvid') {
+            if (!text) return res.status(400).json({ status: false, message: "Parameter 'text' wajib diisi!" });
+            try {
+                const targetUrl = `https://api.pixxxry.eu.cc/sticker/bratvid?text=${encodeURIComponent(text)}`;
+                const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
+                
+                // Biasanya bratvid menghasilkan mp4 atau webp (sticker video)
+                res.setHeader('Content-Type', 'video/mp4'); 
+                return res.status(200).send(response.data);
+            } catch (e) {
+                return res.status(500).json({ status: false, message: "Gagal membuat bratvid: " + e.message });
+            }
+        }
+
+        // --- 2. STICKERLY SEARCH (JSON) ---
+        else if (type === 'stickerly') {
+            if (!keyword) return res.status(400).json({ status: false, message: "Parameter kata kunci (q) wajib diisi!" });
+            try {
+                const targetUrl = `https://api.pixxxry.eu.cc/sticker/stickerly?q=${encodeURIComponent(keyword)}`;
+                const response = await axios.get(targetUrl);
+                
+                let cleanData = response.data.data || response.data;
+                if (cleanData && typeof cleanData === 'object') { 
+                    delete cleanData.creator; 
+                    delete cleanData.status; 
+                }
+
+                return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+            } catch (e) {
+                return res.status(500).json({ status: false, message: "Gagal mencari stickerly: " + e.message });
+            }
+        }
+
+        // --- 3. QUOTELY (QC) ---
+        else if (type === 'qc') {
+            if (!text || !name) return res.status(400).json({ status: false, message: "Parameter 'text' dan 'name' wajib diisi!" });
+            try {
+                // Gunakan avatarUrl dari destructuring atau default pravatar
+                const avatar = avatarUrl || "https://i.pravatar.cc/300";
+                const backgroundColor = bg ? (bg.startsWith('#') ? bg : `#${bg}`) : "#1f2c33";
+                
+                const targetUrl = `https://api.pixxxry.eu.cc/sticker/qc?text=${encodeURIComponent(text)}&name=${encodeURIComponent(name)}&avatar=${encodeURIComponent(avatar)}&background=${encodeURIComponent(backgroundColor)}&format=image`;
+                
+                const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
+                res.setHeader('Content-Type', 'image/png');
+                return res.status(200).send(response.data);
+            } catch (e) {
+                return res.status(500).json({ status: false, message: "Gagal membuat QC: " + e.message });
+            }
+        }
+
+        // --- 4. EMOJIMIX ---
+        else if (type === 'emojimix') {
+            // Kita ambil emoji1 & emoji2 langsung dari req.query karena tidak ada di destructuring awal
+            const { emoji1, emoji2 } = req.query;
+            if (!emoji1 || !emoji2) return res.status(400).json({ status: false, message: "Parameter 'emoji1' dan 'emoji2' wajib diisi!" });
+
+            try {
+                const targetUrl = `https://api.pixxxry.eu.cc/sticker/emojimix?emoji1=${encodeURIComponent(emoji1)}&emoji2=${encodeURIComponent(emoji2)}&q=${encodeURIComponent(emoji1 + '+' + emoji2)}&format=image`;
+                
+                const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
+                res.setHeader('Content-Type', 'image/png');
+                return res.status(200).send(response.data);
+            } catch (e) {
+                return res.status(500).json({ status: false, message: "Gagal membuat emojimix: " + e.message });
+            }
+        }
+        else if (type === 'brat') {
+            if (!text) return res.status(400).json({ status: false, message: "Parameter 'text' wajib diisi" });
+            const targetUrl = `https://brat.siputzx.my.id/image?text=${encodeURIComponent(text)}`;
+            const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
+            res.setHeader('Content-Type', 'image/png');
+            return res.status(200).send(response.data);
+        }
+        else {
+            return res.status(404).json({ status: false, message: `Type stiker '${type}' tidak ditemukan!` });
+        }
+    }
+
+    // ==========================================
+    // 10. KATEGORI: EPHOTO
+    // ==========================================
+    else if (kategori === 'ephoto') {
+        const textInput = q || text || query;
+        
+        // Daftar semua efek dari Cuki API
+        const listEffect = [
+            '1917style', 'advancedglow', 'blackpinklogo', 'blackpinkstyle', 'cartoonstyle', 
+            'deletingtext', 'dragonball', 'effectclouds', 'flag3dtext', 'flagtext', 
+            'freecreate', 'galaxy', 'galaxywallpaper', 'glitchtext', 'glowingtext', 
+            'gradienttext', 'lighteffects', 'logomaker', 'luxurygold', 'makingneon', 
+            'neonglitch', 'papercutstyle', 'pixelglitch', 'royaltext', 'sandsummer', 
+            'summerbeach', 'typographytext', 'underwatertext', 'watercolortext', 'writetext'
+        ];
+
+        if (!textInput) {
+            return res.status(400).json({ status: false, message: "Parameter teks (q/text/query) wajib diisi!" });
+        }
+
+        if (listEffect.includes(type)) {
+            try {
+                const targetUrl = `https://api.cuki.biz.id/api/ephoto/${type}?apikey=${apiKeyCuki}&query=${encodeURIComponent(textInput)}`;
+                
+                const response = await axios.get(targetUrl, {
+                    headers: { 'x-api-key': apiKeyCuki }
+                });
+
+                let cleanData = response.data.data || response.data;
+                
+                // Trik Sapu Bersih Watermark
+                if (cleanData && typeof cleanData === 'object') {
+                    delete cleanData.creator;
+                    delete cleanData.status;
+                }
+
+                return res.status(200).json({ 
+                    status: true, 
+                    creator: "InuuTyzDev", 
+                    result: cleanData 
+                });
+            } catch (e) {
+                return res.status(500).json({ 
+                    status: false, 
+                    message: `Gagal memproses efek ${type}: ` + e.message 
+                });
+            }
+        } else {
+            return res.status(404).json({ 
+                status: false, 
+                message: `Efek '${type}' tidak ditemukan di kategori ephoto.`,
+                available_effects: listEffect
+            });
+        }
+    }
+            // ==========================================
+    // 11. KATEGORI: KOMIK
+    // ==========================================
+    else if (kategori === 'komik') {
+        
+        // --- 1. SEARCH KOMIK (Komikindo) ---
+        if (type === 'search') {
+            const keyword = q || query || text;
+            if (!keyword) return res.status(400).json({ status: false, message: "Parameter 'query' (judul komik) wajib diisi!" });
+
+            try {
+                const targetUrl = `https://api.cuki.biz.id/api/komik/komikindo-search?apikey=${apiKeyCuki}&query=${encodeURIComponent(keyword)}`;
+                const response = await axios.get(targetUrl);
+                
+                let cleanData = response.data.data || response.data;
+                if (cleanData && typeof cleanData === 'object') {
+                    delete cleanData.creator;
+                    delete cleanData.status;
+                }
+
+                return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+            } catch (e) {
+                return res.status(500).json({ status: false, message: "Gagal mencari komik: " + e.message });
+            }
+        }
+
+        // --- 2. DETAIL KOMIK ---
+        else if (type === 'detail') {
+            if (!url) return res.status(400).json({ status: false, message: "Parameter 'url' komik wajib diisi!" });
+
+            try {
+                const targetUrl = `https://api.cuki.biz.id/api/komik/komikindo-detail?apikey=${apiKeyCuki}&url=${encodeURIComponent(url)}`;
+                const response = await axios.get(targetUrl);
+                
+                let cleanData = response.data.data || response.data;
+                if (cleanData && typeof cleanData === 'object') {
+                    delete cleanData.creator;
+                    delete cleanData.status;
+                }
+
+                return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+            } catch (e) {
+                return res.status(500).json({ status: false, message: "Gagal mengambil detail komik: " + e.message });
+            }
+        }
+
+        // --- 3. CHAPTER KOMIK (BACA) ---
+        else if (type === 'chapter') {
+            if (!url) return res.status(400).json({ status: false, message: "Parameter 'url' chapter wajib diisi!" });
+
+            try {
+                const targetUrl = `https://api.cuki.biz.id/api/komik/komikindo-chapter?apikey=${apiKeyCuki}&url=${encodeURIComponent(url)}`;
+                const response = await axios.get(targetUrl);
+                
+                let cleanData = response.data.data || response.data;
+                if (cleanData && typeof cleanData === 'object') {
+                    delete cleanData.creator;
+                    delete cleanData.status;
+                }
+
+                return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+            } catch (e) {
+                return res.status(500).json({ status: false, message: "Gagal mengambil isi chapter: " + e.message });
+            }
+        }
+        
+        else {
+            return res.status(404).json({ status: false, message: `Type komik '${type}' tidak ditemukan!` });
+        }
+    }
+
+            // ==========================================
+    // 12. KATEGORI: MEME
+    // ==========================================
+    else if (kategori === 'meme') {
+        const listMeme = [
+            'dogecheems', 'hotline', 'jarvis', 'majulu', 
+            'pelajaran', 'pilihan', 'squidwindow', 'twobuttons'
+        ];
+
+        if (listMeme.includes(type)) {
+            // Validasi parameter teks dasar
+            if (!text1 && !text) {
+                return res.status(400).json({ status: false, message: "Minimal parameter 'text1' atau 'text' wajib diisi!" });
+            }
+
+            try {
+                // Membangun URL secara dinamis berdasarkan parameter yang ada
+                let targetUrl = `https://api.cuki.biz.id/api/canvas/meme/${type}?apikey=${apiKeyCuki}`;
+                
+                if (text) targetUrl += `&text=${encodeURIComponent(text)}`;
+                if (text1) targetUrl += `&text1=${encodeURIComponent(text1)}`;
+                if (text2) targetUrl += `&text2=${encodeURIComponent(text2)}`;
+                if (text3) targetUrl += `&text3=${encodeURIComponent(text3)}`;
+
+                const response = await axios.get(targetUrl, { 
+                    headers: { 'x-api-key': apiKeyCuki },
+                    responseType: 'arraybuffer' 
+                });
+
+                res.setHeader('Content-Type', 'image/png');
+                return res.status(200).send(response.data);
+            } catch (e) {
+                return res.status(500).json({ status: false, message: `Gagal membuat meme ${type}: ` + e.message });
+            }
+        } else {
+            return res.status(404).json({ 
+                status: false, 
+                message: `Type meme '${type}' tidak ditemukan!`,
+                available_memes: listMeme
+            });
         }
     }
 
