@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+Export default async function handler(req, res) {
 
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Content-Type', 'application/json');
@@ -230,6 +230,13 @@ export default async function handler(req, res) {
                     "params": [{ "name": "q", "required": true, "description": "Judul lagu atau artis" }]
                 },
                 {
+                    "name": "Lyrics Search",
+                    "endpoint": "/api/search/lyrics",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Judul lagu" }]
+                },
+
+                {
                     "name": "GSM Arena",
                     "endpoint": "/api/search/gsm",
                     "method": "GET",
@@ -444,6 +451,283 @@ export default async function handler(req, res) {
                     ]
                 }
             ],
+             "komik": [
+                {
+                    "name": "Komikindo Search",
+                    "endpoint": "/api/komik/search",
+                    "method": "GET",
+                    "params": [{ "name": "query", "required": true, "description": "Judul komik (Contoh: One Piece)" }]
+                },
+                {
+                    "name": "Komikindo Detail",
+                    "endpoint": "/api/komik/detail",
+                    "method": "GET",
+                    "params": [{ "name": "url", "required": true, "description": "URL dari hasil search" }]
+                },
+                {
+                    "name": "Komikindo Chapter",
+                    "endpoint": "/api/komik/chapter",
+                    "method": "GET",
+                    "params": [{ "name": "url", "required": true, "description": "URL chapter untuk baca" }]
+                }
+            ],
+                        "meme": [
+                {
+                    "name": "Doge vs Cheems",
+                    "endpoint": "/api/meme/dogecheems",
+                    "method": "GET",
+                    "params": [
+                        { "name": "text1", "required": true, "description": "Teks untuk si Doge (Kiri)" },
+                        { "name": "text2", "required": true, "description": "Teks untuk si Cheems (Kanan)" }
+                    ]
+                },
+                {
+                    "name": "Drake Hotline Bling",
+                    "endpoint": "/api/meme/hotline",
+                    "method": "GET",
+                    "params": [
+                        { "name": "text1", "required": true, "description": "Sesuatu yang ditolak/tidak suka" },
+                        { "name": "text2", "required": true, "description": "Sesuatu yang diterima/disukai" }
+                    ]
+                },
+                {
+                    "name": "Jarvis Assistant",
+                    "endpoint": "/api/meme/jarvis",
+                    "method": "GET",
+                    "params": [
+                        { "name": "text", "required": true, "description": "Perintah atau kata-kata untuk Jarvis" }
+                    ]
+                },
+                {
+                    "name": "Maju Lu (Drama)",
+                    "endpoint": "/api/meme/majulu",
+                    "method": "GET",
+                    "params": [
+                        { "name": "text1", "required": true, "description": "Teks tantangan pertama" },
+                        { "name": "text2", "required": true, "description": "Teks jawaban/kenyataan" }
+                    ]
+                },
+                {
+                    "name": "Pelajaran Hidup",
+                    "endpoint": "/api/meme/pelajaran",
+                    "method": "GET",
+                    "params": [
+                        { "name": "text1", "required": true, "description": "Pelajaran hidup yang berat" },
+                        { "name": "text2", "required": true, "description": "Pelajaran sekolah yang sepele" }
+                    ]
+                },
+                {
+                    "name": "Pilihan Dilema (Dua Tombol)",
+                    "endpoint": "/api/meme/pilihan",
+                    "method": "GET",
+                    "params": [
+                        { "name": "text1", "required": true, "description": "Pertanyaan utama" },
+                        { "name": "text2", "required": true, "description": "Pilihan tombol kiri" },
+                        { "name": "text3", "required": true, "description": "Pilihan tombol kanan" }
+                    ]
+                },
+                {
+                    "name": "Squidward Window",
+                    "endpoint": "/api/meme/squidwindow",
+                    "method": "GET",
+                    "params": [
+                        { "name": "text1", "required": true, "description": "Teks Squidward di dalam rumah" },
+                        { "name": "text2", "required": true, "description": "Teks Patrick/Spongebob di luar" }
+                    ]
+                },
+                {
+                    "name": "Two Buttons (Daily)",
+                    "endpoint": "/api/meme/twobuttons",
+                    "method": "GET",
+                    "params": [
+                        { "name": "text1", "required": true, "description": "Opsi tombol 1" },
+                        { "name": "text2", "required": true, "description": "Opsi tombol 2" }
+                    ]
+                }
+            ],
+
+                        "ephoto": [
+                {
+                    "name": "1917 Style",
+                    "endpoint": "/api/ephoto/1917style",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks untuk efek 1917" }]
+                },
+                {
+                    "name": "Advanced Glow",
+                    "endpoint": "/api/ephoto/advancedglow",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks efek cahaya glow" }]
+                },
+                {
+                    "name": "Blackpink Logo",
+                    "endpoint": "/api/ephoto/blackpinklogo",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks logo Blackpink" }]
+                },
+                {
+                    "name": "Blackpink Style",
+                    "endpoint": "/api/ephoto/blackpinkstyle",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks gaya Blackpink" }]
+                },
+                {
+                    "name": "Cartoon Style",
+                    "endpoint": "/api/ephoto/cartoonstyle",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks gaya kartun" }]
+                },
+                {
+                    "name": "Deleting Text",
+                    "endpoint": "/api/ephoto/deletingtext",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Efek teks terhapus" }]
+                },
+                {
+                    "name": "Dragon Ball",
+                    "endpoint": "/api/ephoto/dragonball",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks tema Dragon Ball" }]
+                },
+                {
+                    "name": "Cloud Effect",
+                    "endpoint": "/api/ephoto/effectclouds",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks di atas awan" }]
+                },
+                {
+                    "name": "Flag 3D Text",
+                    "endpoint": "/api/ephoto/flag3dtext",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks bendera 3D" }]
+                },
+                {
+                    "name": "Flag Text",
+                    "endpoint": "/api/ephoto/flagtext",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks tema bendera" }]
+                },
+                {
+                    "name": "Free Create",
+                    "endpoint": "/api/ephoto/freecreate",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Bebas buat teks" }]
+                },
+                {
+                    "name": "Galaxy Style",
+                    "endpoint": "/api/ephoto/galaxy",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks tema galaksi" }]
+                },
+                {
+                    "name": "Galaxy Wallpaper",
+                    "endpoint": "/api/ephoto/galaxywallpaper",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Buat wallpaper galaksi" }]
+                },
+                {
+                    "name": "Glitch Text",
+                    "endpoint": "/api/ephoto/glitchtext",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Efek teks glitch" }]
+                },
+                {
+                    "name": "Glowing Text",
+                    "endpoint": "/api/ephoto/glowingtext",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks bercahaya neon" }]
+                },
+                {
+                    "name": "Gradient Text",
+                    "endpoint": "/api/ephoto/gradienttext",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks warna gradasi" }]
+                },
+                {
+                    "name": "Light Effects",
+                    "endpoint": "/api/ephoto/lighteffects",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks efek lampu" }]
+                },
+                {
+                    "name": "Logo Maker",
+                    "endpoint": "/api/ephoto/logomaker",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Buat logo simpel" }]
+                },
+                {
+                    "name": "Luxury Gold",
+                    "endpoint": "/api/ephoto/luxurygold",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks emas mewah" }]
+                },
+                {
+                    "name": "Making Neon",
+                    "endpoint": "/api/ephoto/makingneon",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Efek lampu neon" }]
+                },
+                {
+                    "name": "Neon Glitch",
+                    "endpoint": "/api/ephoto/neonglitch",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Perpaduan neon & glitch" }]
+                },
+                {
+                    "name": "Paper Cut Style",
+                    "endpoint": "/api/ephoto/papercutstyle",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Gaya potongan kertas" }]
+                },
+                {
+                    "name": "Pixel Glitch",
+                    "endpoint": "/api/ephoto/pixelglitch",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Efek glitch kotak pixel" }]
+                },
+                {
+                    "name": "Royal Text",
+                    "endpoint": "/api/ephoto/royaltext",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks gaya kerajaan" }]
+                },
+                {
+                    "name": "Sand Summer",
+                    "endpoint": "/api/ephoto/sandsummer",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks di atas pasir pantai" }]
+                },
+                {
+                    "name": "Summer Beach",
+                    "endpoint": "/api/ephoto/summerbeach",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks tema pantai" }]
+                },
+                {
+                    "name": "Typography Text",
+                    "endpoint": "/api/ephoto/typographytext",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Seni tipografi" }]
+                },
+                {
+                    "name": "Underwater Text",
+                    "endpoint": "/api/ephoto/underwatertext",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks di dalam air" }]
+                },
+                {
+                    "name": "Watercolor Text",
+                    "endpoint": "/api/ephoto/watercolortext",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks cat air" }]
+                },
+                {
+                    "name": "Write Text",
+                    "endpoint": "/api/ephoto/writetext",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Teks tulis tangan" }]
+                }
+            ], 
             "canvas": [
                 {
                     "name": "Circle Avatar",
