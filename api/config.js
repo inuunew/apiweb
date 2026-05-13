@@ -1,4 +1,4 @@
-Export default async function handler(req, res) {
+export default async function handler(req, res) {
 
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Content-Type', 'application/json');
@@ -6,13 +6,7 @@ Export default async function handler(req, res) {
     res.status(200).json({
         "settings": {
             "apiName": "InuuTyzDev",
-            "creator": "InuuTyzDev",
-            "description": "Developer Modal AI\nMasterpiece provider-api" ,
-            "thumbnail": "https://files.catbox.moe/la9esc.png",
-            "favicon": "https://files.catbox.moe/tv1rv6.jpeg",
-            "websiteUrl": "https://social-information.inuu.my.id", 
-            "whatsappUrl": "https://wa.me/6283160556330",
-            "apiVersion": "4.5.0"
+            "creator": "InuuTyzDev"
         },
         "tags": {
             "ai": [
@@ -235,7 +229,6 @@ Export default async function handler(req, res) {
                     "method": "GET",
                     "params": [{ "name": "q", "required": true, "description": "Judul lagu" }]
                 },
-
                 {
                     "name": "GSM Arena",
                     "endpoint": "/api/search/gsm",
@@ -451,7 +444,7 @@ Export default async function handler(req, res) {
                     ]
                 }
             ],
-             "komik": [
+            "komik": [
                 {
                     "name": "Komikindo Search",
                     "endpoint": "/api/komik/search",
@@ -471,7 +464,7 @@ Export default async function handler(req, res) {
                     "params": [{ "name": "url", "required": true, "description": "URL chapter untuk baca" }]
                 }
             ],
-                        "meme": [
+            "meme": [
                 {
                     "name": "Doge vs Cheems",
                     "endpoint": "/api/meme/dogecheems",
@@ -545,8 +538,7 @@ Export default async function handler(req, res) {
                     ]
                 }
             ],
-
-                        "ephoto": [
+            "ephoto": [
                 {
                     "name": "1917 Style",
                     "endpoint": "/api/ephoto/1917style",
