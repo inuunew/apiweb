@@ -80,12 +80,6 @@ export default async function handler(req, res) {
             ],
             "maker": [
                 {
-                    "name": "Brat Generator",
-                    "endpoint": "/api/maker/brat",
-                    "method": "GET",
-                    "params": [{ "name": "text", "required": true, "description": "Teks stiker" }]
-                },
-                {
                     "name": "E-KTP Maker",
                     "endpoint": "/api/maker/ektp",
                     "method": "POST",
@@ -719,7 +713,47 @@ export default async function handler(req, res) {
                     "method": "GET",
                     "params": [{ "name": "q", "required": true, "description": "Teks tulis tangan" }]
                 }
-            ], 
+            ],
+"stiker": [
+    {
+        "name": "Brat Video",
+        "endpoint": "/api/stiker/bratvid",
+        "method": "GET",
+        "params": [{ "name": "text", "required": true, "description": "Teks untuk stiker video brat" }]
+    },
+    {
+        "name": "Stickerly Search",
+        "endpoint": "/api/stiker/stickerly",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Kata kunci stiker" }]
+    },
+    {
+        "name": "Quotely (QC)",
+        "endpoint": "/api/stiker/qc",
+        "method": "GET",
+        "params": [
+            { "name": "text", "required": true, "description": "Isi pesan" },
+            { "name": "name", "required": true, "description": "Nama pengirim" },
+            { "name": "avatarUrl", "required": false, "description": "Link foto profil (opsional)" },
+            { "name": "bg", "required": false, "description": "Warna background hex tanpa # (opsional)" }
+        ]
+    },
+    {
+        "name": "Emojimix",
+        "endpoint": "/api/stiker/emojimix",
+        "method": "GET",
+        "params": [
+            { "name": "emoji1", "required": true, "description": "Emoji pertama" },
+            { "name": "emoji2", "required": true, "description": "Emoji kedua" }
+        ]
+    },
+    {
+        "name": "Brat Sticker",
+        "endpoint": "/api/stiker/brat",
+        "method": "GET",
+        "params": [{ "name": "text", "required": true, "description": "Teks stiker brat" }]
+    }
+], 
             "canvas": [
                 {
                     "name": "Circle Avatar",
