@@ -252,7 +252,7 @@ const apiKeyCuki = "cuki-x";
     // ==========================================
     // 5. KATEGORI: DOWNLOADER
     // ==========================================
-    else if (kategori === 'downloader') {
+    else if (kategori === 'download') {
         // Validasi awal: Semua fitur downloader butuh URL
         if (!url) return res.status(400).json({ status: false, message: "Parameter 'url' wajib diisi untuk kategori Downloader!" });
 
@@ -365,22 +365,62 @@ else if (kategori === 'search') {
         }
         // --- GSM ARENA SEARCH ---
 
-   else if (type === 'lyrics') {
-        try {
-            const targetUrl = `https://api.pixxxry.eu.cc/search/lyrics?q=${encodeURIComponent(keyword)}`;
-            const response = await axios.get(targetUrl);
-            
-            let cleanData = response.data.data || response.data;
-            if (cleanData && typeof cleanData === 'object') { 
-                delete cleanData.creator; 
-                delete cleanData.status; 
-            }
+           else if (type === 'lyrics') {
+            try {
+                // 1. Validasi: Pastikan ada kata kunci
+                if (!keyword) return res.status(400).json({ status: false, message: "Masukkan judul lagu yang mau dicari!" });
 
-            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
-        } catch (e) {
-            return res.status(500).json({ status: false, message: "Gagal mengambil lirik: " + e.message });
+                const targetUrl = `https://api.pixxxry.eu.cc/search/lyrics?q=${encodeURIComponent(keyword)}`;
+                
+                const response = await axios.get(targetUrl, {
+                    // 2. TAMENG UTAMA: User-Agent Browser
+                    // Ini wajib supaya server provider gak ngira kamu robot/bot jahat
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
+                        'Accept': 'application/json',
+                        'Referer': 'https://api.pixxxry.eu.cc/'
+                    },
+                    timeout: 10000 // Timeout 10 detik biar gak nunggu kelamaan kalau provider lemot
+                });
+                
+                // 3. Ambil data dengan aman
+                let cleanData = response.data.data || response.data;
+
+                // 4. TRIK SAPU BERSIH: Hapus watermark provider asli
+                if (cleanData && typeof cleanData === 'object') { 
+                    delete cleanData.creator; 
+                    delete cleanData.status; 
+                    
+                    // Kalau hasilnya array (banyak lirik), kita bersihkan tiap itemnya
+                    if (Array.isArray(cleanData)) {
+                        cleanData = cleanData.map(item => {
+                            delete item.creator;
+                            return item;
+                        });
+                    }
+                }
+
+                return res.status(200).json({ 
+                    status: true, 
+                    creator: "InuuTyzDev", 
+                    result: cleanData 
+                });
+
+            } catch (e) {
+                // 5. Debugging Error yang lebih detail
+                console.error("Error Lyrics:", e.message);
+                
+                // Jika provider kasih respon error (misal 403 atau 404)
+                const errorStatus = e.response?.status || 500;
+                const errorMsg = e.response?.data?.message || e.message;
+
+                return res.status(errorStatus).json({ 
+                    status: false, 
+                    message: "Aduh, server lirik lagi bermasalah: " + errorMsg 
+                });
+            }
         }
-    }
+
 
         else if (type === 'gsm') {
             const response = await axios.get(`https://www.neoapis.xyz/api/search/gsm?query=${encodeURIComponent(keyword)}`);
@@ -813,10 +853,9 @@ if (type === 'qr') {
     // ==========================================
     // 10. KATEGORI: EPHOTO
     // ==========================================
-    else if (kategori === 'ephoto') {
+     else if (kategori === 'ephoto') {
         const textInput = q || text || query;
         
-        // Daftar semua efek dari Cuki API
         const listEffect = [
             '1917style', 'advancedglow', 'blackpinklogo', 'blackpinkstyle', 'cartoonstyle', 
             'deletingtext', 'dragonball', 'effectclouds', 'flag3dtext', 'flagtext', 
@@ -826,45 +865,33 @@ if (type === 'qr') {
             'summerbeach', 'typographytext', 'underwatertext', 'watercolortext', 'writetext'
         ];
 
-        if (!textInput) {
-            return res.status(400).json({ status: false, message: "Parameter teks (q/text/query) wajib diisi!" });
-        }
+        if (!textInput) return res.status(400).json({ status: false, message: "Parameter teks wajib diisi!" });
 
         if (listEffect.includes(type)) {
             try {
                 const targetUrl = `https://api.cuki.biz.id/api/ephoto/${type}?apikey=${apiKeyCuki}&query=${encodeURIComponent(textInput)}`;
                 
+                // PENTING: Gunakan responseType 'arraybuffer' untuk mengambil data gambar
                 const response = await axios.get(targetUrl, {
-                    headers: { 'x-api-key': apiKeyCuki }
+                    headers: { 'x-api-key': apiKeyCuki },
+                    responseType: 'arraybuffer' 
                 });
 
-                let cleanData = response.data.data || response.data;
+                // SET HEADER AGAR BROWSER TAHU INI ADALAH GAMBAR
+                res.setHeader('Content-Type', 'image/jpeg');
+                res.setHeader('Cache-Control', 'public, max-age=86400');
                 
-                // Trik Sapu Bersih Watermark
-                if (cleanData && typeof cleanData === 'object') {
-                    delete cleanData.creator;
-                    delete cleanData.status;
-                }
+                // KIRIM LANGSUNG DATA GAMBARNYA (Bukan JSON!)
+                return res.status(200).send(response.data);
 
-                return res.status(200).json({ 
-                    status: true, 
-                    creator: "InuuTyzDev", 
-                    result: cleanData 
-                });
             } catch (e) {
-                return res.status(500).json({ 
-                    status: false, 
-                    message: `Gagal memproses efek ${type}: ` + e.message 
-                });
+                return res.status(500).json({ status: false, message: "Gagal memproses gambar: " + e.message });
             }
         } else {
-            return res.status(404).json({ 
-                status: false, 
-                message: `Efek '${type}' tidak ditemukan di kategori ephoto.`,
-                available_effects: listEffect
-            });
+            return res.status(404).json({ status: false, message: `Efek '${type}' tidak ditemukan.` });
         }
     }
+
             // ==========================================
     // 11. KATEGORI: KOMIK
     // ==========================================
