@@ -258,8 +258,7 @@ const apiKeyCuki = "cuki-x";
 
       const siputzxTypes = [
             'twitter', 'douyin', 'fastdl', 'github', 
-            'tiktok', 'gdrive', 'snackvideo', 
-            'savefrom', 'ummy', 'capcut'
+            'tiktok', 'gdrive', 'savefrom', 'ummy', 'capcut'
         ];
 
         if (siputzxTypes.includes(type)) {
@@ -275,7 +274,10 @@ const apiKeyCuki = "cuki-x";
             
             return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
         }
+        
+        
         // --- TIKTOK V2 (Endpoint Khusus Siputzx) ---
+        
         else if (type === 'tiktok_v2') {
             const response = await axios.get(`https://api.siputzx.my.id/api/d/tiktok/v2?url=${encodeURIComponent(url)}`);
             
@@ -339,6 +341,47 @@ const apiKeyCuki = "cuki-x";
             if (!downloadLink) throw new Error('Gagal menemukan link download.');
             return res.json({ status: true, creator: "InuuTyzDev", result: { dl: downloadLink }});
         }
+    // --- SNACKVIDEO DOWNLOADER ---
+   else if (type === 'snackvideo') {
+        try {
+            // Menggunakan API Public yang stabil untuk SnackVideo
+            const response = await axios.get(`https://api.tiklydown.eu.org/api/download/snack?url=${encodeURIComponent(link)}`);
+            const data = response.data;
+
+            // Validasi response dari API target
+            if (!data || data.status !== 200) {
+                return res.status(404).json({ 
+                    status: false, 
+                    creator: "InuuTyzDev", 
+                    message: "Video tidak ditemukan, pastikan link SnackVideo valid!" 
+                });
+            }
+
+            // Teknik "Sapu Bersih" & Re-mapping agar senada dengan fitur lainnya
+            const cleanData = {
+                title: data.result.title || "No Title",
+                thumbnail: data.result.thumbnail,
+                url: data.result.video || data.result.url, // Link video No Watermark
+                author: data.result.author?.name || "Unknown"
+            };
+
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: cleanData 
+            });
+
+        } catch (error) {
+            return res.status(500).json({ 
+                status: false, 
+                creator: "InuuTyzDev", 
+                message: "Gagal mengambil data: " + error.message 
+            });
+        }
+    }
+
+    // --- ERROR HANDLING TYPE DOWNLOAD ---
+
         // --- ERROR HANDLING ---
         else {
             return res.status(400).json({ status: false, message: `Type downloader '${type}' tidak valid` });
@@ -974,6 +1017,71 @@ if (type === 'qr') {
             });
         }
     }
+
+// ==========================================
+// 8. KATEGORI: AI IMAGE
+// ==========================================
+else if (kategori === 'ai-image') {
+    // Menyiapkan variabel input agar fleksibel
+    const imageUrl = url || q || query;
+    const textPrompt = prompt || q || query;
+
+    // --- 8A. IMAGE TRANSFORMATION (URL BASED) ---
+    const imageTransforms = ['torealistic', 'tocinematic', 'tofigure', 'toghibli', 'toanime'];
+    
+    if (imageTransforms.includes(type)) {
+        if (!imageUrl) return res.status(400).json({ status: false, message: "Parameter 'url' gambar wajib diisi!" });
+        
+        try {
+            // PERBAIKAN: Gunakan parameter prompt, bukan url
+            const targetUrl = `https://www.neoapis.xyz/api/ai-image/${type}?prompt=${encodeURIComponent(textPrompt)}`;
+            const response = await axios.get(targetUrl);
+            const data = response.data;
+
+            const finalImage = data.result?.url || data.result || data.url;
+
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: { image_url: finalImage }
+            });
+        } catch (error) {
+             return res.status(500).json({ status: false, message: `Gagal generate: ${type}` });
+        }
+    }
+
+    // --- 8B. TEXT TO IMAGE (PROMPT BASED) ---
+    else if (type === 'ailabs' || type === 'deepai') {
+        if (!textPrompt) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
+
+        try {
+            // PERBAIKAN: Gunakan parameter prompt, bukan url
+            const targetUrl = `https://www.neoapis.xyz/api/ai-image/${type}?prompt=${encodeURIComponent(textPrompt)}`;
+            const response = await axios.get(targetUrl);
+            const data = response.data;
+
+            const finalImage = data.result?.url || data.result || data.url;
+
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: { image_url: finalImage }
+            });
+        } catch (error) {
+             return res.status(500).json({ status: false, message: `Gagal generate: ${type}` });
+        }
+    }
+
+    // --- ERROR HANDLING TYPE AI-IMAGE ---
+    else {
+        return res.status(400).json({ 
+            status: false, 
+            creator: "InuuTyzDev", 
+            message: `Type AI Image '${type}' tidak ditemukan.` 
+        });
+    }
+}
+
 
     // ==========================================
     // JIKA KATEGORI TIDAK DIKENAL
