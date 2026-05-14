@@ -79,6 +79,50 @@ export default async function handler(req, res) {
                     ]
                 }
             ],
+            "ai-image": [
+        {
+            "name": "To Realistic",
+            "endpoint": "/api/ai-image/torealistic",
+            "method": "GET",
+            "params": [{ "name": "url", "required": true, "description": "URL gambar yang ingin diubah" }]
+        },
+        {
+            "name": "To Cinematic",
+            "endpoint": "/api/ai-image/tocinematic",
+            "method": "GET",
+            "params": [{ "name": "url", "required": true, "description": "URL gambar yang ingin diubah" }]
+        },
+        {
+            "name": "To Figure",
+            "endpoint": "/api/ai-image/tofigure",
+            "method": "GET",
+            "params": [{ "name": "url", "required": true, "description": "URL gambar yang ingin diubah" }]
+        },
+        {
+            "name": "To Ghibli",
+            "endpoint": "/api/ai-image/toghibli",
+            "method": "GET",
+            "params": [{ "name": "url", "required": true, "description": "URL gambar yang ingin diubah" }]
+        },
+        {
+            "name": "To Anime",
+            "endpoint": "/api/ai-image/toanime",
+            "method": "GET",
+            "params": [{ "name": "url", "required": true, "description": "URL gambar yang ingin diubah" }]
+        },
+        {
+            "name": "AI Labs Generator",
+            "endpoint": "/api/ai-image/ailabs",
+            "method": "GET",
+            "params": [{ "name": "prompt", "required": true, "description": "Deskripsi gambar" }]
+        },
+        {
+            "name": "DeepAI Generator",
+            "endpoint": "/api/ai-image/deepai",
+            "method": "GET",
+            "params": [{ "name": "prompt", "required": true, "description": "Deskripsi gambar" }]
+        }
+    ],
             "maker": [
                 {
                     "name": "E-KTP Maker",
@@ -150,6 +194,12 @@ export default async function handler(req, res) {
                     "method": "GET",
                     "params": [{ "name": "url", "required": true, "description": "Link lagu Spotify" }]
                 },
+                {
+            "name": "SnackVideo Downloader",
+            "endpoint": "/api/download/snackvideo",
+            "method": "GET",
+            "params": [{ "name": "url", "required": true, "description": "Link video SnackVideo (No Watermark)" }]
+                }, 
                 {
                     "name": "TikTok V2",
                     "endpoint": "/api/download/tiktok_v2",
