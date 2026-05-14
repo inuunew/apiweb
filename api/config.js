@@ -583,6 +583,203 @@ export default async function handler(req, res) {
                     ]
                 }
             ],
+                        "sticker": [
+                {
+                    "name": "Stickerly Search",
+                    "endpoint": "/api/sticker/stickerly",
+                    "method": "GET",
+                    "params": [{ "name": "q", "required": true, "description": "Keyword sticker (Contoh: Pentol)" }]
+                },
+                {
+                    "name": "Emojimix",
+                    "endpoint": "/api/sticker/emojimix",
+                    "method": "GET",
+                    "params": [
+                        { "name": "emoji1", "required": true, "description": "Emoji pertama" },
+                        { "name": "emoji2", "required": true, "description": "Emoji kedua" }
+                    ]
+                },
+                {
+                    "name": "Quotely (QC)",
+                    "endpoint": "/api/sticker/qc",
+                    "method": "GET",
+                    "params": [
+                        { "name": "text", "required": true, "description": "Isi pesan chat" },
+                        { "name": "name", "required": true, "description": "Nama pengirim" },
+                        { "name": "avatarUrl", "required": false, "description": "Link foto profil (Opsional)" }
+                    ]
+                },
+                {
+                    "name": "Brat Generator",
+                    "endpoint": "/api/sticker/brat",
+                    "method": "GET",
+                    "params": [{ "name": "text", "required": true, "description": "Teks untuk sticker brat" }]
+                }
+            ],
+            "fun": [
+                {
+                    "name": "Cek Khodam",
+                    "endpoint": "/api/fun/cekkhodam",
+                    "method": "GET",
+                    "params": [{ "name": "name", "required": true, "description": "Nama untuk cek khodam" }]
+                },
+                {
+                    "name": "Tes Kecocokan",
+                    "endpoint": "/api/fun/teskecocokan",
+                    "method": "GET",
+                    "params": [
+                        { "name": "name1", "required": true, "description": "Nama orang pertama" },
+                        { "name": "name2", "required": true, "description": "Nama orang kedua" }
+                    ]
+                },
+                {
+                    "name": "Apakah (8Ball)",
+                    "endpoint": "/api/fun/apakah",
+                    "method": "GET",
+                    "params": [{ "name": "text", "required": true, "description": "Pertanyaan iya/tidak" }]
+                },
+                {
+                    "name": "Kapan",
+                    "endpoint": "/api/fun/kapan",
+                    "method": "GET",
+                    "params": [{ "name": "text", "required": true, "description": "Pertanyaan waktu" }]
+                },
+                {
+                    "name": "Bisakah",
+                    "endpoint": "/api/fun/bisakah",
+                    "method": "GET",
+                    "params": [{ "name": "text", "required": true, "description": "Pertanyaan kemampuan" }]
+                },
+                {
+                    "name": "Bagaimanakah",
+                    "endpoint": "/api/fun/bagaimanakah",
+                    "method": "GET",
+                    "params": [{ "name": "text", "required": true, "description": "Pertanyaan kondisi" }]
+                },
+                {
+                    "name": "Cek Ganteng",
+                    "endpoint": "/api/fun/cekganteng",
+                    "method": "GET",
+                    "params": [{ "name": "name", "required": true, "description": "Nama yang dicek" }]
+                },
+                {
+                    "name": "Cek Cantik",
+                    "endpoint": "/api/fun/cekcantik",
+                    "method": "GET",
+                    "params": [{ "name": "name", "required": true, "description": "Nama yang dicek" }]
+                },
+                {
+                    "name": "Cek Bucin",
+                    "endpoint": "/api/fun/cekbucin",
+                    "method": "GET",
+                    "params": [{ "name": "name", "required": true, "description": "Nama yang dicek" }]
+                },
+                {
+                    "name": "Cek Stres",
+                    "endpoint": "/api/fun/cekstres",
+                    "method": "GET",
+                    "params": [{ "name": "name", "required": true, "description": "Nama yang dicek" }]
+                },
+                {
+                    "name": "Cek Wibu",
+                    "endpoint": "/api/fun/cekwibu",
+                    "method": "GET",
+                    "params": [{ "name": "name", "required": true, "description": "Nama yang dicek" }]
+                },
+                {
+                    "name": "Cek Pelit",
+                    "endpoint": "/api/fun/cekpelit",
+                    "method": "GET",
+                    "params": [{ "name": "name", "required": true, "description": "Nama yang dicek" }]
+                },
+                {
+                    "name": "Cek Jomblo",
+                    "endpoint": "/api/fun/cekjomblo",
+                    "method": "GET",
+                    "params": [{ "name": "name", "required": true, "description": "Nama yang dicek" }]
+                },
+                {
+                    "name": "Cek Sifat",
+                    "endpoint": "/api/fun/ceksifat",
+                    "method": "GET",
+                    "params": [{ "name": "name", "required": true, "description": "Analisis sifat nama" }]
+                },
+                {
+                    "name": "Ramal Pekerjaan",
+                    "endpoint": "/api/fun/pekerjaan",
+                    "method": "GET",
+                    "params": [{ "name": "name", "required": true, "description": "Cek masa depan kerja" }]
+                },
+                {
+                    "name": "Prediksi Jodoh",
+                    "endpoint": "/api/fun/jodohku",
+                    "method": "GET",
+                    "params": [{ "name": "name", "required": true, "description": "Ciri-ciri jodohmu" }]
+                },
+                {
+                    "name": "Rate Hal",
+                    "endpoint": "/api/fun/rate",
+                    "method": "GET",
+                    "params": [{ "name": "text", "required": true, "description": "Hal yang ingin dinilai" }]
+                },
+                {
+                    "name": "Fakta Random",
+                    "endpoint": "/api/fun/faktarandom",
+                    "method": "GET",
+                    "params": []
+                },
+                {
+                    "name": "Gombalan",
+                    "endpoint": "/api/fun/gombalan",
+                    "method": "GET",
+                    "params": []
+                },
+                {
+                    "name": "Pantun Lucu",
+                    "endpoint": "/api/fun/pantun",
+                    "method": "GET",
+                    "params": []
+                },
+                {
+                    "name": "Truth",
+                    "endpoint": "/api/fun/truth",
+                    "method": "GET",
+                    "params": []
+                },
+                {
+                    "name": "Dare",
+                    "endpoint": "/api/fun/dare",
+                    "method": "GET",
+                    "params": []
+                },
+                {
+                    "name": "Quotes Galau",
+                    "endpoint": "/api/fun/quotes",
+                    "method": "GET",
+                    "params": []
+                },
+                {
+                    "name": "Kata Bijak",
+                    "endpoint": "/api/fun/katabijak",
+                    "method": "GET",
+                    "params": []
+                },
+                {
+                    "name": "Tebak Umur",
+                    "endpoint": "/api/fun/tebakumur",
+                    "method": "GET",
+                    "params": [{ "name": "name", "required": true, "description": "Tebak umur lewat nama" }]
+                },
+                {
+                    "name": "Text to Speech",
+                    "endpoint": "/api/fun/tts",
+                    "method": "GET",
+                    "params": [
+                        { "name": "text", "required": true, "description": "Teks untuk jadi suara" },
+                        { "name": "lang", "required": false, "description": "Kode bahasa (id, en, ja)" }
+                    ]
+                }
+            ],
             "ephoto": [
                 {
                     "name": "1917 Style",
