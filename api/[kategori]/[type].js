@@ -1063,20 +1063,35 @@ else if (kategori === 'ai-image') {
         if (!textPrompt) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
 
         try {
-            // PENTING: Gunakan parameter ?prompt= untuk kategori ini
-            const targetUrl = `https://www.neoapis.xyz/api/ai-image/${type}?prompt=${encodeURIComponent(textPrompt)}`;
-            const response = await axios.get(targetUrl, axiosConfig);
-            
-            const resultData = response.data.result?.url || response.data.result || response.data.url;
+    const response = await axios.get(targetUrl, {
+        ...axiosConfig,
+        responseType: 'arraybuffer' // Paksa ambil sebagai buffer agar aman untuk keduanya
+    });
 
-            return res.status(200).json({ 
-                status: true, 
-                creator: "InuuTyzDev", 
-                result: resultData ? { image_url: resultData } : {} 
-            });
-        } catch (error) {
-             return res.status(500).json({ status: false, message: `Gagal generate: ${type}` });
-        }
+    const contentType = response.headers['content-type'];
+
+    // JIKA RESPONNYA ADALAH GAMBAR LANGSUNG
+    if (contentType.includes('image')) {
+        res.setHeader('Content-Type', contentType);
+        return res.send(response.data);
+    } 
+    
+    // JIKA RESPONNYA ADALAH JSON (Seperti ailabs yang kamu tunjukkan)
+    else {
+        const jsonData = JSON.parse(Buffer.from(response.data).toString());
+        const finalUrl = jsonData.result || jsonData.url || jsonData.image_url;
+
+        return res.status(200).json({
+            status: true,
+            creator: "InuuTyzDev",
+            result: { image_url: finalUrl }
+        });
+    }
+} catch (error) {
+    // Penanganan error jika API target down
+    return res.status(500).json({ status: false, message: "Gagal memproses gambar." });
+}
+
     }
 }
 
