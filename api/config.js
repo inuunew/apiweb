@@ -583,6 +583,107 @@ export default async function handler(req, res) {
                     ]
                 }
             ],
+    "islam": [
+        {
+            "name": "Al-Qur'an (Per Ayat)",
+            "endpoint": "/api/islam/quran",
+            "method": "GET",
+            "params": [
+                { "name": "surah", "required": true, "description": "Nomor Surat (1-114)" },
+                { "name": "ayat", "required": true, "description": "Nomor Ayat" }
+            ]
+        },
+        {
+            "name": "Daftar Surat",
+            "endpoint": "/api/islam/daftarsurat",
+            "method": "GET",
+            "params": []
+        },
+        {
+            "name": "Tafsir / Arti Surat",
+            "endpoint": "/api/islam/tafsir",
+            "method": "GET",
+            "params": [
+                { "name": "surah", "required": true, "description": "Nomor Surat" }
+            ]
+        },
+        {
+            "name": "Audio Murottal",
+            "endpoint": "/api/islam/audiosurat",
+            "method": "GET",
+            "params": [
+                { "name": "surah", "required": true, "description": "Nomor Surat" }
+            ]
+        },
+        {
+            "name": "Hadits",
+            "endpoint": "/api/islam/hadits",
+            "method": "GET",
+            "params": [
+                { "name": "q", "required": true, "description": "Nama Perawi (bukhari, muslim, dll)" },
+                { "name": "ayat", "required": true, "description": "Nomor Hadits" }
+            ]
+        },
+        {
+            "name": "Jadwal Sholat",
+            "endpoint": "/api/islam/jadwalsholat",
+            "method": "GET",
+            "params": [
+                { "name": "q", "required": true, "description": "Nama Kota" }
+            ]
+        },
+        {
+            "name": "Tebak Kisah Nabi",
+            "endpoint": "/api/islam/tebak-nabi",
+            "method": "GET",
+            "params": []
+        },
+        {
+            "name": "Kisah Nabi",
+            "endpoint": "/api/islam/kisahnabi",
+            "method": "GET",
+            "params": [
+                { "name": "q", "required": true, "description": "Nama Nabi" }
+            ]
+        },
+        {
+            "name": "Zikir Pagi & Petang",
+            "endpoint": "/api/islam/zikir",
+            "method": "GET",
+            "params": [
+                { "name": "q", "required": true, "description": "Pilihan: 'pagi' atau 'petang'" }
+            ]
+        },
+        {
+            "name": "Niat Puasa",
+            "endpoint": "/api/islam/puasa",
+            "method": "GET",
+            "params": [
+                { "name": "q", "required": false, "description": "Jenis Puasa (ramadhan, senin, kamis)" }
+            ]
+        },
+        {
+            "name": "Asmaul Husna",
+            "endpoint": "/api/islam/asmaulhusna",
+            "method": "GET",
+            "params": [
+                { "name": "q", "required": false, "description": "Nomor indeks (1-99)" }
+            ]
+        },
+        {
+            "name": "Doa Tahlil",
+            "endpoint": "/api/islam/tahlil",
+            "method": "GET",
+            "params": []
+        },
+        {
+            "name": "Ayat Kursi",
+            "endpoint": "/api/islam/ayatkursi",
+            "method": "GET",
+            "params": []
+        }
+    ], 
+
                         "sticker": [
                 {
                     "name": "Stickerly Search",
