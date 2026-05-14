@@ -363,42 +363,35 @@ else if (kategori === 'search') {
 
             return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
         }
-        // --- GSM ARENA SEARCH ---
-
-           else if (type === 'lyrics') {
+        
+                // --- PENCARIAN LIRIK BERSERTA DETIK (LRCLIB) ---
+        else if (type === 'lyrics') {
             try {
-                // 1. Validasi: Pastikan ada kata kunci
-                if (!keyword) return res.status(400).json({ status: false, message: "Masukkan judul lagu yang mau dicari!" });
+                // Mengambil data dari API LRCLIB menggunakan axios
+                const response = await axios.get(`https://lrclib.net/api/search?q=${encodeURIComponent(keyword)}`);
+                const data = response.data;
 
-                const targetUrl = `https://api.pixxxry.eu.cc/search/lyrics?q=${encodeURIComponent(keyword)}`;
-                
-                const response = await axios.get(targetUrl, {
-                    // 2. TAMENG UTAMA: User-Agent Browser
-                    // Ini wajib supaya server provider gak ngira kamu robot/bot jahat
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
-                        'Accept': 'application/json',
-                        'Referer': 'https://api.pixxxry.eu.cc/'
-                    },
-                    timeout: 10000 // Timeout 10 detik biar gak nunggu kelamaan kalau provider lemot
-                });
-                
-                // 3. Ambil data dengan aman
-                let cleanData = response.data.data || response.data;
-
-                // 4. TRIK SAPU BERSIH: Hapus watermark provider asli
-                if (cleanData && typeof cleanData === 'object') { 
-                    delete cleanData.creator; 
-                    delete cleanData.status; 
-                    
-                    // Kalau hasilnya array (banyak lirik), kita bersihkan tiap itemnya
-                    if (Array.isArray(cleanData)) {
-                        cleanData = cleanData.map(item => {
-                            delete item.creator;
-                            return item;
-                        });
-                    }
+                // Jika array kosong (lagu tidak ditemukan)
+                if (!data || data.length === 0) {
+                    return res.status(404).json({ 
+                        status: false, 
+                        creator: "InuuTyzDev", 
+                        message: `Lirik untuk lagu '${keyword}' tidak ditemukan!` 
+                    });
                 }
+
+                // Mengambil hasil pertama yang paling relevan
+                const lagu = data[0]; 
+
+                // Merapikan data sebelum dikirim sebagai result
+                const cleanData = {
+                    judul: lagu.trackName || "Tidak diketahui",
+                    penyanyi: lagu.artistName || "Tidak diketahui",
+                    album: lagu.albumName || "Tidak diketahui",
+                    durasi_detik: lagu.duration || 0,
+                    lirik_biasa: lagu.plainLyrics || null,
+                    lirik_sinkron: lagu.syncedLyrics || null // Ini yang ada [00:15.50] nya
+                };
 
                 return res.status(200).json({ 
                     status: true, 
@@ -406,20 +399,16 @@ else if (kategori === 'search') {
                     result: cleanData 
                 });
 
-            } catch (e) {
-                // 5. Debugging Error yang lebih detail
-                console.error("Error Lyrics:", e.message);
-                
-                // Jika provider kasih respon error (misal 403 atau 404)
-                const errorStatus = e.response?.status || 500;
-                const errorMsg = e.response?.data?.message || e.message;
-
-                return res.status(errorStatus).json({ 
+            } catch (error) {
+                return res.status(500).json({ 
                     status: false, 
-                    message: "Aduh, server lirik lagi bermasalah: " + errorMsg 
+                    creator: "InuuTyzDev", 
+                    message: "Gagal mengambil data lirik: " + error.message 
                 });
             }
         }
+
+        // --- GSM ARENA SEARCH --
 
 
         else if (type === 'gsm') {
