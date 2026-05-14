@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     // VERCEL OTOMATIS MENANGKAP NAMA FOLDER & ENDPOINT DARI URL!
     // Contoh URL: /api/ai/gemini  -> kategori = "ai", type = "gemini"
     // Contoh URL: /api/maker/ektp -> kategori = "maker", type = "ektp"
-    const { kategori, type, q, text, color, bg, color1, color2, difficulty, view, seed, format, label, value, w, h, length, symbols, cookie, promptSystem, prompt, system, temperature, provinsi, kota, nik, nama, ttl, jenis_kelamin, golongan_darah, alamat, kecamatan, agama, status, pekerjaan, kewarganegaraan, masa_berlaku, terbuat, pas_photo, image, text1, text2, text3, name, comment, ppurl, number, title, time, avatarUrl, device, domain, query, country, url, user, username, hero, channel } = req.query;
+    const { kategori, type, q, text, color, bg, color1, color2, difficulty, view, seed, format, label, value, w, h, length, symbols, cookie, promptSystem, prompt, system, temperature, provinsi, kota, nik, nama, ttl, jenis_kelamin, golongan_darah, alamat, kecamatan, agama, status, pekerjaan, kewarganegaraan, masa_berlaku, terbuat, pas_photo, image, text1, text2, text3, name, comment, ppurl, number, title, time, avatarUrl, device, domain, query, country, url, user, username, hero, channel, surah, ayat } = req.query;
 
 
 
@@ -345,7 +345,7 @@ const apiKeyCuki = "cuki-x";
    else if (type === 'snackvideo') {
         try {
             // Menggunakan API Public yang stabil untuk SnackVideo
-            const response = await axios.get(`https://api.tiklydown.eu.org/api/download/snack?url=${encodeURIComponent(link)}`);
+            const response = await axios.get(`https://api.tiklydown.eu.org/api/download/snack?url=${encodeURIComponent(url)}`);
             const data = response.data;
 
             // Validasi response dari API target
@@ -389,6 +389,7 @@ const apiKeyCuki = "cuki-x";
     }
     // ==========================================
 // 6. KATEGORI: SEARCH
+
 // ==========================================
 else if (kategori === 'search') {
     // Masukkan trik penyatuan variabel keyword Anda di sini
@@ -431,9 +432,6 @@ else if (kategori === 'search') {
         }
 
 
-        // --- GSM ARENA SEARCH --
-
-
         else if (type === 'gsm') {
             const response = await axios.get(`https://www.neoapis.xyz/api/search/gsm?query=${encodeURIComponent(keyword)}`);
             const cleanData = response.data;
@@ -457,26 +455,65 @@ else if (kategori === 'search') {
             delete cleanData.status;
             return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
         }
-        // --- LAZADA SEARCH ---
-        else if (type === 'lazada') {
-            const response = await axios.get(`https://www.neoapis.xyz/api/search/lazada?query=${encodeURIComponent(keyword)}`);
-            const cleanData = response.data;
-            delete cleanData.creator;
-            delete cleanData.status;
-            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+        // --- PENCARIAN WIKIPEDIA (OFFICIAL API) ---
+        else if (type === 'wikipedia') {
+            const response = await axios.get(`https://id.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(keyword)}`);
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: {
+                    judul: response.data.title,
+                    deskripsi: response.data.extract,
+                    thumbnail: response.data.thumbnail ? response.data.thumbnail.source : null
+                } 
+            });
         }
-        // --- PINTEREST (Placeholder) ---
-        else if (type === 'pinterest') {
-            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: `Berhasil mencari pinterest: ${keyword}` });
-        } 
-        // --- TIKTOK SEARCH (Placeholder) ---
-        else if (type === 'tiktok') {
-            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: `Berhasil mencari tiktok: ${keyword}` });
-        } 
-        // --- YOUTUBE SEARCH (Placeholder) ---
-        else if (type === 'yts') {
-            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: `Berhasil mencari youtube: ${keyword}` });
-        } 
+
+        // --- PENCARIAN KAMUS BAHASA INGGRIS (DICTIONARY API) ---
+        else if (type === 'dictionary') {
+            const response = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(keyword)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data });
+        }
+
+        // --- PENCARIAN NEGARA (REST COUNTRIES) ---
+        else if (type === 'country') {
+            const response = await axios.get(`https://restcountries.com/v3.1/name/${encodeURIComponent(keyword)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data[0] });
+        }
+
+        // --- PENCARIAN NPM PACKAGES (NPM REGISTRY) ---
+        else if (type === 'npm') {
+            const response = await axios.get(`https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(keyword)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.objects });
+        }
+
+        // --- PENCARIAN UNIVERSITY (HIPPO LABS) ---
+        else if (type === 'univ') {
+            const response = await axios.get(`http://universities.hipolabs.com/search?name=${encodeURIComponent(keyword)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data });
+        }
+
+        // --- PENCARIAN DUKCAPIL KTP (CHECK NIK - SIMULASI LOGIC) ---
+        else if (type === 'nik') {
+            // Ini menggunakan logic perhitungan NIK lokal tanpa api luar (Mandiri)
+            if (keyword.length !== 16) return res.status(400).json({ status: false, message: "NIK harus 16 digit!" });
+            const data = {
+                provinsi: keyword.substring(0, 2),
+                kota: keyword.substring(2, 4),
+                kecamatan: keyword.substring(4, 6),
+                tgl_lahir: keyword.substring(6, 8),
+                bln_lahir: keyword.substring(8, 10),
+                thn_lahir: keyword.substring(10, 12),
+                unique_code: keyword.substring(12, 16)
+            };
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: data });
+        }
+
+        // --- PENCARIAN BUKU (GOOGLE BOOKS) ---
+        else if (type === 'books') {
+            const response = await axios.get(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(keyword)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.items });
+        }
         // --- ERROR HANDLING ---
         else {
             return res.status(400).json({ status: false, message: `Type search '${type}' tidak valid` });
@@ -487,65 +524,97 @@ else if (kategori === 'search') {
     // 7. KATEGORI: INFO
     // ==========================================
     else if (kategori === 'info') {
-        
+    // Penyatuan variabel agar fleksibel
+    const keyword = q || query || searchText;
+
+    try {
+        // --- 1. INFO BMKG (CUACA/GEMPA MIX) ---
         if (type === 'bmkg') {
             const response = await axios.get(`https://api.siputzx.my.id/api/info/bmkg`);
-            
-            // --- TRIK SAPU BERSIH ---
             let cleanData = response.data.data || response.data;
             if (cleanData && typeof cleanData === 'object') { 
                 delete cleanData.creator; 
                 delete cleanData.status; 
             }
-            
-            return res.status(200).json({ 
-                status: true, 
-                creator: "InuuTyzDev", 
-                result: cleanData 
-            });
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
         }
+
         // --- 2. INFO CUACA DAERAH ---
         else if (type === 'cuaca') {
-            if (!q) return res.status(400).json({ status: false, message: "Parameter 'q' (nama lokasi) wajib diisi! (contoh: pasiran jaya)" });
-            
-            const response = await axios.get(`https://api.siputzx.my.id/api/info/cuaca?q=${encodeURIComponent(q)}`);
-            
-            // --- TRIK SAPU BERSIH ---
+            if (!keyword) return res.status(400).json({ status: false, message: "Parameter kata kunci lokasi wajib diisi!" });
+            const response = await axios.get(`https://api.siputzx.my.id/api/info/cuaca?q=${encodeURIComponent(keyword)}`);
             let cleanData = response.data.data || response.data;
             if (cleanData && typeof cleanData === 'object') { 
                 delete cleanData.creator; 
                 delete cleanData.status; 
             }
-            
-            return res.status(200).json({ 
-                status: true, 
-                creator: "InuuTyzDev", 
-                result: cleanData 
-            });
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
         }
+
         // --- 3. JADWAL ACARA TV ---
         else if (type === 'jadwaltv') {
-            if (!channel) return res.status(400).json({ status: false, message: "Parameter 'channel' wajib diisi! (contoh: gtv, rcti, antv)" });
+            // Gunakan keyword agar user bisa pakai ?q=rcti atau ?channel=rcti
+            const tvChannel = channel || keyword;
+            if (!tvChannel) return res.status(400).json({ status: false, message: "Nama channel TV wajib diisi! (gtv, rcti, antv, dll)" });
             
-            const response = await axios.get(`https://api.siputzx.my.id/api/info/jadwaltv?channel=${encodeURIComponent(channel)}`);
-            
-            // --- TRIK SAPU BERSIH ---
+            const response = await axios.get(`https://api.siputzx.my.id/api/info/jadwaltv?channel=${encodeURIComponent(tvChannel)}`);
             let cleanData = response.data.data || response.data;
             if (cleanData && typeof cleanData === 'object') { 
                 delete cleanData.creator; 
                 delete cleanData.status; 
             }
-            
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+        }
+
+        // --- 4. WIKIPEDIA (OFFICIAL) ---
+        else if (type === 'wikipedia') {
+            if (!keyword) return res.status(400).json({ status: false, message: "Apa yang ingin dicari di Wikipedia?" });
+            const searchRes = await axios.get(`https://id.wikipedia.org/w/api.php?action=query&format=json&list=search&srsearch=${encodeURIComponent(keyword)}`);
+            const pageId = searchRes.data.query.search[0]?.pageid;
+            if (!pageId) return res.status(404).json({ status: false, message: "Artikel tidak ditemukan." });
+
+            const detailRes = await axios.get(`https://id.wikipedia.org/w/api.php?action=query&prop=extracts&exintro&explaintext&format=json&pageids=${pageId}`);
+            const result = detailRes.data.query.pages[pageId];
             return res.status(200).json({ 
                 status: true, 
                 creator: "InuuTyzDev", 
-                result: cleanData 
+                result: { title: result.title, extract: result.extract, wiki_url: `https://id.wikipedia.org/?curid=${pageId}` } 
             });
         }
-        else {
-            return res.status(404).json({ status: false, message: `Endpoint info '${type}' tidak ditemukan!` });
+
+        // --- 5. KBBI (OFFICIAL-LIKE) ---
+        else if (type === 'kbbi') {
+            if (!keyword) return res.status(400).json({ status: false, message: "Masukkan kata yang ingin dicari artinya!" });
+            const response = await axios.get(`https://kbbi-api-zhirrr.vercel.app/api/kbbi?text=${encodeURIComponent(keyword)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data });
         }
+
+        // --- 6. GEMPA TERKINI (OFFICIAL BMKG JSON) ---
+        else if (type === 'gempa') {
+            const response = await axios.get(`https://data.bmkg.go.id/DataMKG/TEWS/autogempa.json`);
+            const gempa = response.data.Infogempa.gempa;
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: {
+                    waktu: `${gempa.Tanggal} | ${gempa.Jam}`,
+                    magnitudo: gempa.Magnitude,
+                    kedalaman: gempa.Kedalaman,
+                    wilayah: gempa.Wilayah,
+                    potensi: gempa.Potensi,
+                    map: `https://data.bmkg.go.id/DataMKG/TEWS/${gempa.Shakemap}`
+                } 
+            });
+        }
+
+        else {
+            return res.status(404).json({ status: false, message: `Endpoint '${type}' tidak tersedia di kategori info.` });
+        }
+    } catch (e) {
+        return res.status(500).json({ status: false, message: "Terjadi kesalahan pada server penyedia data." });
     }
+}
+
     // ==========================================
     // 8. KATEGORI: GENERATOR
     // ==========================================
@@ -776,30 +845,7 @@ if (type === 'qr') {
         }
     }
 
-    // ==========================================
-    // 9. KATEGORI: STIKER
-    // ==========================================
-    else if (kategori === 'stiker') {
-        const keyword = q || query || hero;
-
-        // --- 1. BRAT VIDEO STICKER ---
-        if (type === 'bratvid') {
-            if (!text) return res.status(400).json({ status: false, message: "Parameter 'text' wajib diisi!" });
-            try {
-                const targetUrl = `https://api.pixxxry.eu.cc/sticker/bratvid?text=${encodeURIComponent(text)}`;
-                const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
-                
-                // Biasanya bratvid menghasilkan mp4 atau webp (sticker video)
-                res.setHeader('Content-Type', 'video/mp4'); 
-                return res.status(200).send(response.data);
-            } catch (e) {
-                return res.status(500).json({ status: false, message: "Gagal membuat bratvid: " + e.message });
-            }
-        }
-
-        // --- 2. STICKERLY SEARCH (JSON) ---
         else if (kategori === 'sticker') {
-    const { type, text, name, avatarUrl, bg, q, query } = req.query;
     const keyword = q || query;
 
     const axiosConfig = {
@@ -1370,8 +1416,622 @@ else if (kategori === 'fun') {
     }
 }
 
+else if (kategori === 'islam') {
+    try {
+        if (type === 'quran') {
+            // Fitur Al-Qur'an per Ayat
+            if (!surah || !ayat) return res.status(400).json({ status: false, message: "Parameter 'surah' dan 'ayat' wajib diisi!" });
+            const response = await axios.get(`https://equran.id/api/v2/surat/${surah}`);
+            const dataAyat = response.data.data.ayat.find(a => a.nomorAyat == ayat);
+            
+            if (!dataAyat) return res.status(404).json({ status: false, message: "Ayat tidak ditemukan." });
+            return res.status(200).json({ status: true, creator: "InuutyzDev", result: dataAyat });
+
+        } else if (type === 'jadwalsholat') {
+            // Fitur Jadwal Sholat (Contoh: Jakarta / ID Kota 1301)
+            if (!q) return res.status(400).json({ status: false, message: "Masukkan nama kota pada parameter 'q'!" });
+            
+            // Cari ID Kota dulu
+            const searchKota = await axios.get(`https://api.myquran.com/v2/sholat/kota/cari/${q}`);
+            if (searchKota.data.data.length === 0) return res.status(404).json({ status: false, message: "Kota tidak ditemukan." });
+            
+            const idKota = searchKota.data.data[0].id;
+            const date = new Date().toISOString().split('T')[0].replace(/-/g, '/');
+            const jadwal = await axios.get(`https://api.myquran.com/v2/sholat/jadwal/${idKota}/${date}`);
+            
+            return res.status(200).json({ status: true, creator: "InuutyzDev", result: jadwal.data.data });
+
+        }
+                } else if (type === 'tebak-nabi') {
+            // Fitur Kuis Tebak Kisah Nabi
+            const response = await axios.get(`https://raw.githubusercontent.com/Pandaid-Official/Pandaid-Lib/main/islam/kisahnabi.json`);
+            const data = response.data;
+            const nabiAcak = data[Math.floor(Math.random() * data.length)];
+            
+            // Kita kirim clue-nya saja, jawaban disimpan untuk divalidasi user nanti
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuutyzDev", 
+                result: {
+                    pertanyaan: "Siapakah nabi yang memiliki mukjizat berikut?",
+                    clue: nabiAcak.description.substring(0, 200) + "...", // Potong sedikit deskripsi buat clue
+                    jawaban: nabiAcak.name
+                }
+            });
+
+        } else if (type === 'doa') {
+            // Fitur Doa-Doa Harian
+            const response = await axios.get(`https://doa-doa-harian-api.vercel.app/adsyatir73/all`);
+            const doaAcak = response.data.data[Math.floor(Math.random() * response.data.data.length)];
+            return res.status(200).json({ status: true, creator: "InuutyzDev", result: doaAcak });
+
+        } else if (type === 'hadits') {
+            // Fitur Hadits (Contoh: Bukhari, Muslim, dll)
+            // Default ke Bukhari nomor 1 jika tidak ada query
+            const kitab = q || 'bukhari';
+            const nomor = ayat || 1; 
+            const response = await axios.get(`https://api.hadith.gading.dev/books/${kitab}/${nomor}`);
+            return res.status(200).json({ status: true, creator: "InuutyzDev", result: response.data.data });
+        } else if (type === 'asmaulhusna') {
+            // Mengambil daftar Asmaul Husna
+            const response = await axios.get(`https://raw.githubusercontent.com/pajang/pajang-data/master/asmaul-husna.json`);
+            // Jika user minta spesifik nomor tertentu lewat query 'q'
+            if (q) {
+                const husna = response.data.find(h => h.index == q);
+                if (!husna) return res.status(404).json({ status: false, message: "Nomor Asmaul Husna tidak ditemukan." });
+                return res.status(200).json({ status: true, creator: "InuutyzDev", result: husna });
+            }
+            // Jika tidak, kasih random
+            const randomHusna = response.data[Math.floor(Math.random() * response.data.length)];
+            return res.status(200).json({ status: true, creator: "InuutyzDev", result: randomHusna });
+
+        } else if (type === 'niatsholat') {
+            // Daftar Niat Sholat Wajib & Sunnah
+            const response = await axios.get(`https://raw.githubusercontent.com/niat-sholat-api/niat-sholat-api/main/data/niat-sholat.json`);
+            if (q) {
+                const niat = response.data.find(n => n.name.toLowerCase().includes(q.toLowerCase()));
+                if (!niat) return res.status(404).json({ status: false, message: "Niat sholat tidak ditemukan." });
+                return res.status(200).json({ status: true, creator: "InuutyzDev", result: niat });
+            }
+            return res.status(200).json({ status: true, creator: "InuutyzDev", result: response.data });
+
+        } else if (type === 'ayatkursi') {
+            // Spesifik Ayat Kursi dengan teks dan audio
+            const response = await axios.get(`https://pencari-hadits-api.vercel.app/api/ayatkursi`);
+            return res.status(200).json({ status: true, creator: "InuutyzDev", result: response.data.data });
+        } else if (type === 'tahlil') {
+            // Doa Tahlil Lengkap (Sangat berguna untuk bot religi)
+            const response = await axios.get(`https://raw.githubusercontent.com/Zhirrr/islamic-rest-api-indonesian/refs/heads/main/data/tahlil.json`);
+            return res.status(200).json({ status: true, creator: "InuutyzDev", result: response.data.data });
+
+        } else if (type === 'wirid') {
+            // Bacaan Wirid setelah sholat
+            const response = await axios.get(`https://raw.githubusercontent.com/Zhirrr/islamic-rest-api-indonesian/refs/heads/main/data/wirid.json`);
+            return res.status(200).json({ status: true, creator: "InuutyzDev", result: response.data.data });
+
+        } else if (type === 'doapahlawan') {
+            // Doa Khusus untuk para pahlawan/arwah (biasanya bagian dari kumpulan doa)
+            const response = await axios.get(`https://doa-doa-harian-api.vercel.app/adsyatir73/all`);
+            // Mencari doa yang spesifik berkaitan dengan pahlawan atau ampunan arwah
+            const pahlawan = response.data.data.find(d => d.doa.toLowerCase().includes('pahlawan') || d.doa.toLowerCase().includes('arwah'));
+            
+            if (!pahlawan) return res.status(404).json({ status: false, message: "Doa spesifik pahlawan tidak ditemukan, silakan gunakan fitur 'doa' umum." });
+            return res.status(200).json({ status: true, creator: "InuutyzDev", result: pahlawan });
+                } else if (type === 'daftarsurat') {
+            // Mengambil daftar semua surat (1-114) beserta ringkasannya
+            const response = await axios.get(`https://equran.id/api/v2/surat`);
+            
+            // Trik sapu bersih watermark/status ganda
+            let cleanData = response.data.data || response.data;
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+
+        } else if (type === 'artisurat' || type === 'tafsir') {
+            // Mengambil arti/tafsir lengkap per surat
+            if (!surah) return res.status(400).json({ status: false, message: "Parameter 'surah' (nomor surat) wajib diisi!" });
+            
+            const response = await axios.get(`https://equran.id/api/v2/tafsir/${surah}`);
+            
+            let cleanData = response.data.data || response.data;
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+
+        } else if (type === 'audiosurat') {
+            // Mengambil list audio murottal full satu surat
+            if (!surah) return res.status(400).json({ status: false, message: "Parameter 'surah' wajib diisi!" });
+            
+            const response = await axios.get(`https://equran.id/api/v2/surat/${surah}`);
+            const data = response.data.data;
+            
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: {
+                    nama_surat: data.namaLatin,
+                    audio_full: data.audioFull // Mengembalikan objek berisi berbagai pilihan qori
+                } 
+            });
+}
+        else if (type === 'zikir') {
+            // q=pagi atau q=petang
+            const waktu = q === 'petang' ? 'petang' : 'pagi';
+            const response = await axios.get(`https://raw.githubusercontent.com/Zhirrr/islamic-rest-api-indonesian/refs/heads/main/data/zikir${waktu}.json`);
+            
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: response.data.data 
+            });
+        }
+         else if (type === 'puasa') {
+            const listPuasa = [
+                { niat: "Ramadhan", bacaan: "Nawaitu shauma ghadin 'an ada'i fardhi syahri Ramadhana hadzihis sanati lillahi ta'ala." },
+                { niat: "Senin", bacaan: "Nawaitu shauma yaumil itsnaini sunnatan lillahi ta'ala." },
+                { niat: "Kamis", bacaan: "Nawaitu shauma yaumil khamisi sunnatan lillahi ta'ala." },
+                { niat: "Buka Puasa", bacaan: "Allahumma laka shumtu wa bika amantu wa 'ala rizqika afthartu birahmatika ya arhamar rahimin." }
+            ];
+            
+            if (q) {
+                const hasil = listPuasa.find(p => p.niat.toLowerCase().includes(q.toLowerCase()));
+                if (hasil) return res.status(200).json({ status: true, creator: "InuuTyzDev", result: hasil });
+            }
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: listPuasa });
+        }
 
 
+ else if (type === 'kisahnabi') {
+            if (!q) return res.status(400).json({ status: false, message: "Masukkan nama nabi pada parameter 'q'!" });
+            const response = await axios.get(`https://raw.githubusercontent.com/Pandaid-Official/Pandaid-Lib/main/islam/kisahnabi.json`);
+            const kisah = response.data.find(n => n.name.toLowerCase() === q.toLowerCase());
+            
+            if (!kisah) return res.status(404).json({ status: false, message: "Kisah nabi tidak ditemukan." });
+            return res.status(200).json({ status: true, creator: "InuutyzDev", result: kisah });
+        }
+    } catch (e) {
+        return res.status(500).json({ status: false, message: "Internal Server Error" });
+    }
+}
+
+else if (kategori === 'berita') {
+    try {
+        if (type === 'detik') {
+            // Berita Terbaru dari Detik.com
+            const response = await axios.get(`https://api-berita-indonesia.vercel.app/detik/terbaru/`);
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: response.data.data.posts 
+            });
+
+        } else if (type === 'cnbc') {
+            // Berita Ekonomi & Tech dari CNBC Indonesia
+            const response = await axios.get(`https://api-berita-indonesia.vercel.app/cnbc/terbaru/`);
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: response.data.data.posts 
+            });
+
+        } else if (type === 'antara') {
+            // Berita Nasional dari Antara News
+            const response = await axios.get(`https://api-berita-indonesia.vercel.app/antara/terbaru/`);
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: response.data.data.posts 
+            });
+
+        } else if (type === 'kompas') {
+            // Berita Terpercaya dari Kompas
+            const response = await axios.get(`https://api-berita-indonesia.vercel.app/kompas/terbaru/`);
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: response.data.data.posts 
+            });
+
+        } else {
+            return res.status(404).json({ status: false, message: `Tipe berita '${type}' tidak tersedia!` });
+        }
+    } catch (e) {
+        return res.status(500).json({ status: false, message: "Gagal mengambil data berita." });
+    }
+}
+
+else if (kategori === 'entertainment') {
+    // Helper untuk mengambil data random dari array
+    const getRandom = (array) => array[Math.floor(Math.random() * array.length)];
+
+    try {
+        if (type === 'fakta') {
+            const resData = await axios.get('https://raw.githubusercontent.com/Zhirrr/id-data/master/fakta.json');
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(resData.data) });
+
+        } else if (type === 'quotes') {
+            const resData = await axios.get('https://raw.githubusercontent.com/Zhirrr/id-data/master/quotes.json');
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(resData.data) });
+
+        } else if (type === 'meme') {
+            const resData = await axios.get('https://meme-api.com/gimme');
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: { title: resData.data.title, url: resData.data.url } });
+
+        } else if (type === 'darkjoke') {
+            const resData = await axios.get('https://raw.githubusercontent.com/Inuutyz/database/main/entertainment/darkjoke.json');
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(resData.data) });
+
+        } else if (type === 'pantun') {
+            const resData = await axios.get('https://raw.githubusercontent.com/pajaar/grabber-pasukan-mati/master/data/pantun.json');
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(resData.data) });
+
+        } else if (type === 'tebak-gambar') {
+            // Memberikan soal tebak gambar (URL gambar & Jawaban)
+            const resData = await axios.get('https://raw.githubusercontent.com/BochilGaming/games-data-api/master/data/tebakgambar.json');
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(resData.data) });
+
+        } else if (type === 'asahi') {
+            // Asah Otak
+            const resData = await axios.get('https://raw.githubusercontent.com/BochilGaming/games-data-api/master/data/asahotak.json');
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(resData.data) });
+
+        } else if (type === 'susunkata') {
+            const resData = await axios.get('https://raw.githubusercontent.com/BochilGaming/games-data-api/master/data/susunkata.json');
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(resData.data) });
+
+        } else if (type === 'tebak-lirik') {
+            const resData = await axios.get('https://raw.githubusercontent.com/BochilGaming/games-data-api/master/data/tebaklirik.json');
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(resData.data) });
+
+        } else if (type === 'siapakah-aku') {
+            const resData = await axios.get('https://raw.githubusercontent.com/BochilGaming/games-data-api/master/data/siapakahaku.json');
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(resData.data) });
+
+        } else if (type === 'kata-lucu') {
+            const list = ["Kenapa kalau orang berenang rambutnya basah? Karena ada air.", "Makan apa yang gak bikin kenyang? Makan hati.", "Sapi apa yang bisa nulis? Sapidol."];
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(list) });
+
+        } else if (type === 'gombal') {
+            const resData = await axios.get('https://raw.githubusercontent.com/Zhirrr/id-data/master/gombalan.json');
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(resData.data) });
+
+        } else if (type === 'pickline') {
+            const resData = await axios.get('https://raw.githubusercontent.com/Zhirrr/id-data/master/pickline.json');
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(resData.data) });
+
+        } else if (type === 'hilih') {
+            // Mengubah teks vokal menjadi 'i'
+            if (!q) return res.status(400).json({ status: false, message: "Masukkan parameter q!" });
+            const result = q.replace(/[aiueo]/gi, 'i');
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result });
+
+        }
+                // --- 16. RANDOM COCO --- (Gambar Anime/Char Random)
+        
+        // --- 18. TEBAK KABUPATEN --- (Game Gambar)
+        else if (type === 'tebak-kabupaten') {
+            const response = await axios.get(`https://raw.githubusercontent.com/BochilGaming/games-data-api/master/data/tebakkabupaten.json`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(response.data) });
+        }
+        // --- 19. TEBAK BENDERA ---
+        else if (type === 'tebak-bendera') {
+            const response = await axios.get(`https://raw.githubusercontent.com/BochilGaming/games-data-api/master/data/tebakbendera.json`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(response.data) });
+        }
+        // --- 20. TEBAK KIMIA ---
+        else if (type === 'tebak-kimia') {
+            const response = await axios.get(`https://raw.githubusercontent.com/BochilGaming/games-data-api/master/data/tebakkimia.json`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(response.data) });
+        }
+        // --- 21. CAK LONTONG --- (TTS Sulit)
+        else if (type === 'caklontong') {
+            const response = await axios.get(`https://raw.githubusercontent.com/BochilGaming/games-data-api/master/data/caklontong.json`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(response.data) });
+        }
+        // --- 22. TEBAK KATA ---
+        else if (type === 'tebak-kata') {
+            const response = await axios.get(`https://raw.githubusercontent.com/BochilGaming/games-data-api/master/data/tebakkata.json`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(response.data) });
+        }
+        // --- 23. TEBAK JENAKA ---
+        else if (type === 'tebak-jenaka') {
+            const response = await axios.get(`https://raw.githubusercontent.com/BochilGaming/games-data-api/master/data/tebakjenaka.json`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(response.data) });
+        }
+        // --- 24. CHARACTER GENSHIN --- (Info Random)
+        else if (type === 'genshin') {
+            const response = await axios.get(`https://raw.githubusercontent.com/UnevenS/genshin-db/main/src/data/english/characters.json`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(Object.values(response.data)) });
+        }
+        // --- 25. KATA-KATA SAD ---
+        else if (type === 'kata-sad') {
+            const list = ["Aku tidak apa-apa, hanya saja hatiku sedikit lelah.", "Terlalu banyak rindu yang tidak tersampaikan.", "Menunggu itu membosankan, tapi melepaskan itu menyakitkan."];
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(list) });
+        }
+        // --- 26. KATA-KATA MOTIVASI ---
+        else if (type === 'motivasi') {
+            const response = await axios.get(`https://raw.githubusercontent.com/Zhirrr/id-data/master/motivasi.json`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(response.data) });
+        }
+        // --- 27. TEKA-TEKI ---
+        else if (type === 'tekateki') {
+            const response = await axios.get(`https://raw.githubusercontent.com/BochilGaming/games-data-api/master/data/tekateki.json`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(response.data) });
+        }
+        // --- 28. CERPEN (Cerita Pendek) ---
+        else if (type === 'cerpen') {
+            const response = await axios.get(`https://raw.githubusercontent.com/Zhirrr/id-data/master/cerpen.json`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(response.data) });
+        }
+        // --- 29. PUISI ---
+        else if (type === 'puisi') {
+            const response = await axios.get(`https://raw.githubusercontent.com/Zhirrr/id-data/master/puisi.json`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(response.data) });
+        }
+        // --- 30. WALLPAPER ESTETIK ---
+        else if (type === 'estetik') {
+            const list = ["https://images.unsplash.com/photo-1506744038136-46273834b3fb", "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b"];
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(list) });
+        }
+
+    } catch (e) {
+        return res.status(500).json({ status: false, message: "Error saat mengambil data hiburan." });
+    }
+}
+
+else if (kategori === 'primbon') {
+    try {
+        // --- 1. ARTI NAMA ---
+        if (type === 'artinama') {
+            if (!q) return res.status(400).json({ status: false, message: "Parameter 'q' (nama) wajib diisi!" });
+            const response = await axios.get(`https://api.lolhuman.xyz/api/primbon/artinama?name=${encodeURIComponent(q)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result });
+        }
+        // --- 2. ARTI MIMPI ---
+        else if (type === 'artimimpi') {
+            if (!q) return res.status(400).json({ status: false, message: "Parameter 'q' (mimpi) wajib diisi!" });
+            const response = await axios.get(`https://api.lolhuman.xyz/api/primbon/artimimpi?query=${encodeURIComponent(q)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result });
+        }
+        // --- 3. JODOH (CEK KECOCOKAN) ---
+        else if (type === 'jodoh') {
+            const { nama1, nama2 } = req.query;
+            if (!nama1 || !nama2) return res.status(400).json({ status: false, message: "Parameter 'nama1' & 'nama2' wajib diisi!" });
+            const response = await axios.get(`https://api.lolhuman.xyz/api/primbon/jodoh?name1=${encodeURIComponent(nama1)}&name2=${encodeURIComponent(nama2)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result });
+        }
+        // --- 4. TANGGAL LAHIR (WATAK) ---
+        else if (type === 'watak') {
+            const { tgl, bln, thn } = req.query;
+            if (!tgl || !bln || !thn) return res.status(400).json({ status: false, message: "Parameter 'tgl', 'bln', 'thn' wajib diisi!" });
+            const response = await axios.get(`https://api.lolhuman.xyz/api/primbon/tanggal_lahir?tanggal=${tgl}&bulan=${bln}&tahun=${thn}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result });
+        }
+        // --- 5. RAMALAN NASIB ---
+        else if (type === 'nasib') {
+            const { tgl, bln, thn } = req.query;
+            const response = await axios.get(`https://api.lolhuman.xyz/api/primbon/ramalan_nasib?tanggal=${tgl}&bulan=${bln}&tahun=${thn}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result });
+        }
+        // --- 6. ZODIAK MINGGUAN ---
+        else if (type === 'zodiak') {
+            if (!q) return res.status(400).json({ status: false, message: "Parameter 'q' (nama zodiak) wajib diisi!" });
+            const response = await axios.get(`https://api.lolhuman.xyz/api/primbon/zodiak?query=${q.toLowerCase()}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result });
+        }
+        // --- 7. SHIO ---
+        else if (type === 'shio') {
+            if (!q) return res.status(400).json({ status: false, message: "Parameter 'q' (nama shio) wajib diisi!" });
+            const response = await axios.get(`https://api.lolhuman.xyz/api/primbon/shio?query=${q.toLowerCase()}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result });
+        }
+        // --- 8. NOMOR HOKI ---
+        else if (type === 'nomorhoki') {
+            if (!q) return res.status(400).json({ status: false, message: "Parameter 'q' (nomor HP) wajib diisi!" });
+            const response = await axios.get(`https://api.lolhuman.xyz/api/primbon/nomor_hoki?number=${q}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result });
+        }
+        // --- 9. GARIS TANGAN ---
+        else if (type === 'garistangan') {
+            const list = ["Garis hidupmu kuat, panjang umur.", "Garis cinta bercabang, hati-hati.", "Garis sukses terlihat jelas di usia 30-an."];
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: list[Math.floor(Math.random() * list.length)] });
+        }
+        // --- 10. REZEKI WETON ---
+        else if (type === 'rezeki') {
+            const { tgl, bln, thn } = req.query;
+            const response = await axios.get(`https://api.lolhuman.xyz/api/primbon/rejeki_harian?tanggal=${tgl}&bulan=${bln}&tahun=${thn}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result });
+        }
+        // --- 11. HARI BAIK ---
+        else if (type === 'haribaik') {
+            const { tgl, bln, thn } = req.query;
+            const response = await axios.get(`https://api.lolhuman.xyz/api/primbon/hari_baik?tanggal=${tgl}&bulan=${bln}&tahun=${thn}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result });
+        }
+        // --- 12. HARI LARANGAN ---
+        else if (type === 'harilarangan') {
+            const { tgl, bln, thn } = req.query;
+            const response = await axios.get(`https://api.lolhuman.xyz/api/primbon/hari_larangan?tanggal=${tgl}&bulan=${bln}&tahun=${thn}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result });
+        }
+        // --- 13. ARAH REZEKI ---
+        else if (type === 'arahrezeki') {
+            const { tgl, bln, thn } = req.query;
+            const response = await axios.get(`https://api.lolhuman.xyz/api/primbon/arah_rejeki?tanggal=${tgl}&bulan=${bln}&tahun=${thn}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result });
+        }
+        // --- 14. PEKERJAAN WETON ---
+        else if (type === 'pekerjaan') {
+            const { tgl, bln, thn } = req.query;
+            const response = await axios.get(`https://api.lolhuman.xyz/api/primbon/pekerjaan_weton?tanggal=${tgl}&bulan=${bln}&tahun=${thn}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result });
+        }
+        // --- 15. SIFAT USAHA ---
+        else if (type === 'usaha') {
+            if (!q) return res.status(400).json({ status: false, message: "Parameter 'q' (tanggal lahir: 14-05-2026) wajib diisi!" });
+            const response = await axios.get(`https://api.lolhuman.xyz/api/primbon/sifat_usaha?date=${q}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result });
+        }
+        // --- 16. PRANATA MANGSA ---
+        else if (type === 'pranatamangsa') {
+            const { tgl, bln, thn } = req.query;
+            const response = await axios.get(`https://api.lolhuman.xyz/api/primbon/pranata_mangsa?tanggal=${tgl}&bulan=${bln}&tahun=${thn}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result });
+        }
+        else {
+            return res.status(404).json({ status: false, message: "Tipe primbon tidak ditemukan!" });
+        }
+    } catch (e) {
+        return res.status(500).json({ status: false, message: "Gagal memproses data Primbon." });
+    }
+}
+
+else if (kategori === 'idol') {
+    const getRandom = (array) => array[Math.floor(Math.random() * array.length)];
+    try {
+        const response = await axios.get(`https://raw.githubusercontent.com/Inuutyz/database/main/idol/${type}.json`);
+        return res.status(200).json({ 
+            status: true, 
+            creator: "InuuTyzDev", 
+            result: getRandom(response.data) 
+        });
+    } catch (e) {
+        return res.status(404).json({ status: false, message: `Data idol '${type}' tidak ditemukan!` });
+    }
+}
+
+else if (kategori === 'anime') {
+    const getRandom = (array) => array[Math.floor(Math.random() * array.length)];
+    
+    try {
+        // --- FEATURE: RANDOM ANIME IMAGE (DARI EXTERNAL REPO) ---
+        if (type === 'random-anime') {
+            const response = await axios.get(`https://raw.githubusercontent.com/MyImg-Archive/dibacot/main/anime.json`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(response.data) });
+        }
+        
+        // --- FEATURE: QUOTES ANIME (DARI VERCEL API) ---
+                // --- FEATURE: PREMIUM QUOTES ANIME (OTAKOTAKU) ---
+        else if (type === 'quotes-anime') {
+            try {
+                // Kita ambil halaman random (misal 1-50) agar quotes tidak itu-itu saja
+                const page = Math.floor(Math.random() * 50) + 1;
+                const response = await axios.get(`https://otakotaku.com/quote/feed/${page}`);
+                
+                // Ambil satu quotes secara acak dari hasil array 'results'
+                const results = response.data.results;
+                const randomQuote = results[Math.floor(Math.random() * results.length)];
+                
+                return res.status(200).json({ 
+                    status: true, 
+                    creator: "InuuTyzDev", 
+                    result: {
+                        quotes: randomQuote.quotes,
+                        karakter: randomQuote.karakter,
+                        anime: randomQuote.anime,
+                        episode: randomQuote.episode,
+                        thumbnail: randomQuote.gambar
+                    } 
+                });
+            } catch (e) {
+                return res.status(500).json({ status: false, message: "Gagal mengambil data dari OtakOtaku." });
+            }
+        }
+
+
+        // --- FEATURE: DINAMIS (GENSHIN, BLUE ARCHIVE, WAIFU, DLL) ---
+        // Mencari file otomatis di repo kamu sendiri berdasarkan 'type'
+        else {
+            const response = await axios.get(`https://raw.githubusercontent.com/Inuutyz/database/main/anime/${type}.json`);
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: getRandom(response.data) 
+            });
+        }
+    } catch (e) {
+        return res.status(404).json({ 
+            status: false, 
+            message: `Data anime tipe '${type}' tidak ditemukan atau server tujuan sedang down.` 
+        });
+    }
+}
+
+else if (kategori === 'movie') {
+    const keyword = q || query || searchText;
+    const baseUrl = "https://api.cuki.biz.id";
+
+    try {
+        // --- 1. MELOLO SERIES ---
+        if (type === 'melolo-home') {
+            const response = await axios.get(`${baseUrl}/api/movie/melolo-home?apikey=${apiKeyCuki}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result || response.data });
+        }
+        else if (type === 'melolo-search') {
+            if (!keyword) return res.status(400).json({ status: false, message: "Masukkan query pencarian!" });
+            const response = await axios.get(`${baseUrl}/api/movie/melolo-search?apikey=${apiKeyCuki}&query=${encodeURIComponent(keyword)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result || response.data });
+        }
+        else if (type === 'melolo-detail') {
+            if (!url) return res.status(400).json({ status: false, message: "Parameter URL wajib diisi!" });
+            const response = await axios.get(`${baseUrl}/api/movie/melolo-detail?apikey=${apiKeyCuki}&url=${encodeURIComponent(url)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result || response.data });
+        }
+        else if (type === 'melolo-download') {
+            if (!url) return res.status(400).json({ status: false, message: "Parameter URL download wajib diisi!" });
+            const response = await axios.get(`${baseUrl}/api/movie/melolo-download?apikey=${apiKeyCuki}&url=${encodeURIComponent(url)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result || response.data });
+        }
+        else if (type === 'melolo-category') {
+            if (!url) return res.status(400).json({ status: false, message: "Parameter category_url wajib diisi!" });
+            const response = await axios.get(`${baseUrl}/api/movie/melolo-category?apikey=${apiKeyCuki}&category_url=${encodeURIComponent(url)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result || response.data });
+        }
+
+        // --- 2. DONGHUA & DRAKOR ---
+        else if (type === 'donghua-search') {
+            const p = page || 1;
+            const response = await axios.get(`${baseUrl}/api/movie/donghua-search?apikey=${apiKeyCuki}&query=${encodeURIComponent(keyword)}&page=${p}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result || response.data });
+        }
+        else if (type === 'donghua-detail') {
+            if (!url) return res.status(400).json({ status: false, message: "Parameter URL wajib diisi!" });
+            const response = await axios.get(`${baseUrl}/api/movie/donghua-detail?apikey=${apiKeyCuki}&url=${encodeURIComponent(url)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result || response.data });
+        }
+        else if (type === 'drakor-search') {
+            const response = await axios.get(`${baseUrl}/api/movie/drakor-search?apikey=${apiKeyCuki}&query=${encodeURIComponent(keyword)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result || response.data });
+        }
+
+        // --- 3. IQIYI & DRAMABOS ---
+        else if (type === 'iq-search') {
+            const response = await axios.get(`${baseUrl}/api/movie/iq-search?apikey=${apiKeyCuki}&query=${encodeURIComponent(keyword)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result || response.data });
+        }
+        else if (type === 'iq-detail') {
+            const response = await axios.get(`${baseUrl}/api/movie/iq-detail?apikey=${apiKeyCuki}&query=${encodeURIComponent(keyword)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result || response.data });
+        }
+        else if (type === 'dramabos-search') {
+            const response = await axios.get(`${baseUrl}/api/movie/dramabos-search?apikey=${apiKeyCuki}&query=${encodeURIComponent(keyword)}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result || response.data });
+        }
+
+        // --- 4. NETFLIX & PUSATFILM21 ---
+        else if (type === 'netflix-trending') {
+            const lang = language || 'id';
+            const response = await axios.get(`${baseUrl}/api/movie/netflix-trending?apikey=${apiKeyCuki}&language=${lang}`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result || response.data });
+        }
+        else if (type === 'pusatfilm-search') {
+            const response = await axios.get(`${baseUrl}/api/movie/pusatfilm21-search?apikey=${apiKeyCuki}&query=${encodeURIComponent(keyword)}&type=search`);
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result || response.data });
+        }
+
+        else {
+            return res.status(404).json({ status: false, message: "Type endpoint movie tidak ditemukan." });
+        }
+    } catch (e) {
+        return res.status(500).json({ status: false, message: "Gagal menyambung ke server." });
+    }
+}
 
 
     // ==========================================
