@@ -6,7 +6,8 @@ export default async function handler(req, res) {
     res.status(200).json({
         "settings": {
             "apiName": "InuuTyzDev",
-            "creator": "InuuTyzDev"
+            "creator": "InuuTyzDev", 
+            "visitors": "1352"
         },
         "tags": {
             "ai": [
