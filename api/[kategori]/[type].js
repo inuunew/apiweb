@@ -798,69 +798,95 @@ if (type === 'qr') {
         }
 
         // --- 2. STICKERLY SEARCH (JSON) ---
-        else if (type === 'stickerly') {
-            if (!keyword) return res.status(400).json({ status: false, message: "Parameter kata kunci (q) wajib diisi!" });
-            try {
-                const targetUrl = `https://api.pixxxry.eu.cc/sticker/stickerly?q=${encodeURIComponent(keyword)}`;
-                const response = await axios.get(targetUrl);
-                
-                let cleanData = response.data.data || response.data;
-                if (cleanData && typeof cleanData === 'object') { 
-                    delete cleanData.creator; 
-                    delete cleanData.status; 
-                }
+        else if (kategori === 'sticker') {
+    const { type, text, name, avatarUrl, bg, q, query } = req.query;
+    const keyword = q || query;
 
-                return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
-            } catch (e) {
-                return res.status(500).json({ status: false, message: "Gagal mencari stickerly: " + e.message });
-            }
-        }
+    const axiosConfig = {
+        headers: { 
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36' 
+        },
+        timeout: 30000
+    };
 
-        // --- 3. QUOTELY (QC) ---
-        else if (type === 'qc') {
-            if (!text || !name) return res.status(400).json({ status: false, message: "Parameter 'text' dan 'name' wajib diisi!" });
-            try {
-                // Gunakan avatarUrl dari destructuring atau default pravatar
-                const avatar = avatarUrl || "https://i.pravatar.cc/300";
-                const backgroundColor = bg ? (bg.startsWith('#') ? bg : `#${bg}`) : "#1f2c33";
-                
-                const targetUrl = `https://api.pixxxry.eu.cc/sticker/qc?text=${encodeURIComponent(text)}&name=${encodeURIComponent(name)}&avatar=${encodeURIComponent(avatar)}&background=${encodeURIComponent(backgroundColor)}&format=image`;
-                
-                const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
-                res.setHeader('Content-Type', 'image/png');
-                return res.status(200).send(response.data);
-            } catch (e) {
-                return res.status(500).json({ status: false, message: "Gagal membuat QC: " + e.message });
-            }
-        }
+    // --- 1. STICKERLY (Scraping Sendiri) ---
+    if (type === 'stickerly') {
+        if (!keyword) return res.status(400).json({ status: false, message: "Query (q) wajib diisi!" });
+        
+        try {
+            // Kita tembak langsung ke web sticker.ly
+            const searchUrl = `https://sticker.ly/api/search/pack?keyword=${encodeURIComponent(keyword)}&size=20`;
+            const response = await axios.get(searchUrl, axiosConfig);
+            
+            // Kita olah datanya sendiri agar rapi
+            const packs = response.data.result?.stickerPackList || [];
+            const result = packs.map(pack => ({
+                name: pack.name,
+                author: pack.authorName,
+                trayImage: pack.trayImageUri,
+                stickers: pack.stickers.map(s => s.stickerUri)
+            }));
 
-        // --- 4. EMOJIMIX ---
-        else if (type === 'emojimix') {
-            // Kita ambil emoji1 & emoji2 langsung dari req.query karena tidak ada di destructuring awal
-            const { emoji1, emoji2 } = req.query;
-            if (!emoji1 || !emoji2) return res.status(400).json({ status: false, message: "Parameter 'emoji1' dan 'emoji2' wajib diisi!" });
-
-            try {
-                const targetUrl = `https://api.pixxxry.eu.cc/sticker/emojimix?emoji1=${encodeURIComponent(emoji1)}&emoji2=${encodeURIComponent(emoji2)}&q=${encodeURIComponent(emoji1 + '+' + emoji2)}&format=image`;
-                
-                const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
-                res.setHeader('Content-Type', 'image/png');
-                return res.status(200).send(response.data);
-            } catch (e) {
-                return res.status(500).json({ status: false, message: "Gagal membuat emojimix: " + e.message });
-            }
-        }
-        else if (type === 'brat') {
-            if (!text) return res.status(400).json({ status: false, message: "Parameter 'text' wajib diisi" });
-            const targetUrl = `https://brat.siputzx.my.id/image?text=${encodeURIComponent(text)}`;
-            const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
-            res.setHeader('Content-Type', 'image/png');
-            return res.status(200).send(response.data);
-        }
-        else {
-            return res.status(404).json({ status: false, message: `Type stiker '${type}' tidak ditemukan!` });
+            return res.status(200).json({
+                status: true,
+                creator: "InuuTyzDev",
+                result: result
+            });
+        } catch (e) {
+            return res.status(500).json({ status: false, message: "Gagal scraping Stickerly secara mandiri." });
         }
     }
+
+    // --- 2. EMOJIMIX (Direct Google Emoji Kitchen) ---
+    else if (type === 'emojimix') {
+        const { emoji1, emoji2 } = req.query;
+        if (!emoji1 || !emoji2) return res.status(400).json({ status: false, message: "Kirim emoji1 dan emoji2!" });
+
+        try {
+            // Menggunakan API pihak ketiga yang stabil untuk emojimix (biasanya gratis & open)
+            const targetUrl = `https://api.vany.my.id/api/maker/emojimix?emoji1=${encodeURIComponent(emoji1)}&emoji2=${encodeURIComponent(emoji2)}`;
+            const response = await axios.get(targetUrl, { ...axiosConfig, responseType: 'arraybuffer' });
+            
+            res.setHeader('Content-Type', 'image/png');
+            return res.status(200).send(response.data);
+        } catch (e) {
+            return res.status(500).json({ status: false, message: "Gagal membuat emojimix." });
+        }
+    }
+
+    // --- 3. QUOTELY / QC (Gunakan Provider Alternatif) ---
+    else if (type === 'qc') {
+        if (!text || !name) return res.status(400).json({ status: false, message: "Teks dan Nama wajib!" });
+        try {
+            const avatar = avatarUrl || "https://i.pravatar.cc/300";
+            const color = bg ? (bg.startsWith('#') ? bg : `#${bg}`) : "#1f2c33";
+            
+            // Kita cari provider yang lebih umum digunakan (Paxsenix)
+            const targetUrl = `https://api.paxsenix.biz.id/api/maker/qc?text=${encodeURIComponent(text)}&name=${encodeURIComponent(name)}&avatar=${encodeURIComponent(avatar)}&hex=${encodeURIComponent(color)}`;
+            const response = await axios.get(targetUrl, { ...axiosConfig, responseType: 'arraybuffer' });
+            
+            res.setHeader('Content-Type', 'image/png');
+            return res.status(200).send(response.data);
+        } catch (e) {
+            return res.status(500).json({ status: false, message: "Gagal memproses QC." });
+        }
+    }
+
+    // --- 4. BRAT (Bikin Versi Gambar Sendiri) ---
+    else if (type === 'brat') {
+        if (!text) return res.status(400).json({ status: false, message: "Teks wajib!" });
+        try {
+            // Karena bratvid berat, kita sediakan versi Brat Image yang lebih stabil
+            const targetUrl = `https://api.paxsenix.biz.id/api/maker/brat?text=${encodeURIComponent(text)}`;
+            const response = await axios.get(targetUrl, { ...axiosConfig, responseType: 'arraybuffer' });
+            
+            res.setHeader('Content-Type', 'image/png');
+            return res.status(200).send(response.data);
+        } catch (e) {
+            return res.status(500).json({ status: false, message: "Gagal membuat Brat." });
+        }
+    }
+}
 
     // ==========================================
     // 10. KATEGORI: EPHOTO
@@ -1083,6 +1109,266 @@ else if (kategori === 'ai-image') {
 }
 
 
+else if (kategori === 'fun') {
+    const { type, text, name, name1, name2, lang, q, query } = req.query;
+    const inputTeks = text || q || query;
+
+    // --- HELPER FUNCTIONS ---
+    const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const getPersen = () => Math.floor(Math.random() * 101);
+
+    try {
+        // ==========================================
+        // 1. CEK KHODAM (Array Diperbanyak)
+        // ==========================================
+        if (type === 'cekkhodam') {
+            if (!name) return res.status(400).json({ status: false, message: "Parameter 'name' wajib!" });
+            const khodamList = [
+                "Macan Putih", "Naga Sakti", "Genderuwo", "Tuyul Kesasar", "Batu Bata", 
+                "Sapu Lidi", "Kuntilanak Merah", "Jin Qorin", "Panci Gosong", "Ular Kobra",
+                "Singa Paddle Pop", "Kipas Angin Cosmos", "Kosong (Tidak ada khodam)",
+                "Knalpot Racing", "Sendal Jepit", "Nyamuk DBD", "Kucing Oyen", "Buaya Darat",
+                "Harimau Sumatera", "Kuntilanak Disko", "Pocong Ngesot", "Kambing Hitam"
+            ];
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: { nama: name, khodam: getRandom(khodamList) } });
+        }
+
+        // ==========================================
+        // 2. TES KECOCOKAN (COUPLE MATCH)
+        // ==========================================
+        else if (type === 'teskecocokan') {
+            if (!name1 || !name2) return res.status(400).json({ status: false, message: "Parameter 'name1' & 'name2' wajib!" });
+            const persen = getPersen();
+            let pesan = persen > 80 ? "Sangat serasi! Jodoh dunia akhirat." : 
+                        persen > 50 ? "Lumayan cocok, tapi butuh banyak kompromi." : 
+                        persen > 20 ? "Banyak rintangan, sering beda pendapat." : 
+                        "Mending cari yang lain aja deh, agak susah ini mah.";
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: { nama1: name1, nama2: name2, kecocokan: `${persen}%`, pesan } });
+        }
+
+        // ==========================================
+        // 3-6. PERTANYAAN RANDOM (Apakah, Kapan, Bisakah, Bagaimanakah)
+        // ==========================================
+        else if (type === 'apakah') {
+            if (!inputTeks) return res.status(400).json({ status: false, message: "Parameter 'text' wajib!" });
+            const jawaban = ["Iya", "Tidak", "Bisa jadi", "Mungkin saja", "Tentu saja tidak", "Coba tanya lagi besok", "Sudah pasti!", "Mustahil!", "Yakin 100% iya", "Jangan ngarep deh"];
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: { pertanyaan: inputTeks, jawaban: getRandom(jawaban) } });
+        }
+        else if (type === 'kapan') {
+            if (!inputTeks) return res.status(400).json({ status: false, message: "Parameter 'text' wajib!" });
+            const waktu = ["Besok", "Lusa", "Bulan depan", "Tahun depan", "5 tahun lagi", "Hari ini juga", "Tidak akan pernah", "Minggu depan", "Nanti sore", "Pas kiamat"];
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: { pertanyaan: inputTeks, jawaban: getRandom(waktu) } });
+        }
+        else if (type === 'bisakah') {
+            if (!inputTeks) return res.status(400).json({ status: false, message: "Parameter 'text' wajib!" });
+            const jawaban = ["Bisa banget!", "Wah, susah sih itu", "Tergantung amal ibadah", "Mimpi aja dulu", "Pasti bisa kalau usaha", "Mustahil!", "Coba aja sendiri", "Tanya bapakmu gih"];
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: { pertanyaan: inputTeks, jawaban: getRandom(jawaban) } });
+        }
+        else if (type === 'bagaimanakah') {
+            if (!inputTeks) return res.status(400).json({ status: false, message: "Parameter 'text' wajib!" });
+            const jawaban = ["Sangat buruk", "Biasa aja", "Luar biasa baik!", "Mengerikan...", "Lumayan lah", "Tidak bisa dijelaskan dengan kata-kata", "Bikin geleng-geleng kepala", "Sempurna!"];
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: { pertanyaan: inputTeks, jawaban: getRandom(jawaban) } });
+        }
+
+        // ==========================================
+        // 7-13. METERAN PERSENTASE (Ganteng, Cantik, Bucin, dll)
+        // ==========================================
+        else if (['cekganteng', 'cekcantik', 'cekbucin', 'cekstres', 'cekwibu', 'cekpelit', 'cekjomblo'].includes(type)) {
+            if (!name) return res.status(400).json({ status: false, message: "Parameter 'name' wajib!" });
+            const persen = getPersen();
+            const kategoriNama = type.replace('cek', ''); 
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: { nama: name, kategori: kategoriNama.toUpperCase(), skor: `${persen}%` } });
+        }
+
+        // ==========================================
+        // 14. TEBAK SIFAT
+        // ==========================================
+        else if (type === 'ceksifat') {
+            if (!name) return res.status(400).json({ status: false, message: "Parameter 'name' wajib!" });
+            const sifatList = [
+                "Suka ngambek tapi penyayang", "Caper tingkat dewa", "Dewasa dan pengertian", "Childish banget", 
+                "Sering overthinking", "Santuy abis", "Pemarah tapi cepat reda", "Pendiam tapi asyik",
+                "Suka gibah", "Loyal ke teman", "Cemburuan parah", "Pemaaf banget"
+            ];
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: { nama: name, sifat: getRandom(sifatList) } });
+        }
+
+        // ==========================================
+        // 15. RAMAL PEKERJAAN
+        // ==========================================
+        else if (type === 'pekerjaan') {
+            if (!name) return res.status(400).json({ status: false, message: "Parameter 'name' wajib!" });
+            const kerjaList = [
+                "CEO Perusahaan Top", "Tukang Parkir Indomaret", "Programmer Handal", "Pawang Hujan", 
+                "Presiden", "Penjual Seblak", "Atlet E-Sport", "Gamer Rebahan", "Anggota DPR", 
+                "Kang Paket", "Youtuber Sukses", "Pengangguran Sukses"
+            ];
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: { nama: name, masa_depan: getRandom(kerjaList) } });
+        }
+
+        // ==========================================
+        // 16. PREDIKSI JODOH
+        // ==========================================
+        else if (type === 'jodohku') {
+            if (!name) return res.status(400).json({ status: false, message: "Parameter 'name' wajib!" });
+            const ciriJodoh = [
+                "Orang terdekat yang sering kamu abaikan", "Seseorang dari masa lalumu", 
+                "Orang kaya raya dari negara tetangga", "Teman sekelas/sekerjamu sendiri",
+                "Ketemu di jalan pas lagi hujan", "Artis K-Pop terkenal", "Masih dirahasiakan semesta"
+            ];
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: { nama: name, prediksi_jodoh: getRandom(ciriJodoh) } });
+        }
+
+        // ==========================================
+        // 17. RATE (NILAI)
+        // ==========================================
+        else if (type === 'rate') {
+            if (!inputTeks) return res.status(400).json({ status: false, message: "Parameter 'text' wajib!" });
+            const nilai = getPersen(); // Rate 1-100
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: { hal_dinilai: inputTeks, nilai: `${nilai}/100` } });
+        }
+
+        // ==========================================
+        // 18. FAKTA RANDOM
+        // ==========================================
+        else if (type === 'faktarandom') {
+            const faktaList = [
+                "Madu tidak akan pernah basi.",
+                "Sapi bisa tidur berdiri, tapi mereka hanya bisa bermimpi jika berbaring.",
+                "Jantung udang terletak di kepalanya.",
+                "Siput bisa tidur selama 3 tahun.",
+                "Sidik jari koala sangat mirip dengan sidik jari manusia.",
+                "Babi tidak bisa melihat ke langit karena bentuk lehernya.",
+                "Kecoa bisa hidup berminggu-minggu tanpa kepala.",
+                "Lidah jerapah panjangnya bisa mencapai 50 cm."
+            ];
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(faktaList) });
+        }
+
+        // ==========================================
+        // 19. GOMBALAN
+        // ==========================================
+        else if (type === 'gombalan') {
+            const gombalList = [
+                "Cita-citaku cuma satu, pengen jadi orang yang selalu ada di hati kamu.",
+                "Kamu tahu bedanya kamu sama Monas? Kalau Monas milik negara, kalau kamu milik aku.",
+                "Bapak kamu tukang kebun ya? Soalnya kamu telah menaburkan benih cinta di hatiku.",
+                "Aku rela ikut lomba lari keliling dunia, asalkan garis finishnya itu kamu.",
+                "Kalau aku jadi gubernur, aku bakal ubah ibu kota jadi nama kamu.",
+                "Selain ada garuda di dadaku, di dadaku juga selalu ada kamu.",
+                "Kamu itu kaya pelangi ya, indahnya cuma sesaat tapi bikin senyum terus."
+            ];
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(gombalList) });
+        }
+
+        // ==========================================
+        // 20. PANTUN LUCU
+        // ==========================================
+        else if (type === 'pantun') {
+            const pantunList = [
+                "Beli paku di pasar malam, Kamu ngaku sayang tapi diam-diam.",
+                "Jalan-jalan ke kota Paris, Lihat cewek manis eh ternyata berkumis.",
+                "Burung perkutut burung kutilang, Kamunya cemberut akunya hilang.",
+                "Buah duku buah manggis, Eh lu ngaku manis padahal bau amis.",
+                "Makan duku di atas papan, Mukamu lucu tapi kayak tampan."
+            ];
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(pantunList) });
+        }
+
+        // ==========================================
+        // 21. TRUTH
+        // ==========================================
+        else if (type === 'truth') {
+            const truthList = [
+                "Kapan terakhir kali kamu ngompol di celana?",
+                "Siapa orang yang paling sering kamu kepoin di sosmed?",
+                "Pernahkah kamu diam-diam menyukai teman sekelas?",
+                "Apa kebohongan terbesar yang pernah kamu katakan ke orang tuamu?",
+                "Siapa nama mantan yang paling susah kamu lupain?",
+                "Pernah gak mandi seharian pas hari libur?"
+            ];
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(truthList) });
+        }
+
+        // ==========================================
+        // 22. DARE
+        // ==========================================
+        else if (type === 'dare') {
+            const dareList = [
+                "Kirim pesan 'Aku sayang kamu' ke mantanmu sekarang!",
+                "Buat instastory nyanyi lagu Balonku pakai nada sedih.",
+                "Pakai kaus kaki terbalik sampai besok pagi.",
+                "Chat random kontak nomor urutan ke-7 di HP kamu dan bilang 'Aku kangen'.",
+                "Komen 'Cantik/Ganteng banget' di postingan IG orang yang gak kamu kenal.",
+                "Telepon orang tuamu dan bilang 'Terima kasih sudah melahirkanku' tanpa ketawa."
+            ];
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(dareList) });
+        }
+
+        // ==========================================
+        // 23. QUOTES GALAU
+        // ==========================================
+        else if (type === 'quotes') {
+            const quotesList = [
+                "Lebih baik dibenci karena menjadi diri sendiri, daripada dicintai karena menjadi orang lain.",
+                "Kadang kita harus rela melepaskan untuk melihatnya bahagia bersama yang lain.",
+                "Hujan selalu kembali jatuh meskipun ia tahu rasanya sakit.",
+                "Mencintaimu adalah patah hati yang paling aku sengaja.",
+                "Kita adalah dua orang yang saling mendoakan, tapi tak pernah ditakdirkan bersama."
+            ];
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(quotesList) });
+        }
+
+        // ==========================================
+        // 24. KATA BIJAK / MOTIVASI
+        // ==========================================
+        else if (type === 'katabijak') {
+            const bijakList = [
+                "Jangan menyerah, penderitaanmu hari ini adalah kekuatanmu esok hari.",
+                "Menyerah bukan berarti lemah, terkadang kamu sudah cukup kuat untuk melepaskan.",
+                "Masa depan adalah milik mereka yang percaya pada keindahan mimpi-mimpi mereka.",
+                "Kegagalan adalah bumbu yang memberikan kesuksesan rasanya.",
+                "Lakukan apa yang bisa kamu lakukan hari ini, jangan tunda sampai besok."
+            ];
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(bijakList) });
+        }
+
+        // ==========================================
+        // 25. TEBAK UMUR (Lucu-lucuan)
+        // ==========================================
+        else if (type === 'tebakumur') {
+            if (!name) return res.status(400).json({ status: false, message: "Parameter 'name' wajib!" });
+            const umur = Math.floor(Math.random() * (80 - 10 + 1)) + 10; // Acak umur 10 sampai 80
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: { nama: name, tebakan_umur: `${umur} Tahun`, komentar: umur > 50 ? "Wah udah tuwir yak" : umur < 17 ? "Masih bocil rupanya" : "Lagi masa emasnya nih!" } });
+        }
+
+        // ==========================================
+        // 26. TEXT TO SPEECH (AUDIO DIRECT GOOGLE)
+        // ==========================================
+        else if (type === 'tts') {
+            if (!inputTeks) return res.status(400).json({ status: false, message: "Parameter 'text' wajib!" });
+            const bahasa = lang || 'id'; 
+            
+            const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(inputTeks)}&tl=${bahasa}&client=tw-ob`;
+            
+            const response = await axios.get(googleTtsUrl, {
+                headers: { 'User-Agent': 'Mozilla/5.0' },
+                responseType: 'arraybuffer' 
+            });
+            
+            res.setHeader('Content-Type', 'audio/mpeg');
+            return res.status(200).send(response.data); // LANGSUNG MUNCUL AUDIO PLAYER
+        }
+
+        // --- ERROR HANDLING JIKA ENDPOINT TIDAK KETEMU ---
+        else {
+            return res.status(404).json({ status: false, message: `Endpoint fun '${type}' belum tersedia.` });
+        }
+
+    } catch (error) {
+        return res.status(500).json({ status: false, message: "Server error", detail: error.message });
+    }
+}
 
 
 
