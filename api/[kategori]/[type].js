@@ -1022,78 +1022,63 @@ if (type === 'qr') {
 // 8. KATEGORI: AI IMAGE
 // ==========================================
 else if (kategori === 'ai-image') {
-    // 1. Ambil semua kemungkinan input dari query
+    // 1. Ambil semua input
     const { type, url, q, query, prompt } = req.query;
-    
-    // 2. Normalisasi input agar fleksibel
     const imageUrl = url || q || query;
     const textPrompt = prompt || q || query;
 
+    // Konfigurasi otomatis menangkap Buffer untuk SEMUA request ai-image
     const axiosConfig = {
         headers: { 'User-Agent': 'Mozilla/5.0' },
-        timeout: 30000 
+        timeout: 30000,
+        responseType: 'arraybuffer' 
     };
 
-    // --- 8A. IMAGE TRANSFORMATION (Butuh URL) ---
     const imageTransforms = ['torealistic', 'tocinematic', 'tofigure', 'toghibli', 'toanime'];
-    
+    let targetUrl = '';
+
+    // 2. Tentukan target URL berdasarkan Type
     if (imageTransforms.includes(type)) {
+        // Logika untuk Transform (Butuh URL)
         if (!imageUrl) return res.status(400).json({ status: false, message: "Parameter 'url' gambar wajib diisi!" });
+        targetUrl = `https://www.neoapis.xyz/api/ai-image/${type}?url=${encodeURIComponent(imageUrl)}`;
         
-        try {
-            // PENTING: Gunakan parameter ?url= untuk kategori ini
-            const targetUrl = `https://www.neoapis.xyz/api/ai-image/${type}?url=${encodeURIComponent(imageUrl)}`;
-            const response = await axios.get(targetUrl, axiosConfig);
-            
-            // Ambil data dengan fallback jika result-nya aneh
-            const resultData = response.data.result?.url || response.data.result || response.data.url;
-
-            return res.status(200).json({ 
-                status: true, 
-                creator: "InuuTyzDev", 
-                result: resultData ? { image_url: resultData } : {} 
-            });
-        } catch (error) {
-             return res.status(500).json({ status: false, message: `Gagal transform: ${type}` });
-        }
-    }
-
-    // --- 8B. TEXT TO IMAGE (Butuh PROMPT) ---
-    else if (type === 'ailabs' || type === 'deepai') {
+    } else if (type === 'ailabs' || type === 'deepai') {
+        // Logika untuk Generate (Butuh Prompt)
         if (!textPrompt) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
-
-        try {
-    const response = await axios.get(targetUrl, {
-        ...axiosConfig,
-        responseType: 'arraybuffer' // Paksa ambil sebagai buffer agar aman untuk keduanya
-    });
-
-    const contentType = response.headers['content-type'];
-
-    // JIKA RESPONNYA ADALAH GAMBAR LANGSUNG
-    if (contentType.includes('image')) {
-        res.setHeader('Content-Type', contentType);
-        return res.send(response.data);
-    } 
-    
-    // JIKA RESPONNYA ADALAH JSON (Seperti ailabs yang kamu tunjukkan)
-    else {
-        const jsonData = JSON.parse(Buffer.from(response.data).toString());
-        const finalUrl = jsonData.result || jsonData.url || jsonData.image_url;
-
-        return res.status(200).json({
-            status: true,
-            creator: "InuuTyzDev",
-            result: { image_url: finalUrl }
-        });
+        targetUrl = `https://www.neoapis.xyz/api/ai-image/${type}?prompt=${encodeURIComponent(textPrompt)}`;
+        
+    } else {
+        return res.status(400).json({ status: false, message: `Type AI Image '${type}' tidak ditemukan.` });
     }
-} catch (error) {
-    // Penanganan error jika API target down
-    return res.status(500).json({ status: false, message: "Gagal memproses gambar." });
+
+    // 3. Eksekusi Request (Hybrid: Bisa handle Gambar Langsung ATAU JSON)
+    try {
+        const response = await axios.get(targetUrl, axiosConfig);
+        const contentType = response.headers['content-type'];
+
+        // JIKA RESPONNYA GAMBAR LANGSUNG (contoh: toghibli, toanime, deepai)
+        if (contentType && contentType.includes('image')) {
+            res.setHeader('Content-Type', contentType);
+            return res.send(response.data);
+        } 
+        
+        // JIKA RESPONNYA JSON (contoh: ailabs)
+        else {
+            const jsonData = JSON.parse(Buffer.from(response.data).toString());
+            const finalUrl = jsonData.result?.url || jsonData.result || jsonData.url || jsonData.image_url;
+
+            return res.status(200).json({
+                status: true,
+                creator: "InuuTyzDev",
+                result: finalUrl ? { image_url: finalUrl } : {}
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({ status: false, message: `Gagal memproses: ${type}. Pastikan input valid atau API pusat sedang online.` });
+    }
 }
 
-    }
-}
 
 
 
