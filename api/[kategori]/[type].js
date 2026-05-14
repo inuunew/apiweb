@@ -1022,62 +1022,67 @@ if (type === 'qr') {
 // 8. KATEGORI: AI IMAGE
 // ==========================================
 else if (kategori === 'ai-image') {
-    // 1. Ambil semua input
     const { type, url, q, query, prompt } = req.query;
     const imageUrl = url || q || query;
     const textPrompt = prompt || q || query;
 
-    // Konfigurasi otomatis menangkap Buffer untuk SEMUA request ai-image
-    const axiosConfig = {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
-        timeout: 30000,
-        responseType: 'arraybuffer' 
-    };
-
-    const imageTransforms = ['torealistic', 'tocinematic', 'tofigure', 'toghibli', 'toanime'];
     let targetUrl = '';
+    const imageTransforms = ['torealistic', 'tocinematic', 'tofigure', 'toghibli', 'toanime'];
 
-    // 2. Tentukan target URL berdasarkan Type
+    // 1. Tentukan URL Tujuan
     if (imageTransforms.includes(type)) {
-        // Logika untuk Transform (Butuh URL)
-        if (!imageUrl) return res.status(400).json({ status: false, message: "Parameter 'url' gambar wajib diisi!" });
+        if (!imageUrl) return res.status(400).json({ status: false, message: "Parameter 'url' wajib diisi!" });
         targetUrl = `https://www.neoapis.xyz/api/ai-image/${type}?url=${encodeURIComponent(imageUrl)}`;
-        
     } else if (type === 'ailabs' || type === 'deepai') {
-        // Logika untuk Generate (Butuh Prompt)
         if (!textPrompt) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
         targetUrl = `https://www.neoapis.xyz/api/ai-image/${type}?prompt=${encodeURIComponent(textPrompt)}`;
-        
     } else {
-        return res.status(400).json({ status: false, message: `Type AI Image '${type}' tidak ditemukan.` });
+        return res.status(400).json({ status: false, message: `Type '${type}' tidak ditemukan.` });
     }
 
-    // 3. Eksekusi Request (Hybrid: Bisa handle Gambar Langsung ATAU JSON)
     try {
-        const response = await axios.get(targetUrl, axiosConfig);
+        // 2. Panggil API dengan responseType 'arraybuffer' (SAMA SEPERTI CANVAS KAMU)
+        const response = await axios.get(targetUrl, {
+            headers: { 'User-Agent': 'Mozilla/5.0' },
+            timeout: 35000,
+            responseType: 'arraybuffer' 
+        });
+
         const contentType = response.headers['content-type'];
 
-        // JIKA RESPONNYA GAMBAR LANGSUNG (contoh: toghibli, toanime, deepai)
+        // 3. JIKA HASILNYA GAMBAR (Tocinematic, ToGhibli, DeepAI, dll)
         if (contentType && contentType.includes('image')) {
             res.setHeader('Content-Type', contentType);
-            return res.send(response.data);
+            return res.status(200).send(response.data); // LANGSUNG KIRIM GAMBAR!
         } 
         
-        // JIKA RESPONNYA JSON (contoh: ailabs)
+        // 4. KHUSUS AILABS (Jika isinya JSON teks)
         else {
             const jsonData = JSON.parse(Buffer.from(response.data).toString());
-            const finalUrl = jsonData.result?.url || jsonData.result || jsonData.url || jsonData.image_url;
+            const finalUrl = jsonData.result?.url || jsonData.result || jsonData.url;
 
+            // Jika kamu ingin ailabs juga langsung jadi gambar, tambahkan ini:
+            if (finalUrl && typeof finalUrl === 'string' && finalUrl.startsWith('http')) {
+                const imgBuffer = await axios.get(finalUrl, { responseType: 'arraybuffer' });
+                res.setHeader('Content-Type', 'image/jpeg');
+                return res.status(200).send(imgBuffer.data);
+            }
+
+            // Jika ingin tetap kirim link JSON untuk ailabs:
             return res.status(200).json({
                 status: true,
                 creator: "InuuTyzDev",
-                result: finalUrl ? { image_url: finalUrl } : {}
+                result: { image_url: finalUrl }
             });
         }
     } catch (error) {
-        return res.status(500).json({ status: false, message: `Gagal memproses: ${type}. Pastikan input valid atau API pusat sedang online.` });
+        return res.status(500).json({ 
+            status: false, 
+            message: "Provider Error: " + (error.response?.data?.message || error.message) 
+        });
     }
 }
+
 
 
 
