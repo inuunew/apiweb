@@ -1029,7 +1029,7 @@ else if (kategori === 'ai-image') {
     let targetUrl = '';
     const imageTransforms = ['torealistic', 'tocinematic', 'tofigure', 'toghibli', 'toanime'];
 
-    // 1. Tentukan URL Tujuan
+    // 1. Tentukan URL Tujuan berdasarkan input
     if (imageTransforms.includes(type)) {
         if (!imageUrl) return res.status(400).json({ status: false, message: "Parameter 'url' wajib diisi!" });
         targetUrl = `https://www.neoapis.xyz/api/ai-image/${type}?url=${encodeURIComponent(imageUrl)}`;
@@ -1037,47 +1037,42 @@ else if (kategori === 'ai-image') {
         if (!textPrompt) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
         targetUrl = `https://www.neoapis.xyz/api/ai-image/${type}?prompt=${encodeURIComponent(textPrompt)}`;
     } else {
-        return res.status(400).json({ status: false, message: `Type '${type}' tidak ditemukan.` });
+        return res.status(404).json({ status: false, message: `Type AI Image '${type}' tidak ditemukan.` });
     }
 
     try {
-        // 2. Panggil API dengan responseType 'arraybuffer' (SAMA SEPERTI CANVAS KAMU)
+        // 2. Ambil data dengan pola yang sama seperti fitur 'maker' ektp
         const response = await axios.get(targetUrl, {
-            headers: { 'User-Agent': 'Mozilla/5.0' },
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
             timeout: 35000,
-            responseType: 'arraybuffer' 
+            responseType: 'arraybuffer' // SAMA SEPERTI MAKER/EKTP
         });
 
         const contentType = response.headers['content-type'];
 
-        // 3. JIKA HASILNYA GAMBAR (Tocinematic, ToGhibli, DeepAI, dll)
+        // 3. LOGIKA OUTPUT: Kirim Gambar atau Parse JSON
         if (contentType && contentType.includes('image')) {
+            // Jika NeoAPIs langsung kirim gambar (Tocinematic, ToGhibli, dll)
             res.setHeader('Content-Type', contentType);
-            return res.status(200).send(response.data); // LANGSUNG KIRIM GAMBAR!
-        } 
-        
-        // 4. KHUSUS AILABS (Jika isinya JSON teks)
-        else {
+            return res.status(200).send(response.data);
+        } else {
+            // Jika NeoAPIs kirim JSON (Ailabs)
             const jsonData = JSON.parse(Buffer.from(response.data).toString());
             const finalUrl = jsonData.result?.url || jsonData.result || jsonData.url;
 
-            // Jika kamu ingin ailabs juga langsung jadi gambar, tambahkan ini:
             if (finalUrl && typeof finalUrl === 'string' && finalUrl.startsWith('http')) {
-                const imgBuffer = await axios.get(finalUrl, { responseType: 'arraybuffer' });
+                // DOWNLOAD LINK TERSEBUT AGAR JADI GAMBAR LANGSUNG
+                const imgRes = await axios.get(finalUrl, { responseType: 'arraybuffer' });
                 res.setHeader('Content-Type', 'image/jpeg');
-                return res.status(200).send(imgBuffer.data);
+                return res.status(200).send(imgRes.data);
+            } else {
+                return res.status(404).json({ status: false, message: "Gagal mendapatkan hasil gambar." });
             }
-
-            // Jika ingin tetap kirim link JSON untuk ailabs:
-            return res.status(200).json({
-                status: true,
-                creator: "InuuTyzDev",
-                result: { image_url: finalUrl }
-            });
         }
     } catch (error) {
         return res.status(500).json({ 
             status: false, 
+            creator: "InuuTyzDev", 
             message: "Provider Error: " + (error.response?.data?.message || error.message) 
         });
     }
