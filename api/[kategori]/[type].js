@@ -1,1042 +1,989 @@
-export default async function handler(req, res) {
+// Import semua library yang dibutuhkan di sini (axios, cheerio, dll)
+import axios from 'axios';
+import * as cheerio from 'cheerio';
+import crypto from 'crypto'; // 👉 Tambahkan ini
+import QRCode from 'qrcode-svg'; // 👉 Tambahkan ini (Pastikan sudah npm install qrcode-svg)
 
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Content-Type', 'application/json');
+const colorDictionary = {
+    "putih": "ffffff", "white": "ffffff",
+    "hitam": "000000", "black": "000000",
+    "merah": "ff0000", "red": "ff0000",
+    "biru": "0000ff", "blue": "0000ff",
+    "hijau": "00ff00", "green": "00ff00",
+    "kuning": "ffff00", "yellow": "ffff00",
+    "ungu": "8a2be2", "purple": "8a2be2",
+    "abu": "808080", "gray": "808080", "grey": "808080",
+    "pink": "ffc0cb", "merahmuda": "ffc0cb",
+    "oren": "ffa500", "orange": "ffa500",
+    "cyan": "00ffff", "magenta": "ff00ff"
+};
 
-    res.status(200).json({
-        "settings": {
-            "apiName": "InuuTyzDev",
-            "creator": "InuuTyzDev"
-        },
-        "tags": {
-            "ai": [
-                {
-                    "name": "DeepSeek R1",
-                    "endpoint": "/api/ai/deepseekr1",
-                    "method": "GET",
-                    "params": [
-                        { "name": "prompt", "required": true, "description": "Tanyakan apa saja ke DeepSeek R1" },
-                        { "name": "system", "required": false, "description": "Instruksi sistem (opsional)" },
-                        { "name": "temperature", "required": false, "description": "Kreativitas (Contoh: 0.7)" }
-                    ]
-                },
-                {
-                    "name": "Gemini AI (Vision)",
-                    "endpoint": "/api/ai/gemini",
-                    "method": "GET",
-                    "params": [
-                        { "name": "text", "required": true, "description": "Pesan untuk Gemini" },
-                        { "name": "cookie", "required": false, "description": "Isi dengan: smart" },
-                        { "name": "promptSystem", "required": false, "description": "Persona/Peran AI" },
-                        { "name": "imageUrl", "required": false, "description": "URL Gambar / Upload Galeri" }
-                    ]
-                },
-                {
-                    "name": "Gita (Spiritual AI)",
-                    "endpoint": "/api/ai/gita",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Ask about Karma/Spirituality" }]
-                },
-                {
-                    "name": "QwQ 32B",
-                    "endpoint": "/api/ai/qwq32b",
-                    "method": "GET",
-                    "params": [
-                        { "name": "prompt", "required": true, "description": "Chat dengan model QWQ" },
-                        { "name": "system", "required": false, "description": "Instruksi sistem (opsional)" },
-                        { "name": "temperature", "required": false, "description": "Kreativitas (Contoh: 0.7)" }
-                    ]
-                },
-                {
-                    "name": "Phi-2",
-                    "endpoint": "/api/ai/phi2",
-                    "method": "GET",
-                    "params": [
-                        { "name": "prompt", "required": true, "description": "Pertanyaan untuk AI" },
-                        { "name": "system", "required": false, "description": "Instruksi Sistem (Opsional)" },
-                        { "name": "temperature", "required": false, "description": "Kreativitas (Contoh: 0.7)" }
-                    ]
-                },
-                {
-                    "name": "GLM 4.7 Flash",
-                    "endpoint": "/api/ai/glm47flash",
-                    "method": "GET",
-                    "params": [
-                        { "name": "prompt", "required": true, "description": "Pertanyaan untuk AI" },
-                        { "name": "system", "required": false, "description": "Instruksi Sistem (Opsional)" },
-                        { "name": "temperature", "required": false, "description": "Kreativitas (Contoh: 0.7)" }
-                    ]
-                },
-                {
-                    "name": "GPT-OSS 120B",
-                    "endpoint": "/api/ai/gptoss120b",
-                    "method": "GET",
-                    "params": [
-                        { "name": "prompt", "required": true, "description": "Model GPT open-source 120B" },
-                        { "name": "system", "required": false, "description": "Instruksi sistem (opsional)" },
-                        { "name": "temperature", "required": false, "description": "Kreativitas (Contoh: 0.7)" }
-                    ]
-                }
-            ],
-            "maker": [
-                {
-                    "name": "E-KTP Maker",
-                    "endpoint": "/api/maker/ektp",
-                    "method": "POST",
-                    "params": [
-                        { "name": "provinsi", "required": true, "description": "Contoh: JAWA BARAT" },
-                        { "name": "kota", "required": true, "description": "Contoh: BANDUNG" },
-                        { "name": "nik", "required": true, "description": "NIK (16 Digit)" },
-                        { "name": "nama", "required": true, "description": "Nama Lengkap" },
-                        { "name": "ttl", "required": true, "description": "Tempat, Tgl Lahir" },
-                        { "name": "jenis_kelamin", "required": true, "description": "Laki-laki / Perempuan" },
-                        { "name": "alamat", "required": true, "description": "Nama Jalan & No Rumah" },
-                        { "name": "rt/rw", "required": true, "description": "RT/RW (Contoh: 001/002)" },
-                        { "name": "kel/desa", "required": true, "description": "Kelurahan / Desa" },
-                        { "name": "kecamatan", "required": true, "description": "Kecamatan" },
-                        { "name": "agama", "required": true, "description": "Agama" },
-                        { "name": "status", "required": true, "description": "Contoh: Belum Kawin" },
-                        { "name": "pekerjaan", "required": true, "description": "Pekerjaan" },
-                        // 👇 KUNCI PERUBAHAN: pas_photo diubah jadi image 👇
-                        { "name": "image", "required": true, "description": "Link Foto (URL) / Upload Galeri" }
-                    ]
-                },
-                {
-                    "name": "FB Command Canvas",
-                    "endpoint": "/api/maker/fbcommand",
-                    "method": "GET",
-                    "params": [
-                        { "name": "name", "required": true, "description": "Nama Profil" },
-                        { "name": "comment", "required": true, "description": "Isi Komentar" },
-                        { "name": "ppurl", "required": true, "description": "Link Foto Profil" }
-                    ]
-                },
-                {
-                    "name": "Fake Group Chat",
-                    "endpoint": "/api/maker/fakegroup",
-                    "method": "GET",
-                    "params": [
-                        { "name": "title", "required": true, "description": "Nama Grup" },
-                        { "name": "number", "required": true, "description": "Jumlah Peserta" },
-                        { "name": "time", "required": true, "description": "Waktu (13.00)" },
-                        { "name": "avatarUrl", "required": true, "description": "Link Foto Grup" }
-                    ]
-                },
-                {
-                    "name": "Roasting Meme",
-                    "endpoint": "/api/maker/roasting",
-                    "method": "GET",
-                    "params": [
-                        { "name": "text1", "required": true, "description": "Teks 1" },
-                        { "name": "text2", "required": true, "description": "Teks 2" },
-                        { "name": "text3", "required": true, "description": "Teks 3" }
-                    ]
-                },
-                {
-                    "name": "Ephoto360 Graffiti",
-                    "endpoint": "/api/maker/ephoto360",
-                    "method": "GET",
-                    "params": [
-                        { "name": "text1", "required": true, "description": "Teks utama" },
-                        { "name": "text2", "required": false, "description": "Teks tambahan (opsional)" }
-                    ]
-                }
-            ],
-            "downloader": [
-                {
-                    "name": "Spotify Downloader",
-                    "endpoint": "/api/download/spotify",
-                    "method": "GET",
-                    "params": [{ "name": "url", "required": true, "description": "Link lagu Spotify" }]
-                },
-                {
-                    "name": "TikTok V2",
-                    "endpoint": "/api/download/tiktok_v2",
-                    "method": "GET",
-                    "params": [{ "name": "url", "required": true, "description": "Link video TikTok" }]
-                },
-                {
-                    "name": "Instagram",
-                    "endpoint": "/api/download/ig",
-                    "method": "GET",
-                    "params": [{ "name": "url", "required": true, "description": "Link post/reels IG" }]
-                },
-                {
-                    "name": "Twitter / X",
-                    "endpoint": "/api/download/twitter",
-                    "method": "GET",
-                    "params": [{ "name": "url", "required": true, "description": "Link tweet/video X" }]
-                },
-                {
-                    "name": "Facebook",
-                    "endpoint": "/api/download/fb",
-                    "method": "GET",
-                    "params": [{ "name": "url", "required": true, "description": "Link video FB" }]
-                },
-                {
-                    "name": "Google Drive",
-                    "endpoint": "/api/download/gdrive",
-                    "method": "GET",
-                    "params": [{ "name": "url", "required": true, "description": "Link file GDrive" }]
-                },
-                {
-                    "name": "Mediafire",
-                    "endpoint": "/api/download/mediafire",
-                    "method": "GET",
-                    "params": [{ "name": "url", "required": true, "description": "Link file Mediafire" }]
-                },
-                {
-                    "name": "CapCut",
-                    "endpoint": "/api/download/capcut",
-                    "method": "GET",
-                    "params": [{ "name": "url", "required": true, "description": "Link template CapCut" }]
-                },
-                {
-                    "name": "Douyin",
-                    "endpoint": "/api/download/douyin",
-                    "method": "GET",
-                    "params": [{ "name": "url", "required": true, "description": "Link video Douyin" }]
-                },
-                {
-                    "name": "SaveFrom",
-                    "endpoint": "/api/download/savefrom",
-                    "method": "GET",
-                    "params": [{ "name": "url", "required": true, "description": "Link video/audio" }]
-                },
-                {
-                    "name": "FastDL",
-                    "endpoint": "/api/download/fastdl",
-                    "method": "GET",
-                    "params": [{ "name": "url", "required": true, "description": "Link FastDL" }]
-                }
-            ],
-            "search": [
-                {
-                    "name": "Spotify Search",
-                    "endpoint": "/api/search/spotify",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Judul lagu atau artis" }]
-                },
-                {
-                    "name": "Lyrics Search",
-                    "endpoint": "/api/search/lyrics",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Judul lagu" }]
-                },
-                {
-                    "name": "GSM Arena",
-                    "endpoint": "/api/search/gsm",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Nama HP" }]
-                },
-                {
-                    "name": "MLBB Detail",
-                    "endpoint": "/api/search/mlbb",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Nama Hero" }]
-                },
-                {
-                    "name": "App Search",
-                    "endpoint": "/api/search/appsearch",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Nama aplikasi/game" }]
-                },
-                {
-                    "name": "Lazada",
-                    "endpoint": "/api/search/lazada",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Nama produk" }]
-                },
-                {
-                    "name": "Pinterest",
-                    "endpoint": "/api/search/pinterest",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Cari gambar" }]
-                },
-                {
-                    "name": "YouTube Search",
-                    "endpoint": "/api/search/yts",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Cari video YT" }]
-                }
-            ],
-            "stalker": [
-                {
-                    "name": "Pinterest Stalk",
-                    "endpoint": "/api/stalker/pinterest",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Username Pinterest" }]
-                },
-                {
-                    "name": "GitHub Stalk",
-                    "endpoint": "/api/stalker/github",
-                    "method": "GET",
-                    "params": [{ "name": "user", "required": true, "description": "Username GitHub" }]
-                },
-                {
-                    "name": "Twitter Stalk",
-                    "endpoint": "/api/stalker/twitter",
-                    "method": "GET",
-                    "params": [{ "name": "user", "required": true, "description": "Username Twitter" }]
-                },
-                {
-                    "name": "YouTube Stalk",
-                    "endpoint": "/api/stalker/youtube",
-                    "method": "GET",
-                    "params": [{ "name": "username", "required": true, "description": "Username / ID Channel" }]
-                },
-                {
-                    "name": "Threads Stalk",
-                    "endpoint": "/api/stalker/threads",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Username Threads" }]
-                }
-            ],
-            "tools": [
-                {
-                    "name": "SS Web (Full Page)",
-                    "endpoint": "/api/tools/ssweb",
-                    "method": "GET",
-                    "params": [
-                        { "name": "url", "required": true, "description": "URL website (https://...)" },
-                        { "name": "device", "required": false, "description": "Pilihan: mobile / desktop / tablet" }
-                    ]
-                },
-                {
-                    "name": "Get HTML Source",
-                    "endpoint": "/api/tools/getcode",
-                    "method": "GET",
-                    "params": [{ "name": "url", "required": true, "description": "URL website target" }]
-                },
-                {
-                    "name": "Subdomain Scanner",
-                    "endpoint": "/api/tools/subdomain",
-                    "method": "GET",
-                    "params": [{ "name": "domain", "required": true, "description": "Domain utama (google.com)" }]
-                },
-                {
-                    "name": "Kode Pos",
-                    "endpoint": "/api/tools/kodepos",
-                    "method": "GET",
-                    "params": [{ "name": "query", "required": true, "description": "Nama daerah/desa" }]
-                },
-                {
-                    "name": "Country Info",
-                    "endpoint": "/api/tools/countryinfo",
-                    "method": "GET",
-                    "params": [{ "name": "country", "required": true, "description": "Nama negara" }]
-                },
-                {
-                    "name": "Short URL",
-                    "endpoint": "/api/tools/shorturl",
-                    "method": "GET",
-                    "params": [{ "name": "url", "required": true, "description": "Link panjang" }]
-                }, 
-                {
-                    "name": "HTML Encryptor",
-                    "endpoint": "/api/tools/encrypthtml",
-                    "method": "POST",
-                    "params": [
-                        { "name": "html", "required": true, "description": "Source Code HTML lengkap (Mendukung teks sangat panjang)" }
-                    ]
-                }
-            ],
-            "info": [
-                {
-                    "name": "Gempa BMKG",
-                    "endpoint": "/api/info/bmkg",
-                    "method": "GET",
-                    "params": []
-                },
-                {
-                    "name": "Info Cuaca",
-                    "endpoint": "/api/info/cuaca",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Nama lokasi" }]
-                },
-                {
-                    "name": "Jadwal TV",
-                    "endpoint": "/api/info/jadwaltv",
-                    "method": "GET",
-                    "params": [{ "name": "channel", "required": true, "description": "Channel (gtv, rcti, dll)" }]
-                }
-            ], 
-            "generator": [
-                {
-                    "name": "QR Code SVG",
-                    "endpoint": "/api/generator/qr",
-                    "method": "GET",
-                    "params": [
-                        { "name": "text", "required": true, "description": "Teks / URL tujuan" },
-                        { "name": "color", "required": false, "description": "Hex warna (contoh: putih atau fff)" }
-                    ]
-                },
-                {
-                    "name": "Captcha Solver",
-                    "endpoint": "/api/generator/captcha",
-                    "method": "GET",
-                    "params": [
-                        { "name": "difficulty", "required": false, "description": "easy / medium / hard (Opsional)" },
-                        { "name": "color", "required": false, "description": "Warna garis noise (Opsional)" },
-                        { "name": "view", "required": false, "description": "Pilih format output (Opsional)" }
-                    ]
-                },
-                {
-                    "name": "Identicon Avatar",
-                    "endpoint": "/api/generator/avatar",
-                    "method": "GET",
-                    "params": [
-                        { "name": "seed", "required": true, "description": "Username / Teks unik" }
-                    ]
-                },
-                {
-                    "name": "License Key",
-                    "endpoint": "/api/generator/license",
-                    "method": "GET",
-                    "params": [
-                        { "name": "format", "required": true, "description": "Contoh: INUU-XXXX-XXXX" }
-                    ]
-                },
-                {
-                    "name": "Cyberpunk Stat Bar",
-                    "endpoint": "/api/generator/statbar",
-                    "method": "GET",
-                    "params": [
-                        { "name": "label", "required": true, "description": "Nama Status" },
-                        { "name": "value", "required": true, "description": "Angka 0 - 100" }
-                    ]
-                }, 
-                {
-                    "name": "Placeholder Image",
-                    "endpoint": "/api/generator/placeholder",
-                    "method": "GET",
-                    "params": [
-                        { "name": "w", "required": false, "description": "Lebar gambar (Contoh: 800)" },
-                        { "name": "h", "required": false, "description": "Tinggi gambar (Contoh: 400)" },
-                        { "name": "text", "required": false, "description": "Teks di tengah gambar" },
-                        { "name": "bg", "required": false, "description": "Warna background (contoh: putih atau fff)" },
-                        { "name": "color", "required": false, "description": "Warna teks (contoh: putih atau fff)" }
-                    ]
-                },
-                {
-                    "name": "Aesthetic Wave BG",
-                    "endpoint": "/api/generator/wave",
-                    "method": "GET",
-                    "params": [
-                        { "name": "color1", "required": false, "description": "Warna gradasi 1 contoh: putih atau fff" },
-                        { "name": "color2", "required": false, "description": "Warna gradasi 2 (contoh: putih atau fff)" },
-                        { "name": "bg", "required": false, "description": "Warna background (contoh: putih atau fff)" }
-                    ]
-                },
-                {
-                    "name": "Secure Token",
-                    "endpoint": "/api/generator/token",
-                    "method": "GET",
-                    "params": [
-                        { "name": "length", "required": false, "description": "Panjang token (Max 256)" },
-                        { "name": "symbols", "required": false, "description": "Gunakan true untuk menyertakan simbol" }
-                    ]
-                }
-            ],
-            "komik": [
-                {
-                    "name": "Komikindo Search",
-                    "endpoint": "/api/komik/search",
-                    "method": "GET",
-                    "params": [{ "name": "query", "required": true, "description": "Judul komik (Contoh: One Piece)" }]
-                },
-                {
-                    "name": "Komikindo Detail",
-                    "endpoint": "/api/komik/detail",
-                    "method": "GET",
-                    "params": [{ "name": "url", "required": true, "description": "URL dari hasil search" }]
-                },
-                {
-                    "name": "Komikindo Chapter",
-                    "endpoint": "/api/komik/chapter",
-                    "method": "GET",
-                    "params": [{ "name": "url", "required": true, "description": "URL chapter untuk baca" }]
-                }
-            ],
-            "meme": [
-                {
-                    "name": "Doge vs Cheems",
-                    "endpoint": "/api/meme/dogecheems",
-                    "method": "GET",
-                    "params": [
-                        { "name": "text1", "required": true, "description": "Teks untuk si Doge (Kiri)" },
-                        { "name": "text2", "required": true, "description": "Teks untuk si Cheems (Kanan)" }
-                    ]
-                },
-                {
-                    "name": "Drake Hotline Bling",
-                    "endpoint": "/api/meme/hotline",
-                    "method": "GET",
-                    "params": [
-                        { "name": "text1", "required": true, "description": "Sesuatu yang ditolak/tidak suka" },
-                        { "name": "text2", "required": true, "description": "Sesuatu yang diterima/disukai" }
-                    ]
-                },
-                {
-                    "name": "Jarvis Assistant",
-                    "endpoint": "/api/meme/jarvis",
-                    "method": "GET",
-                    "params": [
-                        { "name": "text", "required": true, "description": "Perintah atau kata-kata untuk Jarvis" }
-                    ]
-                },
-                {
-                    "name": "Maju Lu (Drama)",
-                    "endpoint": "/api/meme/majulu",
-                    "method": "GET",
-                    "params": [
-                        { "name": "text1", "required": true, "description": "Teks tantangan pertama" },
-                        { "name": "text2", "required": true, "description": "Teks jawaban/kenyataan" }
-                    ]
-                },
-                {
-                    "name": "Pelajaran Hidup",
-                    "endpoint": "/api/meme/pelajaran",
-                    "method": "GET",
-                    "params": [
-                        { "name": "text1", "required": true, "description": "Pelajaran hidup yang berat" },
-                        { "name": "text2", "required": true, "description": "Pelajaran sekolah yang sepele" }
-                    ]
-                },
-                {
-                    "name": "Pilihan Dilema (Dua Tombol)",
-                    "endpoint": "/api/meme/pilihan",
-                    "method": "GET",
-                    "params": [
-                        { "name": "text1", "required": true, "description": "Pertanyaan utama" },
-                        { "name": "text2", "required": true, "description": "Pilihan tombol kiri" },
-                        { "name": "text3", "required": true, "description": "Pilihan tombol kanan" }
-                    ]
-                },
-                {
-                    "name": "Squidward Window",
-                    "endpoint": "/api/meme/squidwindow",
-                    "method": "GET",
-                    "params": [
-                        { "name": "text1", "required": true, "description": "Teks Squidward di dalam rumah" },
-                        { "name": "text2", "required": true, "description": "Teks Patrick/Spongebob di luar" }
-                    ]
-                },
-                {
-                    "name": "Two Buttons (Daily)",
-                    "endpoint": "/api/meme/twobuttons",
-                    "method": "GET",
-                    "params": [
-                        { "name": "text1", "required": true, "description": "Opsi tombol 1" },
-                        { "name": "text2", "required": true, "description": "Opsi tombol 2" }
-                    ]
-                }
-            ],
-            "ephoto": [
-                {
-                    "name": "1917 Style",
-                    "endpoint": "/api/ephoto/1917style",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks untuk efek 1917" }]
-                },
-                {
-                    "name": "Advanced Glow",
-                    "endpoint": "/api/ephoto/advancedglow",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks efek cahaya glow" }]
-                },
-                {
-                    "name": "Blackpink Logo",
-                    "endpoint": "/api/ephoto/blackpinklogo",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks logo Blackpink" }]
-                },
-                {
-                    "name": "Blackpink Style",
-                    "endpoint": "/api/ephoto/blackpinkstyle",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks gaya Blackpink" }]
-                },
-                {
-                    "name": "Cartoon Style",
-                    "endpoint": "/api/ephoto/cartoonstyle",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks gaya kartun" }]
-                },
-                {
-                    "name": "Deleting Text",
-                    "endpoint": "/api/ephoto/deletingtext",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Efek teks terhapus" }]
-                },
-                {
-                    "name": "Dragon Ball",
-                    "endpoint": "/api/ephoto/dragonball",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks tema Dragon Ball" }]
-                },
-                {
-                    "name": "Cloud Effect",
-                    "endpoint": "/api/ephoto/effectclouds",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks di atas awan" }]
-                },
-                {
-                    "name": "Flag 3D Text",
-                    "endpoint": "/api/ephoto/flag3dtext",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks bendera 3D" }]
-                },
-                {
-                    "name": "Flag Text",
-                    "endpoint": "/api/ephoto/flagtext",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks tema bendera" }]
-                },
-                {
-                    "name": "Free Create",
-                    "endpoint": "/api/ephoto/freecreate",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Bebas buat teks" }]
-                },
-                {
-                    "name": "Galaxy Style",
-                    "endpoint": "/api/ephoto/galaxy",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks tema galaksi" }]
-                },
-                {
-                    "name": "Galaxy Wallpaper",
-                    "endpoint": "/api/ephoto/galaxywallpaper",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Buat wallpaper galaksi" }]
-                },
-                {
-                    "name": "Glitch Text",
-                    "endpoint": "/api/ephoto/glitchtext",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Efek teks glitch" }]
-                },
-                {
-                    "name": "Glowing Text",
-                    "endpoint": "/api/ephoto/glowingtext",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks bercahaya neon" }]
-                },
-                {
-                    "name": "Gradient Text",
-                    "endpoint": "/api/ephoto/gradienttext",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks warna gradasi" }]
-                },
-                {
-                    "name": "Light Effects",
-                    "endpoint": "/api/ephoto/lighteffects",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks efek lampu" }]
-                },
-                {
-                    "name": "Logo Maker",
-                    "endpoint": "/api/ephoto/logomaker",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Buat logo simpel" }]
-                },
-                {
-                    "name": "Luxury Gold",
-                    "endpoint": "/api/ephoto/luxurygold",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks emas mewah" }]
-                },
-                {
-                    "name": "Making Neon",
-                    "endpoint": "/api/ephoto/makingneon",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Efek lampu neon" }]
-                },
-                {
-                    "name": "Neon Glitch",
-                    "endpoint": "/api/ephoto/neonglitch",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Perpaduan neon & glitch" }]
-                },
-                {
-                    "name": "Paper Cut Style",
-                    "endpoint": "/api/ephoto/papercutstyle",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Gaya potongan kertas" }]
-                },
-                {
-                    "name": "Pixel Glitch",
-                    "endpoint": "/api/ephoto/pixelglitch",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Efek glitch kotak pixel" }]
-                },
-                {
-                    "name": "Royal Text",
-                    "endpoint": "/api/ephoto/royaltext",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks gaya kerajaan" }]
-                },
-                {
-                    "name": "Sand Summer",
-                    "endpoint": "/api/ephoto/sandsummer",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks di atas pasir pantai" }]
-                },
-                {
-                    "name": "Summer Beach",
-                    "endpoint": "/api/ephoto/summerbeach",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks tema pantai" }]
-                },
-                {
-                    "name": "Typography Text",
-                    "endpoint": "/api/ephoto/typographytext",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Seni tipografi" }]
-                },
-                {
-                    "name": "Underwater Text",
-                    "endpoint": "/api/ephoto/underwatertext",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks di dalam air" }]
-                },
-                {
-                    "name": "Watercolor Text",
-                    "endpoint": "/api/ephoto/watercolortext",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks cat air" }]
-                },
-                {
-                    "name": "Write Text",
-                    "endpoint": "/api/ephoto/writetext",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Teks tulis tangan" }]
-                }
-            ],
-"stiker": [
-    {
-        "name": "Brat Video",
-        "endpoint": "/api/stiker/bratvid",
-        "method": "GET",
-        "params": [{ "name": "text", "required": true, "description": "Teks untuk stiker video brat" }]
-    },
-    {
-        "name": "Stickerly Search",
-        "endpoint": "/api/stiker/stickerly",
-        "method": "GET",
-        "params": [{ "name": "q", "required": true, "description": "Kata kunci stiker" }]
-    },
-    {
-        "name": "Quotely (QC)",
-        "endpoint": "/api/stiker/qc",
-        "method": "GET",
-        "params": [
-            { "name": "text", "required": true, "description": "Isi pesan" },
-            { "name": "name", "required": true, "description": "Nama pengirim" },
-            { "name": "avatarUrl", "required": false, "description": "Link foto profil (opsional)" },
-            { "name": "bg", "required": false, "description": "Warna background hex tanpa # (opsional)" }
-        ]
-    },
-    {
-        "name": "Emojimix",
-        "endpoint": "/api/stiker/emojimix",
-        "method": "GET",
-        "params": [
-            { "name": "emoji1", "required": true, "description": "Emoji pertama" },
-            { "name": "emoji2", "required": true, "description": "Emoji kedua" }
-        ]
-    },
-    {
-        "name": "Brat Sticker",
-        "endpoint": "/api/stiker/brat",
-        "method": "GET",
-        "params": [{ "name": "text", "required": true, "description": "Teks stiker brat" }]
+function parseColor(input, defaultHex) {
+    if (!input) return defaultHex;
+    let cleanInput = input.toLowerCase().trim();
+    
+    // 1. Cek apakah user mengetik nama warna yang ada di kamus
+    if (colorDictionary[cleanInput]) {
+        return colorDictionary[cleanInput];
     }
-], 
-            "canvas": [
-                {
-                    "name": "Circle Avatar",
-                    "endpoint": "/api/canvas/circle",
-                    "method": "POST",
-                    "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
-                },
-                {
-                    "name": "Beautiful Frame",
-                    "endpoint": "/api/canvas/beautiful",
-                    "method": "POST",
-                    "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
-                },
-                {
-                    "name": "Delete Trash",
-                    "endpoint": "/api/canvas/delete",
-                    "method": "POST",
-                    "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
-                },
-                {
-                    "name": "Facepalm",
-                    "endpoint": "/api/canvas/facepalm",
-                    "method": "POST",
-                    "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
-                },
-                {
-                    "name": "Blur Filter",
-                    "endpoint": "/api/canvas/blur",
-                    "method": "POST",
-                    "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
-                },
-                {
-                    "name": "Invert Color",
-                    "endpoint": "/api/canvas/invert",
-                    "method": "POST",
-                    "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
-                },
-                {
-                    "name": "Greyscale",
-                    "endpoint": "/api/canvas/greyscale",
-                    "method": "POST",
-                    "params": [{ "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" }]
-                },
-                {
-                    "name": "Darkness",
-                    "endpoint": "/api/canvas/darkness",
-                    "method": "POST",
-                    "params": [
-                        { "name": "image", "required": true, "description": "URL Gambar / Upload Galeri" },
-                        { "name": "amount", "required": true, "description": "Intensitas Gelap (1-100)" }
-                    ]
-                },
-                {
-                    "name": "Batslap",
-                    "endpoint": "/api/canvas/batslap",
-                    "method": "POST",
-                    "params": [
-                        { "name": "image1", "required": true, "description": "Gambar Penampar" },
-                        { "name": "image2", "required": true, "description": "Gambar Ditampar" }
-                    ]
-                },
-                {
-                    "name": "Kiss",
-                    "endpoint": "/api/canvas/kiss",
-                    "method": "POST",
-                    "params": [
-                        { "name": "image1", "required": true, "description": "URL Gambar 1" },
-                        { "name": "image2", "required": true, "description": "URL Gambar 2" }
-                    ]
-                },
-                {
-                    "name": "Sertifikat Tolol",
-                    "endpoint": "/api/canvas/sertifikat-tolol",
-                    "method": "POST",
-                    "params": [{ "name": "text", "required": true, "description": "Nama di sertifikat" }]
-                },
-                {
-                    "name": "Gay Frame",
-                    "endpoint": "/api/canvas/gay",
-                    "method": "POST",
-                    "params": [
-                        { "name": "nama", "required": true, "description": "Nama User" },
-                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
-                        { "name": "num", "required": true, "description": "Persentase (contoh: 87)" }
-                    ]
-                },
-                {
-                    "name": "Level Up RPG",
-                    "endpoint": "/api/canvas/level-up",
-                    "method": "POST",
-                    "params": [
-                        { "name": "backgroundURL", "required": true, "description": "URL Background / Upload" },
-                        { "name": "avatarURL", "required": true, "description": "URL Avatar / Upload" },
-                        { "name": "fromLevel", "required": true, "description": "Level Sebelumnya (Angka)" },
-                        { "name": "toLevel", "required": true, "description": "Level Baru (Angka)" },
-                        { "name": "name", "required": true, "description": "Nama Player" }
-                    ]
-                },
-                {
-                    "name": "Profile RPG",
-                    "endpoint": "/api/canvas/profile",
-                    "method": "POST",
-                    "params": [
-                        { "name": "backgroundURL", "required": true, "description": "URL Background / Upload" },
-                        { "name": "avatarURL", "required": true, "description": "URL Avatar / Upload" },
-                        { "name": "rankName", "required": true, "description": "Nama Rank (Contoh: Epik)" },
-                        { "name": "rankId", "required": true, "description": "ID Rank (Angka)" },
-                        { "name": "exp", "required": true, "description": "EXP saat ini (Angka)" },
-                        { "name": "requireExp", "required": true, "description": "EXP yang dibutuhkan (Angka)" },
-                        { "name": "level", "required": true, "description": "Level saat ini (Angka)" },
-                        { "name": "name", "required": true, "description": "Nama Player" }
-                    ]
-                },
-                {
-                    "name": "Ship Match",
-                    "endpoint": "/api/canvas/ship",
-                    "method": "POST",
-                    "params": [
-                        { "name": "avatar1", "required": true, "description": "URL Avatar 1" },
-                        { "name": "avatar2", "required": true, "description": "URL Avatar 2" },
-                        { "name": "background", "required": true, "description": "URL Background / Upload" },
-                        { "name": "persen", "required": true, "description": "Persentase Kecocokan (1-100)" }
-                    ]
-                },
-                {
-                    "name": "Twitter Card",
-                    "endpoint": "/api/canvas/tweet",
-                    "method": "POST",
-                    "params": [
-                        { "name": "displayName", "required": true, "description": "Nama Tampilan" },
-                        { "name": "username", "required": true, "description": "Username (Tanpa @)" },
-                        { "name": "comment", "required": true, "description": "Isi Tweet" },
-                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
-                        { "name": "verified", "required": false, "description": "true / false (Opsional)" },
-                        { "name": "theme", "required": false, "description": "dark / light (Opsional)" }
-                    ]
-                },
-                {
-                    "name": "Spotify Player",
-                    "endpoint": "/api/canvas/spotify",
-                    "method": "POST",
-                    "params": [
-                        { "name": "title", "required": true, "description": "Judul Lagu" },
-                        { "name": "artist", "required": true, "description": "Nama Artis" },
-                        { "name": "start", "required": true, "description": "Waktu Mulai dalam ms (Contoh: 100000)" },
-                        { "name": "end", "required": true, "description": "Total Waktu dalam ms (Contoh: 200000)" },
-                        { "name": "image", "required": true, "description": "URL Cover Album / Upload" },
-                        { "name": "border", "required": true, "description": "Warna Border (Hex: %231DB954)" }
-                    ]
-                },
-                {
-                    "name": "Security Report",
-                    "endpoint": "/api/canvas/security",
-                    "method": "POST",
-                    "params": [
-                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
-                        { "name": "background", "required": true, "description": "URL Background / Upload" },
-                        { "name": "createdTimestamp", "required": true, "description": "Timestamp Dibuat (ms)" },
-                        { "name": "suspectTimestamp", "required": true, "description": "Timestamp Suspect (ms)" },
-                        { "name": "locale", "required": true, "description": "Kode Bahasa (en / id)" }
-                    ]
-                },
-                {
-                    "name": "Welcome V1",
-                    "endpoint": "/api/canvas/welcomev1",
-                    "method": "POST",
-                    "params": [
-                        { "name": "username", "required": true, "description": "Nama User" },
-                        { "name": "guildName", "required": true, "description": "Nama Grup/Server" },
-                        { "name": "guildIcon", "required": true, "description": "URL Ikon Grup / Upload" },
-                        { "name": "memberCount", "required": true, "description": "Jumlah Member" },
-                        { "name": "avatar", "required": true, "description": "URL Avatar User / Upload" },
-                        { "name": "background", "required": true, "description": "URL Background / Upload" },
-                        { "name": "quality", "required": false, "description": "Kualitas Gambar (Opsional: 80)" }
-                    ]
-                },
-                {
-                    "name": "Welcome V2",
-                    "endpoint": "/api/canvas/welcomev2",
-                    "method": "POST",
-                    "params": [
-                        { "name": "username", "required": true, "description": "Nama User" },
-                        { "name": "guildName", "required": true, "description": "Nama Grup/Server" },
-                        { "name": "memberCount", "required": true, "description": "Jumlah Member" },
-                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
-                        { "name": "background", "required": true, "description": "URL Background / Upload" }
-                    ]
-                },
-                {
-                    "name": "Welcome V3",
-                    "endpoint": "/api/canvas/welcomev3",
-                    "method": "POST",
-                    "params": [
-                        { "name": "username", "required": true, "description": "Nama User" },
-                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" }
-                    ]
-                },
-                {
-                    "name": "Welcome V4",
-                    "endpoint": "/api/canvas/welcomev4",
-                    "method": "POST",
-                    "params": [
-                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
-                        { "name": "background", "required": true, "description": "URL Background / Upload" },
-                        { "name": "description", "required": true, "description": "Pesan Sambutan" }
-                    ]
-                },
-                {
-                    "name": "Welcome V5",
-                    "endpoint": "/api/canvas/welcomev5",
-                    "method": "POST",
-                    "params": [
-                        { "name": "username", "required": true, "description": "Nama User" },
-                        { "name": "guildName", "required": true, "description": "Nama Grup/Server" },
-                        { "name": "memberCount", "required": true, "description": "Jumlah Member" },
-                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
-                        { "name": "background", "required": true, "description": "URL Background / Upload" },
-                        { "name": "quality", "required": false, "description": "Kualitas Gambar (Opsional: 90)" }
-                    ]
-                },
-                {
-                    "name": "Goodbye V1",
-                    "endpoint": "/api/canvas/goodbyev1",
-                    "method": "POST",
-                    "params": [
-                        { "name": "username", "required": true, "description": "Nama User" },
-                        { "name": "guildName", "required": true, "description": "Nama Grup/Server" },
-                        { "name": "guildIcon", "required": true, "description": "URL Ikon Grup / Upload" },
-                        { "name": "memberCount", "required": true, "description": "Jumlah Member" },
-                        { "name": "avatar", "required": true, "description": "URL Avatar User / Upload" },
-                        { "name": "background", "required": true, "description": "URL Background / Upload" },
-                        { "name": "quality", "required": false, "description": "Kualitas Gambar (Opsional: 80)" }
-                    ]
-                },
-                {
-                    "name": "Goodbye V2",
-                    "endpoint": "/api/canvas/goodbyev2",
-                    "method": "POST",
-                    "params": [
-                        { "name": "username", "required": true, "description": "Nama User" },
-                        { "name": "guildName", "required": true, "description": "Nama Grup/Server" },
-                        { "name": "memberCount", "required": true, "description": "Jumlah Member" },
-                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
-                        { "name": "background", "required": true, "description": "URL Background / Upload" }
-                    ]
-                },
-                {
-                    "name": "Goodbye V3", 
-                    "endpoint": "/api/canvas/goodbyev3", 
-                    "method": "POST",
-                    "params": [
-                        { "name": "username", "required": true, "description": "Nama User" },
-                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" }
-                    ]
-                },
-                {
-                    "name": "Goodbye V4",
-                    "endpoint": "/api/canvas/goodbyev4",
-                    "method": "POST",
-                    "params": [
-                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
-                        { "name": "background", "required": true, "description": "URL Background / Upload" },
-                        { "name": "title", "required": true, "description": "Judul (Contoh: Goodbye)" },
-                        { "name": "description", "required": true, "description": "Pesan Perpisahan" },
-                        { "name": "border", "required": true, "description": "Warna Border" },
-                        { "name": "avatarBorder", "required": true, "description": "Warna Border Avatar" },
-                        { "name": "overlayOpacity", "required": true, "description": "Opasitas (0.1 - 1.0)" }
-                    ]
-                },
-                {
-                    "name": "Goodbye V5",
-                    "endpoint": "/api/canvas/goodbyev5", 
-                    "method": "POST",
-                    "params": [
-                        { "name": "username", "required": true, "description": "Nama User" },
-                        { "name": "guildName", "required": true, "description": "Nama Grup/Server" },
-                        { "name": "memberCount", "required": true, "description": "Jumlah Member" },
-                        { "name": "avatar", "required": true, "description": "URL Avatar / Upload" },
-                        { "name": "background", "required": true, "description": "URL Background / Upload" },
-                        { "name": "quality", "required": false, "description": "Kualitas Gambar (Opsional: 90)" }
-                    ]
-                }
-            ]
+    
+    // 2. Jika tidak ada di kamus, asumsikan user mengetik kode Hex murni.
+    // Hapus tanda '#' jika user tidak sengaja memasukkannya.
+    return cleanInput.replace('#', '');
+}
+
+
+export default async function handler(req, res) {
+    // VERCEL OTOMATIS MENANGKAP NAMA FOLDER & ENDPOINT DARI URL!
+    // Contoh URL: /api/ai/gemini  -> kategori = "ai", type = "gemini"
+    // Contoh URL: /api/maker/ektp -> kategori = "maker", type = "ektp"
+    const { kategori, type, q, text, color, bg, color1, color2, difficulty, view, seed, format, label, value, w, h, length, symbols, cookie, promptSystem, prompt, system, temperature, provinsi, kota, nik, nama, ttl, jenis_kelamin, golongan_darah, alamat, kecamatan, agama, status, pekerjaan, kewarganegaraan, masa_berlaku, terbuat, pas_photo, image, text1, text2, text3, name, comment, ppurl, number, title, time, avatarUrl, device, domain, query, country, url, user, username, hero, channel } = req.query;
+
+
+
+
+
+const apiKeyCuki = "cuki-x"; 
+
+
+
+
+    try {
+    // 1. KATEGORI: AI
+    // ==========================================
+    if (kategori === 'ai') {
+        
+        // --- KELOMPOK MODEL AI STANDAR ---
+        const standardAI = ['deepseekr1', 'qwq32b', 'phi2', 'glm47flash', 'gptoss120b'];
+
+        if (standardAI.includes(type)) {
+            if (!prompt) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
+            
+            // Membangun URL dengan parameter opsional system & temperature
+            let targetUrl = `https://api.siputzx.my.id/api/ai/${type}?prompt=${encodeURIComponent(prompt)}`;
+            if (system) targetUrl += `&system=${encodeURIComponent(system)}`;
+            if (temperature) targetUrl += `&temperature=${temperature}`;
+
+            const response = await axios.get(targetUrl);
+
+            // --- TRIK SAPU BERSIH ---
+            let cleanData = response.data.data || response.data;
+            if (cleanData && typeof cleanData === 'object') { 
+                delete cleanData.creator; 
+                delete cleanData.status; 
+            }
+
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
         }
+
+
+        
+       else if (type === 'gita') {
+            if (!q) return res.status(400).json({ status: false, message: "Parameter 'q' (pertanyaan) wajib diisi!" });
+            
+            const response = await axios.get(`https://api.siputzx.my.id/api/ai/gita?q=${encodeURIComponent(q)}`);
+            
+            // --- TRIK SAPU BERSIH ---
+            let cleanData = response.data.data || response.data;
+            if (cleanData && typeof cleanData === 'object') { 
+                delete cleanData.creator; 
+                delete cleanData.status; 
+            }
+
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+        }
+
+        // --- MODEL AI KHUSUS: GEMINI ---
+        else if (type === 'gemini') {
+            if (!text) return res.status(400).json({ status: false, message: "Parameter 'text' wajib diisi!" });
+            
+            let targetUrl = `https://api.siputzx.my.id/api/ai/gemini?text=${encodeURIComponent(text)}`;
+            if (cookie) targetUrl += `&cookie=${encodeURIComponent(cookie)}`;
+            if (promptSystem) targetUrl += `&promptSystem=${encodeURIComponent(promptSystem)}`;
+            
+            const response = await axios.get(targetUrl);
+            
+            // --- TRIK SAPU BERSIH ---
+            let cleanData = response.data.data || response.data;
+            if (cleanData && typeof cleanData === 'object') { 
+                delete cleanData.creator; 
+                delete cleanData.status; 
+            }
+
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+        }
+        
+        else {
+            return res.status(404).json({ error: `Endpoint AI '${type}' tidak ada` });
+        }
+    }
+
+    // ==========================================
+    // 2. KATEGORI: MAKER
+    // ==========================================
+        // ==========================================
+    // 2. KATEGORI: MAKER
+    // ==========================================
+    else if (kategori === 'maker') {
+        if (type === 'ektp') {
+            const required = ['provinsi', 'kota', 'nik', 'nama', 'ttl', 'jenis_kelamin', 'alamat', 'kecamatan', 'agama', 'status', 'pekerjaan', 'pas_photo'];
+            for (const field of required) {
+                if (!req.query[field]) return res.status(400).json({ status: false, message: `Parameter '${field}' wajib diisi!` });
+            }
+
+            const rt_rw = req.query['rt/rw'] || "000/000";
+            const kel_desa = req.query['kel/desa'] || "Desa";
+
+            const targetUrl = `https://api.siputzx.my.id/api/canvas/ektp?provinsi=${encodeURIComponent(provinsi)}&kota=${encodeURIComponent(kota)}&nik=${encodeURIComponent(nik)}&nama=${encodeURIComponent(nama)}&ttl=${encodeURIComponent(ttl)}&jenis_kelamin=${encodeURIComponent(jenis_kelamin)}&golongan_darah=${encodeURIComponent(golongan_darah || '-')}&alamat=${encodeURIComponent(alamat)}&rt%2Frw=${encodeURIComponent(rt_rw)}&kel%2Fdesa=${encodeURIComponent(kel_desa)}&kecamatan=${encodeURIComponent(kecamatan)}&agama=${encodeURIComponent(agama)}&status=${encodeURIComponent(status)}&pekerjaan=${encodeURIComponent(pekerjaan)}&kewarganegaraan=${encodeURIComponent(kewarganegaraan || 'WNI')}&masa_berlaku=${encodeURIComponent(masa_berlaku || 'Seumur Hidup')}&terbuat=${encodeURIComponent(terbuat || '01-01-2024')}&pas_photo=${encodeURIComponent(pas_photo)}`;
+
+            const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
+            res.setHeader('Content-Type', 'image/jpeg');
+            return res.status(200).send(response.data);
+        }
+
+        // --- 3. EPHOTO360 GRAFFITI ---
+
+        // --- 4. FB COMMAND (CANVAS) ---
+        else if (type === 'fbcommand') {
+            if (!name || !comment || !ppurl) {
+                return res.status(400).json({ status: false, message: "Parameter 'name', 'comment', dan 'ppurl' (Link Foto) wajib diisi!" });
+            }
+            const targetUrl = `https://api.cuki.biz.id/api/canvas/fbcommand?apikey=${apiKeyCuki}&name=${encodeURIComponent(name)}&comment=${encodeURIComponent(comment)}&ppurl=${encodeURIComponent(ppurl)}`;
+            const response = await axios.get(targetUrl, { 
+                headers: { 'x-api-key': apiKeyCuki },
+                responseType: 'arraybuffer' 
+            });
+            res.setHeader('Content-Type', 'image/png');
+            return res.status(200).send(response.data);
+        }
+
+        // --- 5. FAKE GROUP MAKER ---
+        else if (type === 'fakegroup') {
+            if (!number || !title || !time || !avatarUrl) {
+                return res.status(400).json({ status: false, message: "Parameter 'number', 'title', 'time', dan 'avatarUrl' wajib diisi!" });
+            }
+            const targetUrl = `https://api.cuki.biz.id/api/maker/fakegroup?apikey=${apiKeyCuki}&number=${number}&title=${encodeURIComponent(title)}&time=${time}&avatarUrl=${encodeURIComponent(avatarUrl)}`;
+            const response = await axios.get(targetUrl, { 
+                headers: { 'x-api-key': apiKeyCuki },
+                responseType: 'arraybuffer' 
+            });
+            res.setHeader('Content-Type', 'image/jpeg');
+            return res.status(200).send(response.data);
+        }
+
+        // --- 6. ROASTING MAKER ---
+        else if (type === 'roasting') {
+            if (!text1 || !text2 || !text3) {
+                return res.status(400).json({ status: false, message: "Parameter 'teks1', 'teks2', dan 'teks3' wajib diisi!" });
+            }
+            const targetUrl = `https://api.cuki.biz.id/api/maker/roasting?apikey=${apiKeyCuki}&teks1=${encodeURIComponent(text1)}&teks2=${encodeURIComponent(text2)}&teks3=${encodeURIComponent(text3)}`;
+            const response = await axios.get(targetUrl, { 
+                headers: { 'x-api-key': apiKeyCuki },
+                responseType: 'arraybuffer' 
+            });
+            res.setHeader('Content-Type', 'image/jpeg');
+            return res.status(200).send(response.data);
+        } else {
+            return res.status(404).json({ error: `Endpoint '${type}' tidak ada` });
+        }
+      }
+     
+         // ==========================================
+    // 4. KATEGORI: STALKER
+    // ==========================================
+    else if (kategori === 'stalker') {
+        const target = q || user || username;
+
+        if (!target) return res.status(400).json({ status: false, message: "Parameter username/target wajib diisi!" });
+
+        // Daftar type yang menggunakan provider api.pixxxry.eu.cc
+        const pixxxryTypes = ['tiktok', 'replit', 'steam', 'reddit', 'youtube', 'twitter', 'threads', 'npm', 'roblox'];
+        
+        // Daftar type yang tetap menggunakan provider siputzx (seperti pinterest & github)
+        const siputzxTypes = ['pinterest', 'github'];
+
+        if (pixxxryTypes.includes(type)) {
+            try {
+                // Khusus youtube menggunakan parameter 'q', sisanya menggunakan 'username'
+                let paramName = (type === 'youtube') ? 'q' : 'username';
+                const targetUrl = `https://api.pixxxry.eu.cc/stalk/${type}?${paramName}=${encodeURIComponent(target)}`;
+                
+                const response = await axios.get(targetUrl);
+                
+                // --- TRIK SAPU BERSIH ---
+                let cleanData = response.data.data || response.data;
+                if (cleanData && typeof cleanData === 'object') {
+                    delete cleanData.creator;
+                    delete cleanData.status;
+                }
+
+                return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+            } catch (e) {
+                return res.status(500).json({ status: false, message: `Gagal stalk ${type}: ` + e.message });
+            }
+        } 
+        
+        else if (siputzxTypes.includes(type)) {
+            try {
+                // Pinterest menggunakan 'q', Github menggunakan 'user'
+                let paramName = (type === 'pinterest') ? 'q' : 'user';
+                const targetUrl = `https://api.siputzx.my.id/api/stalk/${type}?${paramName}=${encodeURIComponent(target)}`;
+                
+                const response = await axios.get(targetUrl);
+                
+                let cleanData = response.data.data || response.data;
+                if (cleanData && typeof cleanData === 'object') {
+                    delete cleanData.creator;
+                    delete cleanData.status;
+                }
+
+                return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+            } catch (e) {
+                return res.status(500).json({ status: false, message: `Gagal stalk ${type}: ` + e.message });
+            }
+        } 
+        
+        else {
+            return res.status(400).json({ status: false, message: `Type stalker '${type}' tidak valid atau belum didukung` });
+        }
+    }
+
+
+    // ==========================================
+    // 5. KATEGORI: DOWNLOADER
+    // ==========================================
+    else if (kategori === 'download') {
+        // Validasi awal: Semua fitur downloader butuh URL
+        if (!url) return res.status(400).json({ status: false, message: "Parameter 'url' wajib diisi untuk kategori Downloader!" });
+
+      const siputzxTypes = [
+            'twitter', 'douyin', 'fastdl', 'github', 
+            'tiktok', 'gdrive', 'snackvideo', 
+            'savefrom', 'ummy', 'capcut'
+        ];
+
+        if (siputzxTypes.includes(type)) {
+            const targetUrl = `https://api.siputzx.my.id/api/d/${type}?url=${encodeURIComponent(url)}`;
+            const response = await axios.get(targetUrl);
+            
+            // --- TRIK SAPU BERSIH ---
+            let cleanData = response.data.data || response.data;
+            if (cleanData && typeof cleanData === 'object') { 
+                delete cleanData.creator; 
+                delete cleanData.status; 
+            }
+            
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+        }
+        // --- TIKTOK V2 (Endpoint Khusus Siputzx) ---
+        else if (type === 'tiktok_v2') {
+            const response = await axios.get(`https://api.siputzx.my.id/api/d/tiktok/v2?url=${encodeURIComponent(url)}`);
+            
+            // --- TRIK SAPU BERSIH ---
+            let cleanData = response.data.data || response.data;
+            if (cleanData && typeof cleanData === 'object') { 
+                delete cleanData.creator; 
+                delete cleanData.status; 
+            }
+            
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+        }
+        // --- SPOTIFY DOWNLOADER ---
+        else if (type === 'spotify') {
+            const response = await axios.get(`https://api.yupra.my.id/api/downloader/spotify?url=${encodeURIComponent(url)}`);
+            
+            // --- TRIK SAPU BERSIH ---
+            let cleanData = response.data.data || response.data;
+            if (cleanData && typeof cleanData === 'object') { 
+                delete cleanData.creator; 
+                delete cleanData.status; 
+            }
+            
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+        }
+        // --- FACEBOOK (FDOWN) - AMAN DARI WATERMARK ---
+        else if (type === 'fb') {
+            const { data } = await axios.get('https://fdown.net');
+            const $ = cheerio.load(data);
+            const tokens = { v: $('input[name="token_v"]').val(), c: $('input[name="token_c"]').val(), h: $('input[name="token_h"]').val() };
+            const postData = new URLSearchParams({ 'URLz': url, 'token_v': tokens.v, 'token_c': tokens.c, 'token_h': tokens.h });
+            const resDl = await axios.post('https://fdown.net/download.php', postData.toString());
+            const $$ = cheerio.load(resDl.data);
+            return res.json({ status: true, creator: "InuuTyzDev", result: { sd: $$('#sdlink').attr('href'), hd: $$('#hdlink').attr('href') }});
+        } 
+        // --- INSTAGRAM (DOWNLOADGRAM) - AMAN DARI WATERMARK ---
+        else if (type === 'ig') {
+            const data = new URLSearchParams({ url, v: '3', lang: 'en' });
+            const response = await axios.post('https://api.downloadgram.org/media', data.toString());
+            const $ = cheerio.load(response.data);
+            let result = {};
+            if ($('video').length) {
+                result.type = 'video';
+                result.url = $('video source').attr('src');
+                result.download_url = $('a[download]').attr('href');
+                result.thumbnail = $('video').attr('poster');
+            } else if ($('img').length) {
+                result.type = 'image';
+                result.url = $('img').attr('src');
+                result.download_url = $('a[download]').attr('href');
+            } else {
+                throw new Error("Media tidak ditemukan.");
+            }
+            return res.json({ status: true, creator: "InuuTyzDev", result });
+        }
+        // --- MEDIAFIRE - AMAN DARI WATERMARK ---
+        else if (type === 'mediafire') {
+            const { data } = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }});
+            const $ = cheerio.load(data);
+            const downloadLink = $('#downloadButton').attr('href');
+            if (!downloadLink) throw new Error('Gagal menemukan link download.');
+            return res.json({ status: true, creator: "InuuTyzDev", result: { dl: downloadLink }});
+        }
+        // --- ERROR HANDLING ---
+        else {
+            return res.status(400).json({ status: false, message: `Type downloader '${type}' tidak valid` });
+        }
+    }
+    // ==========================================
+// 6. KATEGORI: SEARCH
+// ==========================================
+else if (kategori === 'search') {
+    // Masukkan trik penyatuan variabel keyword Anda di sini
+    const keyword = q || query || hero;
+
+    if (!keyword) return res.status(400).json({ status: false, message: "Parameter kata kunci pencarian wajib diisi!" });
+
+    if (type === 'spotify') {
+            const response = await axios.get(`https://api.yupra.my.id/api/search/spotify?q=${encodeURIComponent(keyword)}`);
+            
+            // TRIK SAPU BERSIH: Menghilangkan watermark dari API target
+            const cleanData = response.data;
+            delete cleanData.creator; // Melenyapkan "YP INC."
+            delete cleanData.status;  // Melenyapkan status ganda
+
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+        }
+        
+                // --- PENCARIAN LIRIK BERSERTA DETIK (LRCLIB) ---
+                // --- PENCARIAN LIRIK (LRCLIB) ---
+        else if (type === 'lyrics') {
+            const response = await axios.get(`https://lrclib.net/api/search?q=${encodeURIComponent(keyword)}`);
+            const data = response.data;
+
+            // Cek jika data kosong
+            if (!data || data.length === 0) return res.status(404).json({ status: false, creator: "InuuTyzDev", message: "Lirik tidak ditemukan!" });
+
+            // Ambil hasil pertama & rapikan (Mapping)
+            const lagu = data[0];
+            const cleanData = {
+                judul: lagu.trackName,
+                penyanyi: lagu.artistName,
+                album: lagu.albumName,
+                durasi: lagu.duration,
+                lirik: lagu.plainLyrics,
+                lirik_sinkron: lagu.syncedLyrics
+            };
+
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+        }
+
+
+        // --- GSM ARENA SEARCH --
+
+
+        else if (type === 'gsm') {
+            const response = await axios.get(`https://www.neoapis.xyz/api/search/gsm?query=${encodeURIComponent(keyword)}`);
+            const cleanData = response.data;
+            delete cleanData.creator;
+            delete cleanData.status;
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+        }
+        // --- MLBB HERO DETAIL ---
+        else if (type === 'mlbb') {
+            const response = await axios.get(`https://www.neoapis.xyz/api/search/mlbbdetail?hero=${encodeURIComponent(keyword)}`);
+            const cleanData = response.data;
+            delete cleanData.creator;
+            delete cleanData.status;
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+        }
+        // --- APP SEARCH ---
+        else if (type === 'appsearch') {
+            const response = await axios.get(`https://www.neoapis.xyz/api/search/appsearch?query=${encodeURIComponent(keyword)}`);
+            const cleanData = response.data;
+            delete cleanData.creator;
+            delete cleanData.status;
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+        }
+        // --- LAZADA SEARCH ---
+        else if (type === 'lazada') {
+            const response = await axios.get(`https://www.neoapis.xyz/api/search/lazada?query=${encodeURIComponent(keyword)}`);
+            const cleanData = response.data;
+            delete cleanData.creator;
+            delete cleanData.status;
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+        }
+        // --- PINTEREST (Placeholder) ---
+        else if (type === 'pinterest') {
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: `Berhasil mencari pinterest: ${keyword}` });
+        } 
+        // --- TIKTOK SEARCH (Placeholder) ---
+        else if (type === 'tiktok') {
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: `Berhasil mencari tiktok: ${keyword}` });
+        } 
+        // --- YOUTUBE SEARCH (Placeholder) ---
+        else if (type === 'yts') {
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: `Berhasil mencari youtube: ${keyword}` });
+        } 
+        // --- ERROR HANDLING ---
+        else {
+            return res.status(400).json({ status: false, message: `Type search '${type}' tidak valid` });
+        }
+}
+
+    // ==========================================
+    // 7. KATEGORI: INFO
+    // ==========================================
+    else if (kategori === 'info') {
+        
+        if (type === 'bmkg') {
+            const response = await axios.get(`https://api.siputzx.my.id/api/info/bmkg`);
+            
+            // --- TRIK SAPU BERSIH ---
+            let cleanData = response.data.data || response.data;
+            if (cleanData && typeof cleanData === 'object') { 
+                delete cleanData.creator; 
+                delete cleanData.status; 
+            }
+            
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: cleanData 
+            });
+        }
+        // --- 2. INFO CUACA DAERAH ---
+        else if (type === 'cuaca') {
+            if (!q) return res.status(400).json({ status: false, message: "Parameter 'q' (nama lokasi) wajib diisi! (contoh: pasiran jaya)" });
+            
+            const response = await axios.get(`https://api.siputzx.my.id/api/info/cuaca?q=${encodeURIComponent(q)}`);
+            
+            // --- TRIK SAPU BERSIH ---
+            let cleanData = response.data.data || response.data;
+            if (cleanData && typeof cleanData === 'object') { 
+                delete cleanData.creator; 
+                delete cleanData.status; 
+            }
+            
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: cleanData 
+            });
+        }
+        // --- 3. JADWAL ACARA TV ---
+        else if (type === 'jadwaltv') {
+            if (!channel) return res.status(400).json({ status: false, message: "Parameter 'channel' wajib diisi! (contoh: gtv, rcti, antv)" });
+            
+            const response = await axios.get(`https://api.siputzx.my.id/api/info/jadwaltv?channel=${encodeURIComponent(channel)}`);
+            
+            // --- TRIK SAPU BERSIH ---
+            let cleanData = response.data.data || response.data;
+            if (cleanData && typeof cleanData === 'object') { 
+                delete cleanData.creator; 
+                delete cleanData.status; 
+            }
+            
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: cleanData 
+            });
+        }
+        else {
+            return res.status(404).json({ status: false, message: `Endpoint info '${type}' tidak ditemukan!` });
+        }
+    }
+    // ==========================================
+    // 8. KATEGORI: GENERATOR
+    // ==========================================
+    else if (kategori === 'generator') {
+        
+        // --- 1. QR CODE ---
+          // SESUDAH (Benar)
+if (type === 'qr') {
+    // Kita gunakan variabel 'text' dan 'color' yang sudah di-destructure di atas
+    const isiQR = text || q || 'https://api.inuutyz.web.id';
+    const warnaQR = parseColor(color, '00f3ff'); 
+    const backgroundQR = parseColor(bg, '0b0b0b');
+
+    const qr = new QRCode({ 
+        content: isiQR, 
+        padding: 4, 
+        width: 256, 
+        height: 256, 
+        color: `#${warnaQR}`, 
+        background: `#${backgroundQR}`, 
+        join: true 
     });
+
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'public, max-age=86400'); 
+    return res.status(200).send(qr.svg());
+}
+
+        
+        // ==========================================
+        // 2. CAPTCHA GENERATOR (JSON + Base64 SVG / Direct Image)
+        // ==========================================
+        else if (type === 'captcha') {
+            const diff = req.query.difficulty || 'medium';
+            const color = parseColor(req.query.color, '8a2be2'); 
+            
+            let max = diff === 'hard' ? 100 : diff === 'easy' ? 10 : 50;
+            let num1 = Math.floor(Math.random() * max) + 1;
+            let num2 = Math.floor(Math.random() * max) + 1;
+            let answer = num1 + num2;
+
+            let noise = '';
+            for(let i = 0; i < 7; i++){
+                noise += `<line x1="${Math.random() * 200}" y1="${Math.random() * 80}" x2="${Math.random() * 200}" y2="${Math.random() * 80}" stroke="#${color}" stroke-width="2" opacity="0.6"/>`;
+            }
+
+            const rawSvg = `
+            <svg width="200" height="80" xmlns="http://www.w3.org/2000/svg">
+                <rect width="200" height="80" fill="#14141E" rx="8"/>
+                ${noise}
+                <text x="50%" y="50" font-family="Courier, monospace" font-size="32" font-weight="900" fill="#ffffff" text-anchor="middle" transform="rotate(${Math.random() * 14 - 7}, 100, 40)">
+                    ${num1} + ${num2}
+                </text>
+            </svg>`;
+
+            if (req.query.view === 'image') {
+                res.setHeader('Content-Type', 'image/svg+xml');
+                res.setHeader('Cache-Control', 'no-cache');
+                return res.status(200).send(rawSvg);
+            }
+
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: { 
+                    answer: answer.toString(),
+                    svg_base64: `data:image/svg+xml;base64,${Buffer.from(rawSvg).toString('base64')}`,
+                    svg_raw: rawSvg
+                } 
+            });
+        }
+
+        // ==========================================
+        // 3. IDENTICON / AVATAR GENERATOR (SVG)
+        // ==========================================
+        else if (type === 'avatar') {
+            const seed = req.query.seed || 'InuuTyzDev';
+            const color = parseColor(req.query.color, '00f3ff');
+            
+            const hash = crypto.createHash('md5').update(seed).digest('hex');
+            
+            let rects = '';
+            for(let i = 0; i < 15; i++) {
+                const isSolid = parseInt(hash[i], 16) % 2 === 0;
+                if(isSolid) {
+                    const col = i % 3;
+                    const row = Math.floor(i / 3);
+                    rects += `<rect x="${col * 20}" y="${row * 20}" width="20" height="20" fill="#${color}"/>`;
+                    if(col !== 2) { 
+                        rects += `<rect x="${(4 - col) * 20}" y="${row * 20}" width="20" height="20" fill="#${color}"/>`;
+                    }
+                }
+            }
+
+            const svg = `
+            <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100" height="100" fill="#1a1a2e"/>
+                ${rects}
+            </svg>`;
+
+            res.setHeader('Content-Type', 'image/svg+xml');
+            res.setHeader('Cache-Control', 'public, max-age=31536000');
+            return res.status(200).send(svg);
+        }
+
+        // ==========================================
+        // 4. LICENSE KEY GENERATOR (JSON)
+        // ==========================================
+        else if (type === 'license') {
+            const format = req.query.format || 'XXXX-XXXX-XXXX-XXXX';
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let key = '';
+            
+            for(let i = 0; i < format.length; i++) {
+                if(format[i] === 'X' || format[i] === 'x') {
+                    key += chars.charAt(Math.floor(Math.random() * chars.length));
+                } else {
+                    key += format[i];
+                }
+            }
+
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: { format_request: format, license_key: key } 
+            });
+        }
+
+        // ==========================================
+        // 5. CYBERPUNK STAT BAR GENERATOR (SVG)
+        // ==========================================
+        else if (type === 'statbar') {
+            const label = req.query.label || 'API HEALTH';
+            const value = Math.min(Math.max(parseInt(req.query.value) || 100, 0), 100); 
+            const color = parseColor(req.query.color, '8a2be2'); 
+            const bg = parseColor(req.query.bg, '111111');
+
+            const svg = `
+            <svg width="350" height="40" xmlns="http://www.w3.org/2000/svg">
+                <rect width="350" height="40" fill="#${bg}" rx="6" stroke="#333" stroke-width="1"/>
+                <rect x="5" y="5" width="${(value / 100) * 340}" height="30" fill="#${color}" rx="4" opacity="0.85"/>
+                <text x="15" y="25" fill="#ffffff" font-family="Orbitron, Courier, sans-serif" font-size="14" font-weight="900" letter-spacing="1">${label.toUpperCase()}</text>
+                <text x="335" y="25" fill="#ffffff" font-family="Orbitron, Courier, sans-serif" font-size="14" font-weight="900" text-anchor="end">${value}%</text>
+            </svg>`;
+
+            res.setHeader('Content-Type', 'image/svg+xml');
+            res.setHeader('Cache-Control', 'no-cache');
+            return res.status(200).send(svg);
+        }  
+
+        // ==========================================
+        // 6. PLACEHOLDER IMAGE GENERATOR (SVG)
+        // ==========================================
+        else if (type === 'placeholder') {
+            const w = parseInt(req.query.w) || 300;
+            const h = parseInt(req.query.h) || 300;
+            const bg = parseColor(req.query.bg, '1a1a2e');
+            const color = parseColor(req.query.color, '8a2be2');
+            const text = req.query.text || `${w} x ${h}`;
+
+            const fontSize = Math.max(12, Math.min(w, h) / 8);
+
+            const svg = `
+            <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+                <rect width="${w}" height="${h}" fill="#${bg}"/>
+                <text x="50%" y="50%" fill="#${color}" font-family="Orbitron, Arial, sans-serif" font-size="${fontSize}" font-weight="bold" dominant-baseline="middle" text-anchor="middle">
+                    ${text}
+                </text>
+            </svg>`;
+
+            res.setHeader('Content-Type', 'image/svg+xml');
+            res.setHeader('Cache-Control', 'public, max-age=31536000');
+            return res.status(200).send(svg);
+        }
+
+        // ==========================================
+        // 7. AESTHETIC WAVE BACKGROUND (SVG)
+        // ==========================================
+        else if (type === 'wave') {
+            const color1 = parseColor(req.query.color1, '8a2be2'); 
+            const color2 = parseColor(req.query.color2, '00f3ff'); 
+            const bg = parseColor(req.query.bg, '050505');
+
+            const svg = `
+            <svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#${color1}" />
+                        <stop offset="100%" stop-color="#${color2}" />
+                    </linearGradient>
+                </defs>
+                <rect width="1440" height="320" fill="#${bg}"/>
+                <path fill="url(#waveGrad)" fill-opacity="1" d="M0,160L48,144C96,128,192,96,288,106.7C384,117,480,171,576,165.3C672,160,768,96,864,80C960,64,1056,96,1152,112C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            </svg>`;
+
+            res.setHeader('Content-Type', 'image/svg+xml');
+            res.setHeader('Cache-Control', 'public, max-age=86400');
+            return res.status(200).send(svg);
+        }
+
+        // ==========================================
+        // 8. SECURE TOKEN / PASSWORD GENERATOR
+        // ==========================================
+        else if (type === 'token') {
+            const length = parseInt(req.query.length) || 16;
+            const useSymbols = req.query.symbols === 'true'; 
+
+            const safeLength = Math.min(length, 256); 
+
+            let chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            if (useSymbols) {
+                chars += '!@#$%^&*()_+~`|}{[]:;?><,./-=';
+            }
+
+            let token = '';
+            for (let i = 0; i < safeLength; i++) {
+                token += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: { length: safeLength, includes_symbols: useSymbols, token: token } 
+            });
+        }
+        else {
+            return res.status(404).json({ status: false, message: `Type generator '${type}' tidak ditemukan!` });
+        }
+    }
+
+    // ==========================================
+    // 9. KATEGORI: STIKER
+    // ==========================================
+    else if (kategori === 'stiker') {
+        const keyword = q || query || hero;
+
+        // --- 1. BRAT VIDEO STICKER ---
+        if (type === 'bratvid') {
+            if (!text) return res.status(400).json({ status: false, message: "Parameter 'text' wajib diisi!" });
+            try {
+                const targetUrl = `https://api.pixxxry.eu.cc/sticker/bratvid?text=${encodeURIComponent(text)}`;
+                const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
+                
+                // Biasanya bratvid menghasilkan mp4 atau webp (sticker video)
+                res.setHeader('Content-Type', 'video/mp4'); 
+                return res.status(200).send(response.data);
+            } catch (e) {
+                return res.status(500).json({ status: false, message: "Gagal membuat bratvid: " + e.message });
+            }
+        }
+
+        // --- 2. STICKERLY SEARCH (JSON) ---
+        else if (type === 'stickerly') {
+            if (!keyword) return res.status(400).json({ status: false, message: "Parameter kata kunci (q) wajib diisi!" });
+            try {
+                const targetUrl = `https://api.pixxxry.eu.cc/sticker/stickerly?q=${encodeURIComponent(keyword)}`;
+                const response = await axios.get(targetUrl);
+                
+                let cleanData = response.data.data || response.data;
+                if (cleanData && typeof cleanData === 'object') { 
+                    delete cleanData.creator; 
+                    delete cleanData.status; 
+                }
+
+                return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+            } catch (e) {
+                return res.status(500).json({ status: false, message: "Gagal mencari stickerly: " + e.message });
+            }
+        }
+
+        // --- 3. QUOTELY (QC) ---
+        else if (type === 'qc') {
+            if (!text || !name) return res.status(400).json({ status: false, message: "Parameter 'text' dan 'name' wajib diisi!" });
+            try {
+                // Gunakan avatarUrl dari destructuring atau default pravatar
+                const avatar = avatarUrl || "https://i.pravatar.cc/300";
+                const backgroundColor = bg ? (bg.startsWith('#') ? bg : `#${bg}`) : "#1f2c33";
+                
+                const targetUrl = `https://api.pixxxry.eu.cc/sticker/qc?text=${encodeURIComponent(text)}&name=${encodeURIComponent(name)}&avatar=${encodeURIComponent(avatar)}&background=${encodeURIComponent(backgroundColor)}&format=image`;
+                
+                const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
+                res.setHeader('Content-Type', 'image/png');
+                return res.status(200).send(response.data);
+            } catch (e) {
+                return res.status(500).json({ status: false, message: "Gagal membuat QC: " + e.message });
+            }
+        }
+
+        // --- 4. EMOJIMIX ---
+        else if (type === 'emojimix') {
+            // Kita ambil emoji1 & emoji2 langsung dari req.query karena tidak ada di destructuring awal
+            const { emoji1, emoji2 } = req.query;
+            if (!emoji1 || !emoji2) return res.status(400).json({ status: false, message: "Parameter 'emoji1' dan 'emoji2' wajib diisi!" });
+
+            try {
+                const targetUrl = `https://api.pixxxry.eu.cc/sticker/emojimix?emoji1=${encodeURIComponent(emoji1)}&emoji2=${encodeURIComponent(emoji2)}&q=${encodeURIComponent(emoji1 + '+' + emoji2)}&format=image`;
+                
+                const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
+                res.setHeader('Content-Type', 'image/png');
+                return res.status(200).send(response.data);
+            } catch (e) {
+                return res.status(500).json({ status: false, message: "Gagal membuat emojimix: " + e.message });
+            }
+        }
+        else if (type === 'brat') {
+            if (!text) return res.status(400).json({ status: false, message: "Parameter 'text' wajib diisi" });
+            const targetUrl = `https://brat.siputzx.my.id/image?text=${encodeURIComponent(text)}`;
+            const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
+            res.setHeader('Content-Type', 'image/png');
+            return res.status(200).send(response.data);
+        }
+        else {
+            return res.status(404).json({ status: false, message: `Type stiker '${type}' tidak ditemukan!` });
+        }
+    }
+
+    // ==========================================
+    // 10. KATEGORI: EPHOTO
+    // ==========================================
+     else if (kategori === 'ephoto') {
+        const textInput = q || text || query;
+        
+        const listEffect = [
+            '1917style', 'advancedglow', 'blackpinklogo', 'blackpinkstyle', 'cartoonstyle', 
+            'deletingtext', 'dragonball', 'effectclouds', 'flag3dtext', 'flagtext', 
+            'freecreate', 'galaxy', 'galaxywallpaper', 'glitchtext', 'glowingtext', 
+            'gradienttext', 'lighteffects', 'logomaker', 'luxurygold', 'makingneon', 
+            'neonglitch', 'papercutstyle', 'pixelglitch', 'royaltext', 'sandsummer', 
+            'summerbeach', 'typographytext', 'underwatertext', 'watercolortext', 'writetext'
+        ];
+
+        if (!textInput) return res.status(400).json({ status: false, message: "Parameter teks wajib diisi!" });
+
+        if (listEffect.includes(type)) {
+            try {
+                const targetUrl = `https://api.cuki.biz.id/api/ephoto/${type}?apikey=${apiKeyCuki}&query=${encodeURIComponent(textInput)}`;
+                
+                // PENTING: Gunakan responseType 'arraybuffer' untuk mengambil data gambar
+                const response = await axios.get(targetUrl, {
+                    headers: { 'x-api-key': apiKeyCuki },
+                    responseType: 'arraybuffer' 
+                });
+
+                // SET HEADER AGAR BROWSER TAHU INI ADALAH GAMBAR
+                res.setHeader('Content-Type', 'image/jpeg');
+                res.setHeader('Cache-Control', 'public, max-age=86400');
+                
+                // KIRIM LANGSUNG DATA GAMBARNYA (Bukan JSON!)
+                return res.status(200).send(response.data);
+
+            } catch (e) {
+                return res.status(500).json({ status: false, message: "Gagal memproses gambar: " + e.message });
+            }
+        } else {
+            return res.status(404).json({ status: false, message: `Efek '${type}' tidak ditemukan.` });
+        }
+    }
+
+            // ==========================================
+    // 11. KATEGORI: KOMIK
+    // ==========================================
+    else if (kategori === 'komik') {
+        
+        // --- 1. SEARCH KOMIK (Komikindo) ---
+        if (type === 'search') {
+            const keyword = q || query || text;
+            if (!keyword) return res.status(400).json({ status: false, message: "Parameter 'query' (judul komik) wajib diisi!" });
+
+            try {
+                const targetUrl = `https://api.cuki.biz.id/api/komik/komikindo-search?apikey=${apiKeyCuki}&query=${encodeURIComponent(keyword)}`;
+                const response = await axios.get(targetUrl);
+                
+                let cleanData = response.data.data || response.data;
+                if (cleanData && typeof cleanData === 'object') {
+                    delete cleanData.creator;
+                    delete cleanData.status;
+                }
+
+                return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+            } catch (e) {
+                return res.status(500).json({ status: false, message: "Gagal mencari komik: " + e.message });
+            }
+        }
+
+        // --- 2. DETAIL KOMIK ---
+        else if (type === 'detail') {
+            if (!url) return res.status(400).json({ status: false, message: "Parameter 'url' komik wajib diisi!" });
+
+            try {
+                const targetUrl = `https://api.cuki.biz.id/api/komik/komikindo-detail?apikey=${apiKeyCuki}&url=${encodeURIComponent(url)}`;
+                const response = await axios.get(targetUrl);
+                
+                let cleanData = response.data.data || response.data;
+                if (cleanData && typeof cleanData === 'object') {
+                    delete cleanData.creator;
+                    delete cleanData.status;
+                }
+
+                return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+            } catch (e) {
+                return res.status(500).json({ status: false, message: "Gagal mengambil detail komik: " + e.message });
+            }
+        }
+
+        // --- 3. CHAPTER KOMIK (BACA) ---
+        else if (type === 'chapter') {
+            if (!url) return res.status(400).json({ status: false, message: "Parameter 'url' chapter wajib diisi!" });
+
+            try {
+                const targetUrl = `https://api.cuki.biz.id/api/komik/komikindo-chapter?apikey=${apiKeyCuki}&url=${encodeURIComponent(url)}`;
+                const response = await axios.get(targetUrl);
+                
+                let cleanData = response.data.data || response.data;
+                if (cleanData && typeof cleanData === 'object') {
+                    delete cleanData.creator;
+                    delete cleanData.status;
+                }
+
+                return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
+            } catch (e) {
+                return res.status(500).json({ status: false, message: "Gagal mengambil isi chapter: " + e.message });
+            }
+        }
+        
+        else {
+            return res.status(404).json({ status: false, message: `Type komik '${type}' tidak ditemukan!` });
+        }
+    }
+
+            // ==========================================
+    // 12. KATEGORI: MEME
+    // ==========================================
+    else if (kategori === 'meme') {
+        const listMeme = [
+            'dogecheems', 'hotline', 'jarvis', 'majulu', 
+            'pelajaran', 'pilihan', 'squidwindow', 'twobuttons'
+        ];
+
+        if (listMeme.includes(type)) {
+            // Validasi parameter teks dasar
+            if (!text1 && !text) {
+                return res.status(400).json({ status: false, message: "Minimal parameter 'text1' atau 'text' wajib diisi!" });
+            }
+
+            try {
+                // Membangun URL secara dinamis berdasarkan parameter yang ada
+                let targetUrl = `https://api.cuki.biz.id/api/canvas/meme/${type}?apikey=${apiKeyCuki}`;
+                
+                if (text) targetUrl += `&text=${encodeURIComponent(text)}`;
+                if (text1) targetUrl += `&text1=${encodeURIComponent(text1)}`;
+                if (text2) targetUrl += `&text2=${encodeURIComponent(text2)}`;
+                if (text3) targetUrl += `&text3=${encodeURIComponent(text3)}`;
+
+                const response = await axios.get(targetUrl, { 
+                    headers: { 'x-api-key': apiKeyCuki },
+                    responseType: 'arraybuffer' 
+                });
+
+                res.setHeader('Content-Type', 'image/png');
+                return res.status(200).send(response.data);
+            } catch (e) {
+                return res.status(500).json({ status: false, message: `Gagal membuat meme ${type}: ` + e.message });
+            }
+        } else {
+            return res.status(404).json({ 
+                status: false, 
+                message: `Type meme '${type}' tidak ditemukan!`,
+                available_memes: listMeme
+            });
+        }
+    }
+
+    // ==========================================
+    // JIKA KATEGORI TIDAK DIKENAL
+    // ==========================================
+    else {
+            return res.status(404).json({ status: false, message: `Kategori '${kategori}' tidak ditemukan!` });
+        }
+
+    } catch (e) {
+        // 3. JIKA ADA ERROR AXIOS, TANGKAP DI SINI BIAR VERCEL GAK CRASH
+        return res.status(500).json({ status: false, creator: "InuuTyzDev", message: "Terjadi kesalahan sistem: " + e.message });
+    }
 }
