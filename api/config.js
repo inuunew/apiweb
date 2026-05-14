@@ -261,56 +261,80 @@ export default async function handler(req, res) {
                     "params": [{ "name": "url", "required": true, "description": "Link FastDL" }]
                 }
             ],
-            "search": [
-                {
-                    "name": "Spotify Search",
-                    "endpoint": "/api/search/spotify",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Judul lagu atau artis" }]
-                },
-                {
-                    "name": "Lyrics Search",
-                    "endpoint": "/api/search/lyrics",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Judul lagu" }]
-                },
-                {
-                    "name": "GSM Arena",
-                    "endpoint": "/api/search/gsm",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Nama HP" }]
-                },
-                {
-                    "name": "MLBB Detail",
-                    "endpoint": "/api/search/mlbb",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Nama Hero" }]
-                },
-                {
-                    "name": "App Search",
-                    "endpoint": "/api/search/appsearch",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Nama aplikasi/game" }]
-                },
-                {
-                    "name": "Lazada",
-                    "endpoint": "/api/search/lazada",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Nama produk" }]
-                },
-                {
-                    "name": "Pinterest",
-                    "endpoint": "/api/search/pinterest",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Cari gambar" }]
-                },
-                {
-                    "name": "YouTube Search",
-                    "endpoint": "/api/search/yts",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Cari video YT" }]
-                }
-            ],
+"search": [
+    {
+        "name": "Spotify Search",
+        "endpoint": "/api/search/spotify",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Judul lagu atau artis" }]
+    },
+    {
+        "name": "Lyrics Search",
+        "endpoint": "/api/search/lyrics",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Judul lagu" }]
+    },
+    {
+        "name": "GSM Arena",
+        "endpoint": "/api/search/gsm",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Nama HP" }]
+    },
+    {
+        "name": "MLBB Detail",
+        "endpoint": "/api/search/mlbb",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Nama Hero" }]
+    },
+    {
+        "name": "App Search",
+        "endpoint": "/api/search/appsearch",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Nama aplikasi/game" }]
+    },
+    {
+        "name": "Wikipedia Search",
+        "endpoint": "/api/search/wikipedia",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Kata kunci informasi" }]
+    },
+    {
+        "name": "English Dictionary",
+        "endpoint": "/api/search/dictionary",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Kata dalam bahasa Inggris" }]
+    },
+    {
+        "name": "Country Info",
+        "endpoint": "/api/search/country",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Nama negara" }]
+    },
+    {
+        "name": "NPM Search",
+        "endpoint": "/api/search/npm",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Nama package NPM" }]
+    },
+    {
+        "name": "University Search",
+        "endpoint": "/api/search/univ",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Nama universitas" }]
+    },
+    {
+        "name": "NIK Checker",
+        "endpoint": "/api/search/nik",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "16 digit NIK KTP" }]
+    },
+    {
+        "name": "Google Books",
+        "endpoint": "/api/search/books",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Judul buku" }]
+    }
+], 
             "stalker": [
                 {
                     "name": "Pinterest Stalk",
@@ -343,75 +367,624 @@ export default async function handler(req, res) {
                     "params": [{ "name": "q", "required": true, "description": "Username Threads" }]
                 }
             ],
-            "tools": [
-                {
-                    "name": "SS Web (Full Page)",
-                    "endpoint": "/api/tools/ssweb",
-                    "method": "GET",
-                    "params": [
-                        { "name": "url", "required": true, "description": "URL website (https://...)" },
-                        { "name": "device", "required": false, "description": "Pilihan: mobile / desktop / tablet" }
-                    ]
-                },
-                {
-                    "name": "Get HTML Source",
-                    "endpoint": "/api/tools/getcode",
-                    "method": "GET",
-                    "params": [{ "name": "url", "required": true, "description": "URL website target" }]
-                },
-                {
-                    "name": "Subdomain Scanner",
-                    "endpoint": "/api/tools/subdomain",
-                    "method": "GET",
-                    "params": [{ "name": "domain", "required": true, "description": "Domain utama (google.com)" }]
-                },
-                {
-                    "name": "Kode Pos",
-                    "endpoint": "/api/tools/kodepos",
-                    "method": "GET",
-                    "params": [{ "name": "query", "required": true, "description": "Nama daerah/desa" }]
-                },
-                {
-                    "name": "Country Info",
-                    "endpoint": "/api/tools/countryinfo",
-                    "method": "GET",
-                    "params": [{ "name": "country", "required": true, "description": "Nama negara" }]
-                },
-                {
-                    "name": "Short URL",
-                    "endpoint": "/api/tools/shorturl",
-                    "method": "GET",
-                    "params": [{ "name": "url", "required": true, "description": "Link panjang" }]
-                }, 
-                {
-                    "name": "HTML Encryptor",
-                    "endpoint": "/api/tools/encrypthtml",
-                    "method": "POST",
-                    "params": [
-                        { "name": "html", "required": true, "description": "Source Code HTML lengkap (Mendukung teks sangat panjang)" }
-                    ]
-                }
-            ],
-            "info": [
-                {
-                    "name": "Gempa BMKG",
-                    "endpoint": "/api/info/bmkg",
-                    "method": "GET",
-                    "params": []
-                },
-                {
-                    "name": "Info Cuaca",
-                    "endpoint": "/api/info/cuaca",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Nama lokasi" }]
-                },
-                {
-                    "name": "Jadwal TV",
-                    "endpoint": "/api/info/jadwaltv",
-                    "method": "GET",
-                    "params": [{ "name": "channel", "required": true, "description": "Channel (gtv, rcti, dll)" }]
-                }
-            ], 
+  "tools": [
+    {
+      "name": "VCC Generator",
+      "endpoint": "/api/tools/vccgen",
+      "method": "GET",
+      "description": "Generate nomor kartu kredit virtual untuk keperluan testing",
+      "params": [
+        { "name": "card", "required": false, "placeholder": "Jenis kartu (Visa/Mastercard)" },
+        { "name": "count", "required": false, "placeholder": "Jumlah kartu (default: 1)" }
+      ]
+    },
+    {
+      "name": "Spam NGL",
+      "endpoint": "/api/tools/spamngl",
+      "method": "GET",
+      "description": "Kirim pesan anonim bertubi-tubi ke username NGL melalui API Cuki",
+      "params": [
+        { "name": "link", "required": true, "placeholder": "Username atau link NGL target" },
+        { "name": "message", "required": true, "placeholder": "Pesan yang ingin dikirim" },
+        { "name": "jumlah", "required": false, "placeholder": "Jumlah pesan (default: 1)" }
+      ]
+    },
+    {
+      "name": "Short URL",
+      "endpoint": "/api/tools/shorturl",
+      "method": "GET",
+      "description": "Memperpendek URL yang panjang menjadi lebih ringkas",
+      "params": [
+        { "name": "url", "required": true, "placeholder": "Masukkan URL panjang" }
+      ]
+    },
+    {
+      "name": "Screenshot Web",
+      "endpoint": "/api/tools/ssweb",
+      "method": "GET",
+      "description": "Ambil tangkapan layar dari sebuah website",
+      "params": [
+        { "name": "url", "required": true, "placeholder": "URL website" },
+        { "name": "device", "required": false, "placeholder": "desktop/mobile" }
+      ]
+    },
+    {
+      "name": "Subdomain Finder",
+      "endpoint": "/api/tools/subdomain",
+      "method": "GET",
+      "description": "Mencari daftar subdomain dari sebuah domain utama",
+      "params": [
+        { "name": "domain", "required": true, "placeholder": "Contoh: google.com" }
+      ]
+    },
+    {
+      "name": "Cek Kode Pos",
+      "endpoint": "/api/tools/kodepos",
+      "method": "GET",
+      "description": "Cari informasi kode pos berdasarkan wilayah",
+      "params": [
+        { "name": "query", "required": true, "placeholder": "Nama daerah/wilayah" }
+      ]
+    },
+    {
+      "name": "Country Info",
+      "endpoint": "/api/tools/countryinfo",
+      "method": "GET",
+      "description": "Dapatkan informasi lengkap mengenai suatu negara",
+      "params": [
+        { "name": "country", "required": true, "placeholder": "Nama negara" }
+      ]
+    },
+    {
+      "name": "Get HTML Code",
+      "endpoint": "/api/tools/getcode",
+      "method": "GET",
+      "description": "Mengambil kode sumber HTML dari sebuah URL",
+      "params": [
+        { "name": "url", "required": true, "placeholder": "URL target" }
+      ]
+    },
+    {
+      "name": "Encrypt HTML",
+      "endpoint": "/api/tools/encrypthtml",
+      "method": "POST",
+      "description": "Enkripsi file atau teks HTML agar sulit dibaca",
+      "params": [
+        { "name": "html", "required": true, "placeholder": "Teks HTML atau upload file" }
+      ]
+    }
+  ], 
+
+"idol": [
+    { 
+        "name": "JKT48", 
+        "endpoint": "/api/idol/jkt48", 
+        "method": "GET", 
+        "description": "Foto random member JKT48 (All Gen)",
+        "params": [] 
+    },
+    { 
+        "name": "Blackpink", 
+        "endpoint": "/api/idol/blackpink", 
+        "method": "GET", 
+        "description": "Foto random member Blackpink",
+        "params": [] 
+    },
+    { 
+        "name": "NewJeans", 
+        "endpoint": "/api/idol/newjeans", 
+        "method": "GET", 
+        "description": "Foto aesthetic member NewJeans",
+        "params": [] 
+    },
+    { 
+        "name": "IVE", 
+        "endpoint": "/api/idol/ive", 
+        "method": "GET", 
+        "description": "Foto random member IVE",
+        "params": [] 
+    },
+    { 
+        "name": "Twice", 
+        "endpoint": "/api/idol/twice", 
+        "method": "GET", 
+        "description": "Foto random member Twice",
+        "params": [] 
+    },
+    { 
+        "name": "Aespa", 
+        "endpoint": "/api/idol/aespa", 
+        "method": "GET", 
+        "description": "Foto random member Aespa",
+        "params": [] 
+    },
+    { 
+        "name": "Lesserafim", 
+        "endpoint": "/api/idol/lesserafim", 
+        "method": "GET", 
+        "description": "Foto random member Le Sserafim",
+        "params": [] 
+    },
+    { 
+        "name": "BabyMonster", 
+        "endpoint": "/api/idol/babymonster", 
+        "method": "GET", 
+        "description": "Foto random member BabyMonster",
+        "params": [] 
+    },
+    { 
+        "name": "BTS", 
+        "endpoint": "/api/idol/bts", 
+        "method": "GET", 
+        "description": "Foto random member BTS",
+        "params": [] 
+    },
+    { 
+        "name": "EXO", 
+        "endpoint": "/api/idol/exo", 
+        "method": "GET", 
+        "description": "Foto random member EXO",
+        "params": [] 
+    }
+], 
+"anime": [
+    { 
+        "name": "Random Anime", 
+        "endpoint": "/api/anime/random-anime", 
+        "method": "GET", 
+        "description": "Gambar karakter anime secara acak",
+        "params": [] 
+    },
+    { 
+        "name": "Quotes Anime", 
+        "endpoint": "/api/anime/quotes-anime", 
+        "method": "GET", 
+        "description": "Kata-kata bijak dari berbagai serial anime (OtakOtaku)",
+        "params": [] 
+    },
+    { 
+        "name": "Genshin Impact", 
+        "endpoint": "/api/anime/genshin", 
+        "method": "GET", 
+        "description": "Foto random karakter Genshin Impact (Fanart/Official)",
+        "params": [] 
+    },
+    { 
+        "name": "Blue Archive", 
+        "endpoint": "/api/anime/bluearchive", 
+        "method": "GET", 
+        "description": "Foto random karakter Blue Archive (Sensei's favorite)",
+        "params": [] 
+    }, 
+    { 
+        "name": "Waifu Random", 
+        "endpoint": "/api/anime/waifu", 
+        "method": "GET", 
+        "description": "Foto random waifu (kualitas HD)",
+        "params": [] 
+    },
+    { 
+        "name": "Husbu Random", 
+        "endpoint": "/api/anime/husbu", 
+        "method": "GET", 
+        "description": "Foto random husbu (kualitas HD)",
+        "params": [] 
+    },
+    { 
+        "name": "Neko Girl", 
+        "endpoint": "/api/anime/neko", 
+        "method": "GET", 
+        "description": "Foto gadis kucing anime",
+        "params": [] 
+    },
+    { 
+        "name": "Shinobu Kochou", 
+        "endpoint": "/api/anime/shinobu", 
+        "method": "GET", 
+        "description": "Koleksi foto Shinobu (Demon Slayer)",
+        "params": [] 
+    },
+    { 
+        "name": "Megumin", 
+        "endpoint": "/api/anime/megumin", 
+        "method": "GET", 
+        "description": "Koleksi foto Megumin (Konosuba)",
+        "params": [] 
+    },
+    { 
+        "name": "Rem", 
+        "endpoint": "/api/anime/rem", 
+        "method": "GET", 
+        "description": "Koleksi foto Rem (Re:Zero)",
+        "params": [] 
+    },
+    { 
+        "name": "Emilia", 
+        "endpoint": "/api/anime/emilia", 
+        "method": "GET", 
+        "description": "Koleksi foto Emilia (Re:Zero)",
+        "params": [] 
+    },
+    { 
+        "name": "Elaina", 
+        "endpoint": "/api/anime/elaina", 
+        "method": "GET", 
+        "description": "Koleksi foto Elaina (Majo no Tabitabi)",
+        "params": [] 
+    },
+    { 
+        "name": "Miku Nakano", 
+        "endpoint": "/api/anime/miku", 
+        "method": "GET", 
+        "description": "Koleksi foto Miku (Gotoubun)",
+        "params": [] 
+    },
+    { 
+        "name": "Wallpaper Anime", 
+        "endpoint": "/api/anime/wallpaper", 
+        "method": "GET", 
+        "description": "Wallpaper anime aesthetic untuk HP",
+        "params": [] 
+    }
+], 
+
+"entertainment": [
+    { 
+        "name": "Fakta Unik", 
+        "endpoint": "/api/entertainment/fakta", 
+        "method": "GET", 
+        "description": "Menampilkan fakta unik dan menarik dari seluruh dunia",
+        "params": [] 
+    },
+    { 
+        "name": "Quotes Bijak", 
+        "endpoint": "/api/entertainment/quotes", 
+        "method": "GET", 
+        "description": "Koleksi kutipan bijak dari tokoh ternama",
+        "params": [] 
+    },
+    { 
+        "name": "Meme Random", 
+        "endpoint": "/api/entertainment/meme", 
+        "method": "GET", 
+        "description": "Menampilkan gambar meme lucu secara acak",
+        "params": [] 
+    },
+    { 
+        "name": "Dark Joke", 
+        "endpoint": "/api/entertainment/darkjoke", 
+        "method": "GET", 
+        "description": "Koleksi lelucon gelap (dark humor)",
+        "params": [] 
+    },
+    { 
+        "name": "Pantun", 
+        "endpoint": "/api/entertainment/pantun", 
+        "method": "GET", 
+        "description": "Menampilkan pantun jenaka, cinta, atau nasihat secara acak",
+        "params": [] 
+    },
+    { 
+        "name": "Tebak Gambar", 
+        "endpoint": "/api/entertainment/tebak-gambar", 
+        "method": "GET", 
+        "description": "Game menebak maksud dari kumpulan gambar",
+        "params": [] 
+    },
+    { 
+        "name": "Asah Otak", 
+        "endpoint": "/api/entertainment/asahi", 
+        "method": "GET", 
+        "description": "Permainan logika untuk menguji kecerdasan",
+        "params": [] 
+    },
+    { 
+        "name": "Susun Kata", 
+        "endpoint": "/api/entertainment/susunkata", 
+        "method": "GET", 
+        "description": "Game menyusun huruf menjadi kata yang benar",
+        "params": [] 
+    },
+    { 
+        "name": "Tebak Lirik", 
+        "endpoint": "/api/entertainment/tebak-lirik", 
+        "method": "GET", 
+        "description": "Teka-teki menebak judul lagu berdasarkan potongan lirik",
+        "params": [] 
+    },
+    { 
+        "name": "Siapakah Aku?", 
+        "endpoint": "/api/entertainment/siapakah-aku", 
+        "method": "GET", 
+        "description": "Teka-teki deskriptif tentang benda, hewan, atau profesi",
+        "params": [] 
+    },
+    { 
+        "name": "Gombalan", 
+        "endpoint": "/api/entertainment/gombal", 
+        "method": "GET", 
+        "description": "Koleksi kata-kata gombal maut untuk pasangan",
+        "params": [] 
+    },
+    { 
+        "name": "Pick Up Lines", 
+        "endpoint": "/api/entertainment/pickline", 
+        "method": "GET", 
+        "description": "Koleksi kalimat pembuka percakapan yang menarik",
+        "params": [] 
+    },
+    { 
+        "name": "Hilih Teks", 
+        "endpoint": "/api/entertainment/hilih", 
+        "method": "GET", 
+        "description": "Mengubah semua huruf vokal menjadi 'i'",
+        "params": [{ "name": "q", "required": true, "description": "Teks yang ingin diubah" }] 
+    },
+    { 
+        "name": "Kata Lucu", 
+        "endpoint": "/api/entertainment/kata-lucu", 
+        "method": "GET", 
+        "description": "Koleksi kalimat singkat yang menghibur",
+        "params": [] 
+    },
+    { 
+        "name": "Arti Nama", 
+        "endpoint": "/api/entertainment/artinama", 
+        "method": "GET", 
+        "description": "Menganalisis arti dari sebuah nama",
+        "params": [{ "name": "q", "required": true, "description": "Nama yang ingin dicari artinya" }] 
+    }, 
+    { 
+        "name": "Tebak Kabupaten", 
+        "endpoint": "/api/entertainment/tebak-kabupaten", 
+        "method": "GET", 
+        "description": "Game menebak nama kabupaten di Indonesia melalui gambar",
+        "params": [] 
+    },
+    { 
+        "name": "Tebak Bendera", 
+        "endpoint": "/api/entertainment/tebak-bendera", 
+        "method": "GET", 
+        "description": "Game menebak bendera negara di dunia",
+        "params": [] 
+    },
+    { 
+        "name": "Tebak Kimia", 
+        "endpoint": "/api/entertainment/tebak-kimia", 
+        "method": "GET", 
+        "description": "Game menebak unsur kimia berdasarkan simbol atau nama",
+        "params": [] 
+    },
+    { 
+        "name": "Cak Lontong", 
+        "endpoint": "/api/entertainment/caklontong", 
+        "method": "GET", 
+        "description": "Teka-teki sulit dan jenaka khas Cak Lontong",
+        "params": [] 
+    },
+    { 
+        "name": "Tebak Kata", 
+        "endpoint": "/api/entertainment/tebak-kata", 
+        "method": "GET", 
+        "description": "Permainan menebak kata berdasarkan petunjuk",
+        "params": [] 
+    },
+    { 
+        "name": "Tebak Jenaka", 
+        "endpoint": "/api/entertainment/tebak-jenaka", 
+        "method": "GET", 
+        "description": "Teka-teki lucu dan menghibur",
+        "params": [] 
+    },
+    { 
+        "name": "Genshin Character", 
+        "endpoint": "/api/entertainment/genshin", 
+        "method": "GET", 
+        "description": "Informasi random karakter dari game Genshin Impact",
+        "params": [] 
+    },
+    { 
+        "name": "Kata-kata Sad", 
+        "endpoint": "/api/entertainment/kata-sad", 
+        "method": "GET", 
+        "description": "Koleksi kalimat galau dan sedih",
+        "params": [] 
+    },
+    { 
+        "name": "Motivasi", 
+        "endpoint": "/api/entertainment/motivasi", 
+        "method": "GET", 
+        "description": "Kata-kata motivasi untuk membangkitkan semangat",
+        "params": [] 
+    },
+    { 
+        "name": "Teka-teki", 
+        "endpoint": "/api/entertainment/tekateki", 
+        "method": "GET", 
+        "description": "Kumpulan teka-teki klasik beserta jawabannya",
+        "params": [] 
+    },
+    { 
+        "name": "Cerpen", 
+        "endpoint": "/api/entertainment/cerpen", 
+        "method": "GET", 
+        "description": "Cerita pendek secara acak dengan berbagai genre",
+        "params": [] 
+    },
+    { 
+        "name": "Puisi", 
+        "endpoint": "/api/entertainment/puisi", 
+        "method": "GET", 
+        "description": "Koleksi puisi indah dan bermakna",
+        "params": [] 
+    },
+    { 
+        "name": "Wallpaper Estetik", 
+        "endpoint": "/api/entertainment/estetik", 
+        "method": "GET", 
+        "description": "Link gambar wallpaper dengan tema estetik",
+        "params": [] 
+    }
+], 
+
+"primbon": [
+    { 
+        "name": "Arti Nama", 
+        "endpoint": "/api/primbon/artinama", 
+        "method": "GET", 
+        "description": "Mengetahui arti dan karakter berdasarkan nama seseorang",
+        "params": [{ "name": "q", "required": true, "description": "Nama yang ingin dicari" }] 
+    },
+    { 
+        "name": "Arti Mimpi", 
+        "endpoint": "/api/primbon/artimimpi", 
+        "method": "GET", 
+        "description": "Tafsir mimpi berdasarkan buku primbon jawa",
+        "params": [{ "name": "q", "required": true, "description": "Mimpi yang dialami" }] 
+    },
+    { 
+        "name": "Cek Jodoh", 
+        "endpoint": "/api/primbon/jodoh", 
+        "method": "GET", 
+        "description": "Menghitung tingkat kecocokan antara dua nama",
+        "params": [
+            { "name": "nama1", "required": true, "description": "Nama orang pertama" },
+            { "name": "nama2", "required": true, "description": "Nama orang kedua" }
+        ] 
+    },
+    { 
+        "name": "Watak Weton", 
+        "endpoint": "/api/primbon/watak", 
+        "method": "GET", 
+        "description": "Mengetahui sifat dan karakter berdasarkan weton kelahiran",
+        "params": [
+            { "name": "tgl", "required": true, "description": "Tanggal (1-31)" },
+            { "name": "bln", "required": true, "description": "Bulan (1-12)" },
+            { "name": "thn", "required": true, "description": "Tahun (Contoh: 1995)" }
+        ] 
+    },
+    { 
+        "name": "Ramalan Nasib", 
+        "endpoint": "/api/primbon/nasib", 
+        "method": "GET", 
+        "description": "Melihat ramalan nasib di masa depan berdasarkan tanggal lahir",
+        "params": [
+            { "name": "tgl", "required": true, "description": "Tanggal" },
+            { "name": "bln", "required": true, "description": "Bulan" },
+            { "name": "thn", "required": true, "description": "Tahun" }
+        ] 
+    },
+    { 
+        "name": "Zodiak", 
+        "endpoint": "/api/primbon/zodiak", 
+        "method": "GET", 
+        "description": "Ramalan mingguan berdasarkan zodiak",
+        "params": [{ "name": "q", "required": true, "description": "Nama zodiak (Contoh: Leo)" }] 
+    },
+    { 
+        "name": "Shio", 
+        "endpoint": "/api/primbon/shio", 
+        "method": "GET", 
+        "description": "Melihat karakter dan ramalan berdasarkan shio",
+        "params": [{ "name": "q", "required": true, "description": "Nama shio (Contoh: Naga)" }] 
+    },
+    { 
+        "name": "Nomor Hoki", 
+        "endpoint": "/api/primbon/nomorhoki", 
+        "method": "GET", 
+        "description": "Mengecek keberuntungan berdasarkan nomor telepon atau angka",
+        "params": [{ "name": "q", "required": true, "description": "Nomor yang ingin dicek" }] 
+    },
+    { 
+        "name": "Garis Tangan", 
+        "endpoint": "/api/primbon/garistangan", 
+        "method": "GET", 
+        "description": "Membaca karakter melalui bentuk garis tangan secara umum",
+        "params": [] 
+    },
+    { 
+        "name": "Rezeki Harian", 
+        "endpoint": "/api/primbon/rezeki", 
+        "method": "GET", 
+        "description": "Ramalan keberuntungan finansial hari ini",
+        "params": [
+            { "name": "tgl", "required": true, "description": "Tanggal" },
+            { "name": "bln", "required": true, "description": "Bulan" },
+            { "name": "thn", "required": true, "description": "Tahun" }
+        ] 
+    },
+    { 
+        "name": "Hari Baik", 
+        "endpoint": "/api/primbon/haribaik", 
+        "method": "GET", 
+        "description": "Mencari hari baik untuk memulai hajat atau kegiatan",
+        "params": [
+            { "name": "tgl", "required": true, "description": "Tanggal" },
+            { "name": "bln", "required": true, "description": "Bulan" },
+            { "name": "thn", "required": true, "description": "Tahun" }
+        ] 
+    },
+    { 
+        "name": "Hari Larangan", 
+        "endpoint": "/api/primbon/harilarangan", 
+        "method": "GET", 
+        "description": "Mengecek hari-hari yang sebaiknya dihindari",
+        "params": [
+            { "name": "tgl", "required": true, "description": "Tanggal" },
+            { "name": "bln", "required": true, "description": "Bulan" },
+            { "name": "thn", "required": true, "description": "Tahun" }
+        ] 
+    },
+    { 
+        "name": "Arah Rezeki", 
+        "endpoint": "/api/primbon/arahrezeki", 
+        "method": "GET", 
+        "description": "Menentukan arah keberuntungan berdasarkan weton",
+        "params": [
+            { "name": "tgl", "required": true, "description": "Tanggal" },
+            { "name": "bln", "required": true, "description": "Bulan" },
+            { "name": "thn", "required": true, "description": "Tahun" }
+        ] 
+    },
+    { 
+        "name": "Pekerjaan Weton", 
+        "endpoint": "/api/primbon/pekerjaan", 
+        "method": "GET", 
+        "description": "Rekomendasi jenis pekerjaan yang cocok berdasarkan hari lahir",
+        "params": [
+            { "name": "tgl", "required": true, "description": "Tanggal" },
+            { "name": "bln", "required": true, "description": "Bulan" },
+            { "name": "thn", "required": true, "description": "Tahun" }
+        ] 
+    },
+    { 
+        "name": "Sifat Usaha", 
+        "endpoint": "/api/primbon/usaha", 
+        "method": "GET", 
+        "description": "Melihat kecocokan bidang usaha berdasarkan nama",
+        "params": [{ "name": "q", "required": true, "description": "Nama atau bidang usaha" }] 
+    },
+    { 
+        "name": "Pranata Mangsa", 
+        "endpoint": "/api/primbon/pranatamangsa", 
+        "method": "GET", 
+        "description": "Penanggalan musim tradisional jawa untuk pertanian dan alam",
+        "params": [
+            { "name": "tgl", "required": true, "description": "Tanggal" },
+            { "name": "bln", "required": true, "description": "Bulan" },
+            { "name": "thn", "required": true, "description": "Tahun" }
+        ] 
+    }
+], 
+
+"info": [
+    { "name": "BMKG Info", "endpoint": "/api/info/bmkg", "method": "GET", "params": [] },
+    { "name": "Cuaca Daerah", "endpoint": "/api/info/cuaca", "method": "GET", "params": [{ "name": "q", "required": true }] },
+    { "name": "Jadwal TV", "endpoint": "/api/info/jadwaltv", "method": "GET", "params": [{ "name": "q", "required": true, "description": "Nama channel" }] },
+    { "name": "Wikipedia", "endpoint": "/api/info/wikipedia", "method": "GET", "params": [{ "name": "q", "required": true }] },
+    { "name": "KBBI", "endpoint": "/api/info/kbbi", "method": "GET", "params": [{ "name": "q", "required": true }] },
+    { "name": "Gempa Terkini", "endpoint": "/api/info/gempa", "method": "GET", "params": [] }
+], 
             "generator": [
                 {
                     "name": "QR Code SVG",
@@ -881,6 +1454,164 @@ export default async function handler(req, res) {
                     ]
                 }
             ],
+            
+  "movie": [
+    {
+      "name": "Melolo Home",
+      "endpoint": "/api/movie/melolo-home",
+      "method": "GET",
+      "description": "Konten homepage dari platform streaming Melolo",
+      "params": []
+    },
+    {
+      "name": "Melolo Search",
+      "endpoint": "/api/movie/melolo-search",
+      "method": "GET",
+      "description": "Pencarian drama dari platform Melolo",
+      "params": [
+        { "name": "query", "required": true, "placeholder": "Masukkan judul drama (cth: ceo)" }
+      ]
+    },
+    {
+      "name": "Melolo Detail",
+      "endpoint": "/api/movie/melolo-detail",
+      "method": "GET",
+      "description": "Detail lengkap drama Melolo",
+      "params": [
+        { "name": "url", "required": true, "placeholder": "URL drama dari Melolo" }
+      ]
+    },
+    {
+      "name": "Melolo Download",
+      "endpoint": "/api/movie/melolo-download",
+      "method": "GET",
+      "description": "Link download episode drama Melolo",
+      "params": [
+        { "name": "url", "required": true, "placeholder": "URL episode drama" }
+      ]
+    },
+    {
+      "name": "Melolo Category",
+      "endpoint": "/api/movie/melolo-category",
+      "method": "GET",
+      "description": "Jelajahi drama berdasarkan kategori Melolo",
+      "params": [
+        { "name": "url", "required": true, "placeholder": "URL kategori (cth: romance)" }
+      ]
+    },
+    {
+      "name": "Donghua Search",
+      "endpoint": "/api/movie/donghua-search",
+      "method": "GET",
+      "description": "Pencarian donghua",
+      "params": [
+        { "name": "query", "required": true, "placeholder": "Judul donghua" },
+        { "name": "page", "required": false, "placeholder": "Halaman" }
+      ]
+    },
+    {
+      "name": "Donghua Detail",
+      "endpoint": "/api/movie/donghua-detail",
+      "method": "GET",
+      "description": "Detail lengkap Donghua",
+      "params": [
+        { "name": "url", "required": true, "placeholder": "URL detail donghua" }
+      ]
+    },
+    {
+      "name": "Drakor Search",
+      "endpoint": "/api/movie/drakor-search",
+      "method": "GET",
+      "description": "Pencarian drama Korea",
+      "params": [
+        { "name": "query", "required": true, "placeholder": "Judul drakor" }
+      ]
+    },
+    {
+      "name": "iQiyi Search",
+      "endpoint": "/api/movie/iq-search",
+      "method": "GET",
+      "description": "Pencarian film dari iQiyi",
+      "params": [
+        { "name": "query", "required": true, "placeholder": "Judul film" }
+      ]
+    },
+    {
+      "name": "iQiyi Detail",
+      "endpoint": "/api/movie/iq-detail",
+      "method": "GET",
+      "description": "Detail film dari iQiyi",
+      "params": [
+        { "name": "query", "required": true, "placeholder": "ID/Judul film" }
+      ]
+    },
+    {
+      "name": "DramaBos Search",
+      "endpoint": "/api/movie/dramabos-search",
+      "method": "GET",
+      "description": "Pencarian DramaBos",
+      "params": [
+        { "name": "query", "required": true, "placeholder": "Masukkan judul" }
+      ]
+    },
+    {
+      "name": "Netflix Trending",
+      "endpoint": "/api/movie/netflix-trending",
+      "method": "GET",
+      "description": "Film trending di Netflix",
+      "params": [
+        { "name": "language", "required": false, "placeholder": "Bahasa (cth: id)" }
+      ]
+    },
+    {
+      "name": "PusatFilm21 Search",
+      "endpoint": "/api/movie/pusatfilm-search",
+      "method": "GET",
+      "description": "Pencarian film di PusatFilm21",
+      "params": [
+        { "name": "query", "required": true, "placeholder": "Judul film" }
+      ]
+    }
+  ], 
+
+    "berita": [
+        {
+            "name": "Detik News",
+            "endpoint": "/api/berita/detik",
+            "method": "GET",
+            "params": [],
+            "description": "Berita terbaru dari portal Detik.com"
+        },
+        {
+            "name": "CNBC Indonesia",
+            "endpoint": "/api/berita/cnbc",
+            "method": "GET",
+            "params": [],
+            "description": "Berita ekonomi, bisnis, dan teknologi"
+        },
+        {
+            "name": "Kompas News",
+            "endpoint": "/api/berita/kompas",
+            "method": "GET",
+            "params": [],
+            "description": "Berita nasional terpercaya dari Kompas"
+        },
+        {
+            "name": "Antara News",
+            "endpoint": "/api/berita/antara",
+            "method": "GET",
+            "params": [],
+            "description": "Berita terkini dari kantor berita Antara"
+        },
+        {
+            "name": "Suara News",
+            "endpoint": "/api/berita/suara",
+            "method": "GET",
+            "params": [],
+            "description": "Berita terkini dari Suara.com"
+        }
+    ], 
+
             "ephoto": [
                 {
                     "name": "1917 Style",
@@ -1063,46 +1794,6 @@ export default async function handler(req, res) {
                     "params": [{ "name": "q", "required": true, "description": "Teks tulis tangan" }]
                 }
             ],
-"stiker": [
-    {
-        "name": "Brat Video",
-        "endpoint": "/api/stiker/bratvid",
-        "method": "GET",
-        "params": [{ "name": "text", "required": true, "description": "Teks untuk stiker video brat" }]
-    },
-    {
-        "name": "Stickerly Search",
-        "endpoint": "/api/stiker/stickerly",
-        "method": "GET",
-        "params": [{ "name": "q", "required": true, "description": "Kata kunci stiker" }]
-    },
-    {
-        "name": "Quotely (QC)",
-        "endpoint": "/api/stiker/qc",
-        "method": "GET",
-        "params": [
-            { "name": "text", "required": true, "description": "Isi pesan" },
-            { "name": "name", "required": true, "description": "Nama pengirim" },
-            { "name": "avatarUrl", "required": false, "description": "Link foto profil (opsional)" },
-            { "name": "bg", "required": false, "description": "Warna background hex tanpa # (opsional)" }
-        ]
-    },
-    {
-        "name": "Emojimix",
-        "endpoint": "/api/stiker/emojimix",
-        "method": "GET",
-        "params": [
-            { "name": "emoji1", "required": true, "description": "Emoji pertama" },
-            { "name": "emoji2", "required": true, "description": "Emoji kedua" }
-        ]
-    },
-    {
-        "name": "Brat Sticker",
-        "endpoint": "/api/stiker/brat",
-        "method": "GET",
-        "params": [{ "name": "text", "required": true, "description": "Teks stiker brat" }]
-    }
-], 
             "canvas": [
                 {
                     "name": "Circle Avatar",
