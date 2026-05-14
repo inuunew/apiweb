@@ -1022,67 +1022,64 @@ if (type === 'qr') {
 // 8. KATEGORI: AI IMAGE
 // ==========================================
 else if (kategori === 'ai-image') {
+    // 1. Ambil semua kemungkinan input dari query
+    const { type, url, q, query, prompt } = req.query;
+    
+    // 2. Normalisasi input agar fleksibel
     const imageUrl = url || q || query;
     const textPrompt = prompt || q || query;
 
-    // Konfigurasi Axios agar tidak mudah error/di-block
     const axiosConfig = {
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        },
-        timeout: 25000 // AI butuh waktu agak lama, kita beri 25 detik
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        timeout: 30000 
     };
 
-    // --- 8A. IMAGE TRANSFORMATION (Wajib URL) ---
+    // --- 8A. IMAGE TRANSFORMATION (Butuh URL) ---
     const imageTransforms = ['torealistic', 'tocinematic', 'tofigure', 'toghibli', 'toanime'];
     
     if (imageTransforms.includes(type)) {
         if (!imageUrl) return res.status(400).json({ status: false, message: "Parameter 'url' gambar wajib diisi!" });
         
         try {
-            // Gunakan parameter 'url' untuk transformasi gambar
+            // PENTING: Gunakan parameter ?url= untuk kategori ini
             const targetUrl = `https://www.neoapis.xyz/api/ai-image/${type}?url=${encodeURIComponent(imageUrl)}`;
             const response = await axios.get(targetUrl, axiosConfig);
-            const data = response.data;
+            
+            // Ambil data dengan fallback jika result-nya aneh
+            const resultData = response.data.result?.url || response.data.result || response.data.url;
 
             return res.status(200).json({ 
                 status: true, 
                 creator: "InuuTyzDev", 
-                result: { image_url: data.result?.url || data.result || data.url }
+                result: resultData ? { image_url: resultData } : {} 
             });
         } catch (error) {
              return res.status(500).json({ status: false, message: `Gagal transform: ${type}` });
         }
     }
 
-    // --- 8B. TEXT TO IMAGE (Wajib PROMPT) ---
+    // --- 8B. TEXT TO IMAGE (Butuh PROMPT) ---
     else if (type === 'ailabs' || type === 'deepai') {
         if (!textPrompt) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
 
         try {
-            // Gunakan parameter 'prompt' untuk generate gambar dari teks
+            // PENTING: Gunakan parameter ?prompt= untuk kategori ini
             const targetUrl = `https://www.neoapis.xyz/api/ai-image/${type}?prompt=${encodeURIComponent(textPrompt)}`;
             const response = await axios.get(targetUrl, axiosConfig);
-            const data = response.data;
+            
+            const resultData = response.data.result?.url || response.data.result || response.data.url;
 
             return res.status(200).json({ 
                 status: true, 
                 creator: "InuuTyzDev", 
-                result: { image_url: data.result?.url || data.result || data.url }
+                result: resultData ? { image_url: resultData } : {} 
             });
         } catch (error) {
              return res.status(500).json({ status: false, message: `Gagal generate: ${type}` });
         }
     }
-
-    else {
-        return res.status(400).json({ 
-            status: false, 
-            creator: "InuuTyzDev", 
-            message: `Type AI Image '${type}' tidak ditemukan.` 
-        });
-    }
 }
+
 
 
 
