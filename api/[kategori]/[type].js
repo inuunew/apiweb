@@ -1900,21 +1900,21 @@ else if (kategori === 'anime') {
     const getRandom = (array) => array[Math.floor(Math.random() * array.length)];
     
     try {
-        // --- FEATURE: RANDOM ANIME IMAGE (DARI EXTERNAL REPO) ---
+        // 1. CEK TYPE: RANDOM ANIME (DARI EXTERNAL REPO)
         if (type === 'random-anime') {
             const response = await axios.get(`https://raw.githubusercontent.com/MyImg-Archive/dibacot/main/anime.json`);
-            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: getRandom(response.data) });
+            return res.status(200).json({ 
+                status: true, 
+                creator: "InuuTyzDev", 
+                result: getRandom(response.data) 
+            });
         }
         
-        // --- FEATURE: QUOTES ANIME (DARI VERCEL API) ---
-                // --- FEATURE: PREMIUM QUOTES ANIME (OTAKOTAKU) ---
+        // 2. CEK TYPE: QUOTES ANIME
         else if (type === 'quotes-anime') {
             try {
-                // Kita ambil halaman random (misal 1-50) agar quotes tidak itu-itu saja
                 const page = Math.floor(Math.random() * 50) + 1;
                 const response = await axios.get(`https://otakotaku.com/quote/feed/${page}`);
-                
-                // Ambil satu quotes secara acak dari hasil array 'results'
                 const results = response.data.results;
                 const randomQuote = results[Math.floor(Math.random() * results.length)];
                 
@@ -1934,10 +1934,9 @@ else if (kategori === 'anime') {
             }
         }
 
-
-        // --- FEATURE: DINAMIS (GENSHIN, BLUE ARCHIVE, WAIFU, DLL) ---
-        // Mencari file otomatis di repo kamu sendiri berdasarkan 'type'
+        // 3. CEK TYPE: DINAMIS (GENSHIN, WAIFU, DLL - BERDASARKAN DATABASE SENDIRI)
         else {
+            // Kita coba ambil data berdasarkan 'type' yang diinput user
             const response = await axios.get(`https://raw.githubusercontent.com/Inuutyz/database/main/anime/${type}.json`);
             return res.status(200).json({ 
                 status: true, 
@@ -1945,13 +1944,16 @@ else if (kategori === 'anime') {
                 result: getRandom(response.data) 
             });
         }
+
     } catch (e) {
+        // Jika file JSON tidak ditemukan di repo atau server down
         return res.status(404).json({ 
             status: false, 
-            message: `Data anime tipe '${type}' tidak ditemukan atau server tujuan sedang down.` 
+            message: `Data anime tipe '${type}' tidak ditemukan atau server sedang gangguan.` 
         });
     }
 }
+
 
 else if (kategori === 'movie') {
     const keyword = q || query || searchText;
