@@ -1419,98 +1419,71 @@ export default async function handler(req, res) {
             }
         }
 
-        // ==========================================
-        // 16. KATEGORI: ENTERTAINMENT
-        // ==========================================
-        else if (kategori === 'entertainment') {
+// ==========================================
+// 16. KATEGORI: ENTERTAINMENT
+// ==========================================
+else if (kategori === 'entertainment') {
     const getRandom = (array) => array[Math.floor(Math.random() * array.length)];
 
-    // Fungsi pembantu untuk ambil data dari database/entertainment.json
-    const getLocalData = (key) => {
-        try {
-            const dbPath = path.join(__dirname, './database/entertainment.json');
-            if (!fs.existsSync(dbPath)) return null;
-            const data = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
-            if (data[key] && Array.isArray(data[key])) {
-                return getRandom(data[key]);
-            }
-            return null;
-        } catch (e) {
-            console.error("Database Error:", e);
-            return null;
-        }
-    };
+    const localTypes = [
+        'fakta', 'darkjoke', 'pantun', 'gombal', 'kata-lucu', 'kata-sad',
+        'pickline', 'tekateki', 'caklontong', 'tebak-jenaka', 'motivasi',
+        'asahi', 'susunkata', 'siapakah-aku', 'tebak-kata', 'tebak-lirik',
+        'cerpen', 'puisi', 'tebak-gambar', 'tebak-kabupaten', 'tebak-bendera',
+        'tebak-kimia'
+    ];
 
     try {
-        switch (type) {
-            // --- GROUP 1: API EKSTERNAL & LOGIKA KHUSUS ---
-            case 'meme': {
-                const { data } = await axios.get('https://meme-api.com/gimme');
-                return res.status(200).json({ status: true, creator, result: { title: data.title, url: data.url } });
-            }
+        if (localTypes.includes(type)) {
+            const entertainmentData = (await import('/database/entertainment.json', { assert: { type: 'json' } })).default;
+            const data = entertainmentData[type];
+            if (!data) return res.status(404).json({ status: false, message: `Type '${type}' tidak ditemukan!` });
+            return res.status(200).json({ status: true, result: getRandom(data) });
 
-            case 'genshin': {
-                const { data } = await axios.get('https://genshin-db-api.vercel.app/api/v5/characters?query=all');
-                return res.status(200).json({ status: true, creator, result: getRandom(data) });
-            }
+        } else if (type === 'quotes') {
+            const resData = await axios.get('https://zenquotes.io/api/random');
+            return res.status(200).json({ status: true, result: resData.data[0]?.q || "Tidak ada quotes." });
 
-            case 'quotes': {
-                const { data } = await axios.get('https://api.quotable.io/random');
-                return res.status(200).json({ status: true, creator, result: { author: data.author, quote: data.content } });
-            }
+        } else if (type === 'meme') {
+            const resData = await axios.get('https://meme-api.com/gimme');
+            return res.status(200).json({ status: true, result: { title: resData.data.title, url: resData.data.url } });
 
-            case 'estetik': {
-                const url = `https://picsum.photos/1080/1920?random=${Math.random()}`;
-                return res.status(200).json({ status: true, creator, result: url });
-            }
+        } else if (type === 'hilih') {
+            if (!q) return res.status(400).json({ status: false, message: "Masukkan parameter q!" });
+            const result = q.replace(/[aiueo]/gi, 'i');
+            return res.status(200).json({ status: true, result });
 
-            case 'hilih': {
-                if (!q) return res.status(400).json({ status: false, message: "Masukkan parameter q!" });
-                return res.status(200).json({ status: true, creator, result: q.replace(/[aiueo]/gi, 'i') });
-            }
+        } else if (type === 'genshin') {
+            const response = await axios.get('https://genshin.jmp.blue/characters/all?lang=en');
+            return res.status(200).json({ status: true, result: getRandom(response.data) });
 
-            case 'artinama': {
-                if (!q) return res.status(400).json({ status: false, message: "Masukkan nama!" });
-                const { data } = await axios.get(`https://www.primbon.com/arti_nama.php?nama1=${q}&proses=+Submit%21+`);
-                const cheerio = require('cheerio');
-                const $ = cheerio.load(data);
-                let isi = $('#body').text().split('ARTI NAMA')[1];
-                let hasil = isi?.split('TIDAK TERDAFTAR')[0]?.trim();
-                if (!hasil) return res.status(404).json({ status: false, message: "Nama tidak ditemukan." });
-                return res.status(200).json({ status: true, creator, result: { nama: q, arti: hasil } });
-            }
+        } else if (type === 'estetik') {
+            const list = [
+                "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
+                "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b"
+            ];
+            return res.status(200).json({ status: true, result: getRandom(list) });
 
-            // --- GROUP 2: OTOMATIS DARI JSON (DEFAULT) ---
-            /* Mencakup semua kategori yang sudah kita buat:
-               fakta, darkjoke, pantun, tebak-gambar, asahi, susunkata, 
-               tebak-lirik, siapakah-aku, gombal, pickline, tebak-kabupaten, 
-               tebak-bendera, tebak-kimia, caklontong, tebak-kata, tebak-jenaka, 
-               motivasi, tekateki, cerpen, puisi, kata-lucu, kata-sad.
-            */
-            default: {
-                if (!type) return res.status(400).json({ status: false, message: "Parameter 'type' diperlukan!" });
-                
-                const dataLokal = getLocalData(type);
-                if (dataLokal) {
-                    return res.status(200).json({ status: true, creator, result: dataLokal });
-                } else {
-                    return res.status(404).json({ status: false, message: `Type '${type}' tidak ditemukan!` });
-                }
-            }
+        } else {
+            return res.status(404).json({ status: false, message: `Type entertainment '${type}' tidak ditemukan!` });
         }
+
     } catch (e) {
-        console.error(e);
-        return res.status(500).json({ status: false, message: "Gagal memproses fitur entertainment." });
+        return res.status(500).json({ status: false, message: "Error saat mengambil data hiburan: " + e.message });
     }
 }
-
 
         // ==========================================
         // 17. KATEGORI: PRIMBON
         // ==========================================
         else if (kategori === 'primbon') {
             try {
-                 if (type === 'artimimpi') {
+                if (type === 'artinama') {
+                    if (!q) return res.status(400).json({ status: false, message: "Parameter 'q' (nama) wajib diisi!" });
+                    const response = await axios.get(`https://api.lolhuman.xyz/api/primbon/artinama?name=${encodeURIComponent(q)}`);
+                    return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result });
+
+                } else if (type === 'artimimpi') {
                     if (!q) return res.status(400).json({ status: false, message: "Parameter 'q' (mimpi) wajib diisi!" });
                     const response = await axios.get(`https://api.lolhuman.xyz/api/primbon/artimimpi?query=${encodeURIComponent(q)}`);
                     return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.result });
