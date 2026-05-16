@@ -1607,7 +1607,7 @@ else if (kategori === 'entertainment') {
         const danzyApiUrl = `https://api.danzy.web.id/api/search/pinterest?q=${encodeURIComponent(targetSearch)}`;
         
         const { data } = await axios.get(danzyApiUrl, {
-            headers: { 'User-Agent': 'Mozilla/5.0' },
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
             timeout: 10000
         });
 
@@ -1622,15 +1622,19 @@ else if (kategori === 'entertainment') {
 
         // 3. Ambil 1 objek data secara acak dari array 'result'
         const randomResult = getRandom(data.result);
-        
-        // Ambil URL gambar langsung apa adanya dari response API tanpa diubah-ubah ukurannya
         const finalImageUrl = randomResult.image;
 
-        // 4. LOGIKA DOWNLOAD DAN DIRECT SEND GAMBAR
+        // 4. LOGIKA DOWNLOAD DENGAN HEADER PENYAMARAN (ANTI-ERROR 403)
         const imageResponse = await axios.get(finalImageUrl, { 
             responseType: 'arraybuffer',
             timeout: 15000,
-            headers: { 'User-Agent': 'Mozilla/5.0' }
+            headers: { 
+                // Header wajib agar Pinterest mengira ini adalah request dari browser asli, bukan bot Vercel
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9,id;q=0.8',
+                'Referer': 'https://www.pinterest.com/' // Berpura-pura seolah kita melihat gambar dari web Pinterest langsung
+            }
         });
 
         // Set header content-type sesuai tipe gambar asli lalu kirim buffernya
@@ -1646,6 +1650,7 @@ else if (kategori === 'entertainment') {
         });
     }
 }
+
 
         // ==========================================
         // 19. KATEGORI: ANIME
