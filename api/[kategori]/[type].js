@@ -1667,38 +1667,74 @@ else if (kategori === 'entertainment') {
     try {
         // --- 1. PERBAIKAN SCRAPER QUOTES ANIME (OTAKOTAKU) ---
         if (type === 'quotes-anime') {
-            const { data } = await axios.get('https://otakotaku.com/quote/feed', {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
-                }
-            });
-            const cheerio = require('cheerio');
-            const $ = cheerio.load(data);
-            const hasil = [];
+    const { data } = await axios.get('https://otakotaku.com/quote/feed', {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7'
+        }
+    });
+    const cheerio = require('cheerio');
+    const $ = cheerio.load(data);
+    const hasil = [];
 
-            // Selector yang lebih spesifik untuk mengambil data quotes
-            $('.quote-item').each((i, el) => {
-                const quoteText = $(el).find('.quote-content').text().trim();
-                const charName = $(el).find('.quote-author').text().trim();
-                const animeTitle = $(el).find('.quote-anime').text().trim();
+    // --- PEMBARUAN SELECTOR HTML TERBARU ---
+    // Menggunakan container utama per kartu quote yang ada di website OtakOtaku
+    $('.otaku-card').each((i, el) => {
+        // Mengambil teks kutipan/quote
+        const quoteText = $(el).find('.quote-text').text().trim();
+        
+        // Mengambil meta data (Karakter & Anime biasanya digabung atau ditaruh di card-footer)
+        const charName = $(el).find('.quote-character').text().trim() || $(el).find('.meta .author').text().trim();
+        const animeTitle = $(el).find('.quote-anime-title').text().trim() || $(el).find('.meta .anime').text().trim();
 
-                if (quoteText) {
-                    hasil.push({
-                        quote: quoteText,
-                        karakter: charName.replace('~ ', ''),
-                        anime: animeTitle
-                    });
-                }
-            });
+        // Jika selector di atas masih meleset, ini adalah fallback selector universal berdasarkan struktur artikel mereka:
+        const altQuote = $(el).find('p').first().text().trim();
+        const altMeta = $(el).find('.meta').text().trim(); 
 
-            if (hasil.length === 0) return res.status(404).json({ status: false, creator, message: "Quotes tidak ditemukan atau sedang maintenance." });
-            
-            return res.status(200).json({ 
-                status: true, 
-                creator, 
-                result: getRandom(hasil) 
+        const finalQuote = quoteText || altQuote;
+
+        if (finalQuote && finalQuote.length > 5) {
+            hasil.push({
+                quote: finalQuote.replace(/^["'„—\s]+|["'„—\s]+$/g, ''), // Membersihkan tanda petik bawaan web jika ada
+                karakter: charName ? charName.replace(/[\n\t~–—]/g, '').trim() : "Unknown",
+                anime: animeTitle ? animeTitle.replace(/[\n\t]/g, '').trim() : "Unknown"
             });
         }
+    });
+
+    // Jika pencarian card utama gagal, pakai fallback scraping alternatif dari halaman quotes terbaru
+    if (hasil.length === 0) {
+        $('.quote-list .item').each((i, el) => {
+            const quoteText = $(el).find('.text').text().trim();
+            const charName = $(el).find('.character').text().trim();
+            const animeTitle = $(el).find('.anime').text().trim();
+
+            if (quoteText) {
+                hasil.push({
+                    quote: quoteText,
+                    karakter: charName,
+                    anime: animeTitle
+                });
+            }
+        });
+    }
+
+    // Jika setelah di-fallback masih kosong juga, tandanya web sedang mendeteksi bot atau strukturnya berubah total
+    if (hasil.length === 0) {
+        return res.status(404).json({ 
+            status: false, 
+            creator, 
+            message: "Quotes tidak ditemukan atau sedang maintenance." 
+        });
+    }
+    
+    return res.status(200).json({ 
+        status: true, 
+        creator, 
+        result: getRandom(hasil) 
+    });
+}
+
 
         // --- 2. LOGIKA GAMBAR (DIRECT SEND - FIX ERROR 500) ---
         let imageUrl;
