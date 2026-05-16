@@ -47,15 +47,12 @@ export default async function handler(req, res) {
                         const imageParamsList = ['image', 'image1', 'image2', 'avatar', 'avatar1', 'avatar2', 'background', 'guildIcon'];
 
                         for (const key in params) {
-    if (key === 'type') continue;
+                            if (key === 'type') continue;
 
-if (files[key]) {
-    const file = Array.isArray(files[key]) ? files[key][0] : files[key];
-    axiosData.append(key, fs.createReadStream(file.filepath), { filename: file.originalFilename || `${key}.png` });
-    // Penghapusan file sebaiknya dilakukan di akhir Promise ini jika diperlukan
-} else if (params[key] && typeof params[key] === 'string' && params[key].startsWith('http') && imageParamsList.includes(key)) {
-    // ... rest of code
-
+                            if (files[key]) {
+                                const file = Array.isArray(files[key]) ? files[key][0] : files[key];
+                                axiosData.append(key, fs.createReadStream(file.filepath), { filename: file.originalFilename || `${key}.png` });
+                            } else if (params[key] && typeof params[key] === 'string' && params[key].startsWith('http') && imageParamsList.includes(key)) {
                                 // Jika URL teks, Vercel download otomatis menjadi file (Buffer)!
                                 const imgRes = await axios.get(params[key], { responseType: 'arraybuffer' });
                                 axiosData.append(key, Buffer.from(imgRes.data), { filename: `${key}.png` });
@@ -64,24 +61,34 @@ if (files[key]) {
                                 axiosData.append(key, params[key]);
                             }
                         }
-                        // Setelah axios.post selesai
-for (const key in files) {
-    const file = Array.isArray(files[key]) ? files[key][0] : files[key];
-    if (fs.existsSync(file.filepath)) fs.unlinkSync(file.filepath);
-}
 
-
-                        // Selalu POST agar bebas 503
+                        // 1. Eksekusi request API terlebih dahulu sampai selesai mengirim file stream
                         const response = await axios.post(`https://api.siputzx.my.id/api/canvas/${canvasType}`, axiosData, {
                             headers: axiosData.getHeaders(),
                             responseType: 'arraybuffer' 
                         });
+
+                        // 2. Hapus temporary file SETELAH axios.post selesai agar tidak terkena ENOENT
+                        for (const key in files) {
+                            const file = Array.isArray(files[key]) ? files[key][0] : files[key];
+                            if (file && file.filepath && fs.existsSync(file.filepath)) {
+                                fs.unlinkSync(file.filepath);
+                            }
+                        }
 
                         res.setHeader('Content-Type', 'image/png');
                         res.status(200).send(response.data);
                         return resolve();
 
                     } catch (error) {
+                        // Bersihkan file sisa di folder /tmp/ jika terjadi error selama request
+                        for (const key in files) {
+                            const file = Array.isArray(files[key]) ? files[key][0] : files[key];
+                            if (file && file.filepath && fs.existsSync(file.filepath)) {
+                                fs.unlinkSync(file.filepath);
+                            }
+                        }
+
                         res.status(400).json({ 
                             status: false, 
                             creator: "InuuTyzDev", 
