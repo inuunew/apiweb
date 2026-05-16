@@ -1584,31 +1584,73 @@ else if (kategori === 'entertainment') {
         // ==========================================
         else if (kategori === 'idol') {
     const creator = "InuuTyzDev";
+    const getRandom = (array) => array[Math.floor(Math.random() * array.length)];
 
     try {
-        // Mapping keyword estetik yang relevan dengan grup
         const queryMap = {
-            jkt48: "JKT48 member",
-            blackpink: "Blackpink aesthetic photo",
-            newjeans: "NewJeans kpop hd",
-            ive: "IVE kpop member",
-            twice: "Twice kpop",
-            aespa: "Aespa kpop icon",
-            lesserafim: "Le Sserafim aesthetic",
-            babymonster: "BabyMonster kpop",
-            bts: "BTS member portrait",
-            exo: "EXO kpop"
+            jkt48: "jkt48 member aesthetic",
+            blackpink: "blackpink photo hd",
+            newjeans: "newjeans kpop aesthetic",
+            ive: "ive wonyoung kpop",
+            twice: "twice kpop aesthetic",
+            aespa: "aespa karina kpop",
+            lesserafim: "le sserafim kpop",
+            babymonster: "babymonster kpop",
+            bts: "bts member aesthetic",
+            exo: "exo kpop hd"
         };
 
-        const targetSearch = queryMap[type.toLowerCase()] || `${type},kpop`;
+        const targetSearch = queryMap[type.toLowerCase()] || `${type} kpop`;
 
-        // Menggunakan official random endpoint Unsplash berdasarkan keyword (Pasti tembus tanpa kena blokir bot)
-        const imageUrl = `https://source.unsplash.com/featured/800x1200/?${encodeURIComponent(targetSearch)}&sig=${Math.floor(Math.random() * 1000)}`;
+        // 1. Tembak langsung API pencarian internal Pinterest (Bukan scraping HTML)
+        // API ini jauh lebih ringan, cepat, dan jarang memblokir IP Vercel
+        const pinteresetApiUrl = `https://id.pinterest.com/resource/BaseSearchResource/get/?source_url=${encodeURIComponent(`/search/pins/?q=${targetSearch}`)}&data=${encodeURIComponent(JSON.stringify({
+            options: {
+                isPrefetch: false,
+                query: targetSearch,
+                scope: "pins",
+                no_meta: true
+            },
+            context: {}
+        }))}`;
 
-        const imageResponse = await axios.get(imageUrl, { 
+        const { data } = await axios.get(pinteresetApiUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            timeout: 10000
+        });
+
+        // 2. Ambil data list pin dari response JSON Pinterest
+        const pins = data?.resource_response?.data?.results || [];
+
+        if (pins.length === 0) {
+            return res.status(404).json({ 
+                status: false, 
+                creator, 
+                message: `Foto untuk grup '${type}' tidak ditemukan di Pinterest.` 
+            });
+        }
+
+        // 3. Filter pin yang valid dan ambil URL gambar resolusi tinggi (orig atau 736x)
+        const imageUrls = pins
+            .map(pin => pin.images?.orig?.url || pin.images?.['736x']?.url)
+            .filter(url => url !== undefined);
+
+        if (imageUrls.length === 0) {
+            return res.status(404).json({ status: false, creator, message: "Gagal mengekstrak URL gambar." });
+        }
+
+        // Ambil 1 foto secara acak
+        const selectedImageUrl = getRandom(imageUrls);
+
+        // 4. DOWNLOAD DAN RENDERING GAMBAR LANGSUNG (DIRECT SEND)
+        const imageResponse = await axios.get(selectedImageUrl, { 
             responseType: 'arraybuffer',
             timeout: 15000,
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+            headers: { 'User-Agent': 'Mozilla/5.0' }
         });
 
         res.setHeader('Content-Type', imageResponse.headers['content-type'] || 'image/jpeg');
@@ -1619,7 +1661,7 @@ else if (kategori === 'entertainment') {
         return res.status(500).json({ 
             status: false, 
             creator, 
-            message: "Gagal mengambil foto. Silakan coba beberapa saat lagi." 
+            message: "Error internal server: " + e.message 
         });
     }
 }
