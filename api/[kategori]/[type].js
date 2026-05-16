@@ -1583,18 +1583,66 @@ else if (kategori === 'entertainment') {
         // 18. KATEGORI: IDOL
         // ==========================================
         else if (kategori === 'idol') {
-            const getRandom = (array) => array[Math.floor(Math.random() * array.length)];
-            try {
-                const response = await axios.get(`https://raw.githubusercontent.com/Inuutyz/database/main/idol/${type}.json`);
-                return res.status(200).json({
-                    status: true,
-                    creator: "InuuTyzDev",
-                    result: getRandom(response.data)
-                });
-            } catch (e) {
-                return res.status(404).json({ status: false, message: `Data idol '${type}' tidak ditemukan!` });
+    try {
+        // 1. Mapping keyword agar hasil pencarian di Pinterest lebih spesifik dan estetik
+        const queryMap = {
+            jkt48: "JKT48 member random aesthetic",
+            blackpink: "Blackpink photo aesthetic",
+            newjeans: "NewJeans kpop aesthetic",
+            ive: "IVE kpop member",
+            twice: "Twice kpop aesthetic",
+            aespa: "Aespa kpop icon",
+            lesserafim: "Le Sserafim aesthetic",
+            babymonster: "BabyMonster kpop",
+            bts: "BTS member aesthetic",
+            exo: "EXO kpop aesthetic"
+        };
+
+        // Jika type tidak terdaftar di map, gunakan nama type itu sendiri + kpop
+        const targetSearch = queryMap[type.toLowerCase()] || `${type} kpop`;
+
+        // 2. Tembak DuckDuckGo khusus untuk mencari di domain pinterest.com
+        const searchUrl = `https://html.duckduckgo.com/html/?q=site:pinterest.com+${encodeURIComponent(targetSearch)}`;
+        
+        const response = await axios.get(searchUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
+        });
+
+        // 3. Gunakan Regex untuk mengekstrak semua URL gambar asli Pinterest (i.pinimg.com)
+        const regex = /https:\/\/i\.pinimg\.com\/[a-zA-Z0-9_\-\/]+\.(jpg|jpeg|png)/g;
+        const matches = response.data.match(regex);
+
+        if (!matches || matches.length === 0) {
+            return res.status(404).json({ 
+                status: false, 
+                message: `Foto untuk idol '${type}' tidak ditemukan di Pinterest!` 
+            });
         }
+
+        // 4. Hilangkan duplikat URL dan pilih 1 foto secara acak
+        const uniqueImages = [...new Set(matches)];
+        const getRandom = (array) => array[Math.floor(Math.random() * array.length)];
+        
+        // Mengubah resolusi gambar kecil (236x) menjadi resolusi tinggi (736x) jika ada
+        const highResImage = getRandom(uniqueImages).replace('/236x/', '/736x/');
+
+        return res.status(200).json({
+            status: true,
+            creator: "NamaAnda",
+            result: highResImage
+        });
+
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ 
+            status: false, 
+            message: "Gagal mengambil foto live dari Pinterest!" 
+        });
+    }
+}
+
 
         // ==========================================
         // 19. KATEGORI: ANIME
