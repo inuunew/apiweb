@@ -1,8 +1,10 @@
+
 // Import semua library yang dibutuhkan di sini (axios, cheerio, dll)
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import crypto from 'crypto';
 import QRCode from 'qrcode-svg';
+import xml2js from 'xml2js';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -1400,30 +1402,97 @@ export default async function handler(req, res) {
         // 15. KATEGORI: BERITA
         // ==========================================
         else if (kategori === 'berita') {
-            try {
-                if (type === 'detik') {
-                    const response = await axios.get(`https://api-berita-indonesia.vercel.app/detik/terbaru/`);
-                    return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.data.posts });
+    const creator = "InuuTyzDev";
 
-                } else if (type === 'cnbc') {
-                    const response = await axios.get(`https://api-berita-indonesia.vercel.app/cnbc/terbaru/`);
-                    return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.data.posts });
+    // Fungsi helper untuk mengambil data RSS XML dan mengubahnya menjadi JSON rapi
+    const parseRSS = async (url) => {
+        try {
+            const { data } = await axios.get(url, {
+                headers: { 
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' 
+                },
+                timeout: 10000
+            });
+            
+            // Menggunakan xml2js.Parser() atau new xml2js.default.Parser() sebagai fallback aman di Vercel ES Module
+            const ParserNode = xml2js.Parser || (xml2js.default && xml2js.default.Parser);
+            if (!ParserNode) throw new Error("xml2js Parser tidak ditemukan.");
 
-                } else if (type === 'antara') {
-                    const response = await axios.get(`https://api-berita-indonesia.vercel.app/antara/terbaru/`);
-                    return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.data.posts });
+            const parser = new ParserNode({ explicitArray: false, mergeAttrs: true });
+            const parsed = await parser.parseStringPromise(data);
+            
+            // Ambil daftar artikel standar RSS (masuk ke channel.item)
+            const items = parsed?.rss?.channel?.item || [];
+            const articles = Array.isArray(items) ? items : [items];
 
-                } else if (type === 'kompas') {
-                    const response = await axios.get(`https://api-berita-indonesia.vercel.app/kompas/terbaru/`);
-                    return res.status(200).json({ status: true, creator: "InuuTyzDev", result: response.data.data.posts });
+            // Mapping struktur data agar konsisten dan bersih
+            return articles.map(item => {
+                // Cari url gambar/thumbnail dari berbagai jenis tag RSS yang umum
+                const thumbnail = item.enclosure?.url || 
+                                  item['media:content']?.url || 
+                                  item['media:thumbnail']?.url || "";
 
-                } else {
-                    return res.status(404).json({ status: false, message: `Tipe berita '${type}' tidak tersedia!` });
-                }
-            } catch (e) {
-                return res.status(500).json({ status: false, message: "Gagal mengambil data berita." });
-            }
+                return {
+                    title: item.title || "",
+                    link: item.link || item.guid?._ || "",
+                    pubDate: item.pubDate || item.isoDate || "",
+                    description: item.description ? item.description.replace(/<[^>]*>/g, '').trim() : "", // Bersihkan sisa tag HTML
+                    thumbnail: thumbnail
+                };
+            });
+        } catch (err) {
+            console.error("Gagal parse RSS untuk URL: " + url, err.message);
+            return [];
         }
+    };
+
+    try {
+        let rssUrl = "";
+
+        // Mapping 5 endpoint berita resmi langsung ke server pusatnya
+        if (type === 'detik') {
+            rssUrl = "https://www.detik.com/terpopuler/rss";
+        } else if (type === 'cnbc') {
+            rssUrl = "https://www.cnbcindonesia.com/news/rss";
+        } else if (type === 'kompas') {
+            rssUrl = "https://www.kompas.com/trend/rss";
+        } else if (type === 'antara') {
+            rssUrl = "https://www.antaranews.com/rss/terkini.xml";
+        } else if (type === 'suara') {
+            rssUrl = "https://www.suara.com/rss/news";
+        } else {
+            return res.status(404).json({ status: false, creator, message: `Tipe berita '${type}' tidak tersedia!` });
+        }
+
+        // Ambil data artikel
+        const posts = await parseRSS(rssUrl);
+
+        // Jika gagal mengambil data atau kosong
+        if (posts.length === 0) {
+            return res.status(404).json({ 
+                status: false, 
+                creator, 
+                message: `Gagal memuat berita terbaru dari ${type}. Silakan coba lagi nanti.` 
+            });
+        }
+
+        // Kembalikan response sukses mengarah ke array 'posts'
+        return res.status(200).json({ 
+            status: true, 
+            creator, 
+            result: posts 
+        });
+
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ 
+            status: false, 
+            creator, 
+            message: "Error internal server saat memproses berita: " + e.message 
+        });
+    }
+}
+
 
 // ==========================================
 // 16. KATEGORI: ENTERTAINMENT
@@ -1668,63 +1737,45 @@ else if (kategori === 'entertainment') {
         // --- 1. PERBAIKAN SCRAPER QUOTES ANIME (OTAKOTAKU) ---
 if (type === 'quotes-anime') {
     const creator = "InuuTyzDev";
-    const getRandom = (array) => array[Math.floor(Math.random() * array.length)];
 
     try {
-        // Tembak halaman quotes terbaru secara mandiri
-        const { data } = await axios.get('https://otakotaku.com/quote', {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept-Language': 'id-ID,id;q=0.9'
+        // Tembak langsung API quotes anime milik Danzy
+        const danzyQuotesUrl = 'https://api.danzy.web.id/api/random/quotesanime';
+        
+        const { data } = await axios.get(danzyQuotesUrl, {
+            headers: { 
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' 
             },
             timeout: 10000
         });
 
-        const cheerio = require('cheerio');
-        const $ = cheerio.load(data);
-        const hasil = [];
-
-        // --- STRUKTUR SELECTOR HTML TERBARU OTAKOTAKU ---
-        // Mereka membungkus setiap item quote di dalam elemen 'li' milik '.quote-list'
-        $('.quote-list li').each((i, el) => {
-            // Mengambil teks utama kutipan anime
-            const quoteText = $(el).find('.quote-content').text().trim();
-            
-            // Mengambil nama karakter (biasanya ada di dalam class .author atau elemen b/strong)
-            const charName = $(el).find('.quote-meta .author').text().trim() || $(el).find('.quote-meta b').text().trim();
-            
-            // Mengambil judul anime
-            const animeTitle = $(el).find('.quote-meta .anime').text().trim() || $(el).find('.quote-meta a').last().text().trim();
-            
-            // Mengambil link detail quote & image thumb jika Anda ingin datanya selengkap Danzy
-            const linkDetail = $(el).find('.quote-content a').attr('href') || '';
-            const imgThumb = $(el).find('.quote-img img').attr('src') || '';
-
-            if (quoteText) {
-                hasil.push({
-                    quote: quoteText.replace(/^["'„—\s]+|["'„—\s]+$/g, ''), // Bersihkan tanda petik mengganggu
-                    karakter: charName ? charName.replace(/[~–—]/g, '').trim() : "Unknown",
-                    anime: animeTitle ? animeTitle.trim() : "Unknown",
-                    link: linkDetail ? `https://otakotaku.com${linkDetail}` : '',
-                    image: imgThumb ? `https://otakotaku.com${imgThumb}` : ''
-                });
-            }
-        });
-
-        // Jika array hasil kosong, berarti selector meleset atau website memberikan respon kosong
-        if (hasil.length === 0) {
+        // Validasi response sukses dari API Danzy
+        if (!data || !data.status || !data.result) {
             return res.status(404).json({ 
                 status: false, 
                 creator, 
-                message: "Gagal mencuri data. Strukturnya mungkin berubah lagi atau server diblokir." 
+                message: "Quotes tidak ditemukan atau server sedang maintenance." 
             });
         }
-        
-        // Ambil satu secara acak lalu kirimkan ke pengguna
+
+        const target = data.result;
+
+        // Bersihkan teks quote dari simbol \n (baris baru) agar JSON Anda rapi
+        const cleanQuote = target.quote ? target.quote.replace(/\\n|\n/g, ' ').trim() : "";
+
+        // Mengembalikan response dengan struktur yang sama persis seperti milik Danzy
         return res.status(200).json({ 
             status: true, 
             creator, 
-            result: getRandom(hasil) 
+            result: {
+                link: target.link || "",
+                image: target.image || "",
+                character: target.character || "Tidak diketahui",
+                anime: target.anime || "Tidak diketahui",
+                episode: target.episode || "",
+                date: target.date || "",
+                quote: cleanQuote
+            }
         });
 
     } catch (e) {
@@ -1732,10 +1783,11 @@ if (type === 'quotes-anime') {
         return res.status(500).json({ 
             status: false, 
             creator, 
-            message: "Error internal saat melakukan scraping: " + e.message 
+            message: "Gagal mengambil data: " + e.message 
         });
     }
 }
+
 
 
 
