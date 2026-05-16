@@ -1587,72 +1587,53 @@ else if (kategori === 'entertainment') {
     const getRandom = (array) => array[Math.floor(Math.random() * array.length)];
 
     try {
+        // 1. Mapping kata kunci pencarian agar hasil di Pinterest lebih akurat
         const queryMap = {
-            jkt48: "jkt48 member aesthetic",
-            blackpink: "blackpink photo hd",
-            newjeans: "newjeans kpop aesthetic",
-            ive: "ive wonyoung kpop",
-            twice: "twice kpop aesthetic",
-            aespa: "aespa karina kpop",
-            lesserafim: "le sserafim kpop",
-            babymonster: "babymonster kpop",
-            bts: "bts member aesthetic",
-            exo: "exo kpop hd"
+            jkt48: "JKT48 member aesthetic",
+            blackpink: "Blackpink aesthetic photo",
+            newjeans: "NewJeans kpop hd",
+            ive: "IVE kpop member",
+            twice: "Twice kpop aesthetic",
+            aespa: "Aespa kpop icon",
+            lesserafim: "Le Sserafim aesthetic",
+            babymonster: "BabyMonster kpop",
+            bts: "BTS member portrait",
+            exo: "EXO kpop hd"
         };
 
         const targetSearch = queryMap[type.toLowerCase()] || `${type} kpop`;
 
-        // 1. Tembak langsung API pencarian internal Pinterest (Bukan scraping HTML)
-        // API ini jauh lebih ringan, cepat, dan jarang memblokir IP Vercel
-        const pinteresetApiUrl = `https://id.pinterest.com/resource/BaseSearchResource/get/?source_url=${encodeURIComponent(`/search/pins/?q=${targetSearch}`)}&data=${encodeURIComponent(JSON.stringify({
-            options: {
-                isPrefetch: false,
-                query: targetSearch,
-                scope: "pins",
-                no_meta: true
-            },
-            context: {}
-        }))}`;
-
-        const { data } = await axios.get(pinteresetApiUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
+        // 2. Tembak API Danzy Pinterest Search
+        const danzyApiUrl = `https://api.danzy.web.id/api/search/pinterest?q=${encodeURIComponent(targetSearch)}`;
+        
+        const { data } = await axios.get(danzyApiUrl, {
+            headers: { 'User-Agent': 'Mozilla/5.0' },
             timeout: 10000
         });
 
-        // 2. Ambil data list pin dari response JSON Pinterest
-        const pins = data?.resource_response?.data?.results || [];
-
-        if (pins.length === 0) {
+        // Pastikan response API valid dan array 'result' tidak kosong
+        if (!data || !data.status || !data.result || data.result.length === 0) {
             return res.status(404).json({ 
                 status: false, 
                 creator, 
-                message: `Foto untuk grup '${type}' tidak ditemukan di Pinterest.` 
+                message: `Foto untuk '${type}' tidak ditemukan di database pencarian.` 
             });
         }
 
-        // 3. Filter pin yang valid dan ambil URL gambar resolusi tinggi (orig atau 736x)
-        const imageUrls = pins
-            .map(pin => pin.images?.orig?.url || pin.images?.['736x']?.url)
-            .filter(url => url !== undefined);
+        // 3. Ambil 1 objek data secara acak dari array 'result'
+        const randomResult = getRandom(data.result);
+        
+        // Ambil URL gambar langsung apa adanya dari response API tanpa diubah-ubah ukurannya
+        const finalImageUrl = randomResult.image;
 
-        if (imageUrls.length === 0) {
-            return res.status(404).json({ status: false, creator, message: "Gagal mengekstrak URL gambar." });
-        }
-
-        // Ambil 1 foto secara acak
-        const selectedImageUrl = getRandom(imageUrls);
-
-        // 4. DOWNLOAD DAN RENDERING GAMBAR LANGSUNG (DIRECT SEND)
-        const imageResponse = await axios.get(selectedImageUrl, { 
+        // 4. LOGIKA DOWNLOAD DAN DIRECT SEND GAMBAR
+        const imageResponse = await axios.get(finalImageUrl, { 
             responseType: 'arraybuffer',
             timeout: 15000,
             headers: { 'User-Agent': 'Mozilla/5.0' }
         });
 
+        // Set header content-type sesuai tipe gambar asli lalu kirim buffernya
         res.setHeader('Content-Type', imageResponse.headers['content-type'] || 'image/jpeg');
         return res.status(200).send(imageResponse.data);
 
@@ -1661,14 +1642,10 @@ else if (kategori === 'entertainment') {
         return res.status(500).json({ 
             status: false, 
             creator, 
-            message: "Error internal server: " + e.message 
+            message: "Gagal memproses atau mengirim gambar: " + e.message 
         });
     }
 }
-
-
-
-
 
         // ==========================================
         // 19. KATEGORI: ANIME
