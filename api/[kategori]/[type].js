@@ -455,6 +455,162 @@ else if (type === 'gpt5nano') {
         result: { model: "openai/gpt-4o", answer }
     });
 }
+else if (type === 'unlimitedai') {
+    // Base: unlimitedai.chat (by Ditzzx)
+    if (!prompt) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
+
+    const chatId = crypto.randomUUID();
+    const deviceId = crypto.randomUUID();
+    const userMsgId = crypto.randomUUID();
+    const asstMsgId = crypto.randomUUID();
+    const createdAt = new Date().toISOString();
+
+    const finalPrompt = `Kamu wajib menjawab dalam bahasa Indonesia.\n\nPertanyaan:\n${prompt}`;
+
+    const userMsg = { id: userMsgId, role: "user", content: finalPrompt, parts: [{ type: "text", text: finalPrompt }], createdAt };
+    const asstMsg = { id: asstMsgId, role: "assistant", content: "", parts: [{ type: "text", text: "" }], createdAt };
+
+    const body = {
+        chatId, messages: [userMsg, asstMsg],
+        selectedChatModel: "chat-model-reasoning",
+        selectedCharacter: null, selectedStory: null,
+        deviceId, locale: "id"
+    };
+
+    const uaiRes = await axios.post("https://app.unlimitedai.chat/api/chat", JSON.stringify(body), {
+        timeout: 60000, responseType: "stream", validateStatus: () => true,
+        headers: {
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36",
+            "Content-Type": "application/json",
+            "x-next-intl-locale": "id",
+            "Origin": "https://app.unlimitedai.chat",
+            "Referer": "https://app.unlimitedai.chat/id",
+            "Cookie": `NEXT_LOCALE=id; u_device_id=${deviceId}; home_chat_id=${chatId}`
+        }
+    });
+
+    let rawBody = "";
+    uaiRes.data.setEncoding("utf8");
+    uaiRes.data.on("data", (chunk) => { rawBody += chunk; });
+    await new Promise((resolve) => uaiRes.data.on("end", resolve));
+
+    let answer = "";
+    for (const line of rawBody.split("\n")) {
+        const clean = line.trim();
+        if (!clean) continue;
+        try {
+            const json = JSON.parse(clean);
+            if (json.type === "delta" && typeof json.delta === "string") answer += json.delta;
+        } catch {}
+    }
+
+    if (!answer) return res.status(500).json({ status: false, creator: "InuuTyzDev", message: "Gagal mendapat respons Unlimited AI." });
+    return res.status(200).json({ status: true, creator: "InuuTyzDev", result: { model: "unlimited-ai", answer } });
+}
+else if (type === 'feelbetter') {
+    // Base: feelbetterbot.com — support custom system prompt (by Ditzzx)
+    if (!prompt) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
+
+    const fbSystem = system || "Ikuti bahasa user dan jawab dengan gaya natural, singkat, dan jelas.";
+    const animals = ["owl", "fox", "cat", "wolf", "bear"];
+    const words = ["safe", "calm", "soft", "kind", "warm"];
+    const memoryId = `${words[Math.floor(Math.random() * words.length)]}-${animals[Math.floor(Math.random() * animals.length)]}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const fbBody = {
+        messages: [
+            { role: "system", content: fbSystem },
+            { role: "assistant", content: "Hi, I'm here to help you. How are you doing right now?" },
+            { role: "user", content: prompt }
+        ]
+    };
+
+    const fbRes = await axios.post("https://feelbetterbot.com/", JSON.stringify(fbBody), {
+        timeout: 30000, responseType: "stream", validateStatus: () => true,
+        headers: {
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36",
+            "Content-Type": "application/json",
+            "Origin": "https://feelbetterbot.com",
+            "Referer": "https://feelbetterbot.com/",
+            "Cookie": `feelbet-memory=${memoryId}`
+        }
+    });
+
+    let rawFb = "";
+    fbRes.data.setEncoding("utf8");
+    fbRes.data.on("data", (chunk) => { rawFb += chunk; });
+    await new Promise((resolve) => fbRes.data.on("end", resolve));
+
+    let fbAnswer = "";
+    for (const line of rawFb.split("\n")) {
+        const clean = line.trim();
+        if (!clean) continue;
+        let data = clean.startsWith("data:") ? clean.slice(5).trim() : clean;
+        if (!data || data === "[DONE]") continue;
+        try {
+            const json = JSON.parse(data);
+            const content = json.content || json.text || json.delta || json.answer || json.choices?.[0]?.delta?.content || "";
+            if (content) fbAnswer += content;
+        } catch { if (data) fbAnswer += data; }
+    }
+
+    if (!fbAnswer) return res.status(500).json({ status: false, creator: "InuuTyzDev", message: "Gagal mendapat respons Feelbetter AI." });
+    return res.status(200).json({ status: true, creator: "InuuTyzDev", result: { model: "feelbetter-ai", answer: fbAnswer } });
+}
+else if (type === 'gptonline') {
+    // Base: gptonline.ai — support session (by Ditzzx)
+    // Requires: npm install tough-cookie axios-cookiejar-support
+    if (!prompt) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
+
+    const { CookieJar } = await import('tough-cookie');
+    const { wrapper } = await import('axios-cookiejar-support');
+
+    const GPT_BASE = "https://gptonline.ai";
+    const GPT_PAGE = `${GPT_BASE}/id/chat-online/`;
+    const GPT_AJAX = `${GPT_BASE}/id/wp-admin/admin-ajax.php`;
+    const GPT_UA = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36";
+    const gptUserId = crypto.randomUUID();
+
+    const jar = new CookieJar();
+    const gptClient = wrapper(axios.create({ jar, withCredentials: true, timeout: 60000, validateStatus: () => true, headers: { "user-agent": GPT_UA } }));
+
+    // Step 1: warmup + ambil nonce
+    const pageRes = await gptClient.get(GPT_PAGE);
+    const pageHtml = String(pageRes.data || "");
+    const nonceMatches = [...pageHtml.matchAll(/["']nonce["']\s*[:=]\s*["']([a-zA-Z0-9_-]{8,})["']/gi)];
+    const nonce = nonceMatches[0]?.[1] || "";
+    if (!nonce) return res.status(500).json({ status: false, creator: "InuuTyzDev", message: "Gagal mendapat nonce dari GPTOnline." });
+
+    // Step 2: send message
+    const { default: FormData } = await import('form-data');
+    const sendForm = new FormData();
+    sendForm.append("msg", prompt);
+    sendForm.append("user_id", gptUserId);
+    sendForm.append("action", "gpt_embed_send_message");
+
+    const sendRes = await gptClient.post(GPT_AJAX, sendForm, { headers: { ...sendForm.getHeaders(), origin: GPT_BASE, referer: GPT_PAGE } });
+    const chatHistoryId = sendRes.data?.id;
+    if (!chatHistoryId) return res.status(500).json({ status: false, creator: "InuuTyzDev", message: "Gagal mengirim pesan ke GPTOnline." });
+
+    // Step 3: get message
+    const getForm = new FormData();
+    getForm.append("chat_history_id", String(chatHistoryId));
+    getForm.append("user_id", gptUserId);
+    getForm.append("action", "gpt_embed_get_message");
+    getForm.append("nonce", nonce);
+
+    const getRes = await gptClient.post(GPT_AJAX, getForm, { headers: { ...getForm.getHeaders(), origin: GPT_BASE, referer: GPT_PAGE } });
+    let rawMsg = getRes.data?.message || "";
+
+    // Bersihkan HTML tags
+    rawMsg = rawMsg.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n").replace(/<[^>]+>/g, "")
+        .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
+
+    if (!rawMsg) return res.status(500).json({ status: false, creator: "InuuTyzDev", message: "Gagal membaca respons GPTOnline." });
+    return res.status(200).json({ status: true, creator: "InuuTyzDev", result: { model: "gptonline-ai", answer: rawMsg } });
+}
+
+
+
             else if (type === 'gemini31') {
     // Base: notegpt.io — model gemini-3.1-flash-lite-preview (by Ditzzx)
     if (!prompt) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
@@ -889,7 +1045,15 @@ else if (type === 'tiktok_v3') {
                 delete cleanData.status;
                 return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
             }
+else if (type === 'ytsearch') {
+    // NPM: @vreden/youtube_scraper (by Ditzzx)
+    if (!keyword) return res.status(400).json({ status: false, message: "Parameter 'q' wajib diisi!" });
 
+    const yt = await import('@vreden/youtube_scraper');
+    const ytResult = await yt.default.search(keyword);
+
+    return res.status(200).json({ status: true, creator: "InuuTyzDev", result: ytResult });
+}
             else if (type === 'lyrics') {
                 const response = await axios.get(`https://lrclib.net/api/search?q=${encodeURIComponent(keyword)}`);
                 const data = response.data;
@@ -1444,23 +1608,64 @@ else if (type === 'tiktok_v3') {
             }
 
             else if (type === 'chapter') {
-                if (!url) return res.status(400).json({ status: false, message: "Parameter 'url' chapter wajib diisi!" });
+    if (!url) return res.status(400).json({ status: false, message: "Parameter 'url' chapter wajib diisi!" });
 
-                try {
-                    const targetUrl = `https://api.cuki.biz.id/api/komik/komikindo-chapter?apikey=${apiKeyCuki}&url=${encodeURIComponent(url)}`;
-                    const response = await axios.get(targetUrl);
+    try {
+        // 1. Ambil data HTML dari web target
+        const response = await axios.get(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'Referer': 'https://komikindo.ch/',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7'
+            },
+            timeout: 10000 
+        });
 
-                    let cleanData = response.data.data || response.data;
-                    if (cleanData && typeof cleanData === 'object') {
-                        delete cleanData.creator;
-                        delete cleanData.status;
-                    }
-
-                    return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
-                } catch (e) {
-                    return res.status(500).json({ status: false, message: "Gagal mengambil isi chapter: " + e.message });
-                }
+        // 2. Load HTML pake cheerio yang sudah di-import di atas global
+        const $ = cheerio.load(response.data);
+        const images = [];
+        
+        // 3. Scraping element gambar
+        $('#readerarea img').each((index, element) => {
+            const src = $(element).attr('src') || $(element).attr('data-src') || $(element).attr('data-lazy-src');
+            
+            if (src && !src.includes('loader') && src.startsWith('http')) {
+                images.push(src.trim());
             }
+        });
+
+        const chapterTitle = $('.entry-title').text().trim() || $('h1').text().trim();
+
+        if (images.length === 0) {
+            return res.status(403).json({ 
+                status: false, 
+                message: "Gagal mengambil gambar. Website target kemungkinan memperketat proteksi Cloudflare." 
+            });
+        }
+
+        return res.status(200).json({ 
+            status: true, 
+            creator: "InuuTyzDev", 
+            result: {
+                title: chapterTitle,
+                chapter_url: url,
+                images: images
+            } 
+        });
+
+    } catch (e) {
+        if (e.response && (e.response.status === 403 || e.response.status === 503)) {
+            return res.status(403).json({ 
+                status: false, 
+                message: "diblokir oleh Cloudflare/WAF Komikindo." 
+            });
+        }
+        return res.status(500).json({ status: false, message: "Gagal mengambil isi chapter: " + e.message });
+    }
+}
+
+
 
             else {
                 return res.status(404).json({ status: false, message: `Type komik '${type}' tidak ditemukan!` });
@@ -1556,7 +1761,52 @@ else if (type === 'tiktok_v3') {
                     return res.status(500).json({ status: false, message: "Gagal generate JSON ailabs" });
                 }
             }
+else if (type === 'deepaitxt2img') {
+    // Base: deepai.org text2img (by Ditzzx)
+    if (!prompt && !q) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
+    const imgPrompt = prompt || q;
 
+    // Generate API key dengan MD5-like hash
+    function md5Like(input) {
+        const a = [];
+        for (let b = 0; b < 64; ) { a[b] = 0 | (4294967296 * Math.sin(++b % Math.PI)); }
+        let d, e, f, g = [(d = 1732584193), (e = 4023233417), ~d, ~e];
+        const h = [];
+        let l = unescape(encodeURI(input)) + "\u0080";
+        let k = l.length;
+        let c = ((--k / 4 + 2) | 15);
+        h[--c] = 8 * k;
+        while (~k) { h[k >> 2] |= l.charCodeAt(k) << (8 * k--); }
+        for (let b = 0, l = 0; b < c; b += 16) {
+            for (k = g; l < 64; k = [(f = k[3]), d + (((f = k[0] + [d & e | ~d & f, f & d | ~f & e, d ^ e ^ f, e ^ (d | ~f)][(k = l >> 4)] + a[l] + ~~h[b | ([l, 5 * l + 1, 3 * l + 5, 7 * l][k] & 15)]) << (k = [7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21][4 * k + (l++ % 4)])) | (f >>> -k)), d, e]) { d = k[1] | 0; e = k[2]; }
+            for (l = 4; l; ) { g[--l] += k[l]; }
+        }
+        let result = "";
+        for (let l = 0; l < 32; ) { result += ((g[l >> 3] >> (4 * (1 ^ l++))) & 15).toString(16); }
+        return result.split("").reverse().join("");
+    }
+
+    const ua = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36";
+    const rnd = Math.round(Math.random() * 100000000000).toString();
+    const apiKey = `tryit-${rnd}-${md5Like(ua + md5Like(ua + md5Like(ua + rnd + "hackers_become_a_little_stinkier_every_time_they_hack")))}`;
+
+    const daForm = new FormData();
+    daForm.append("text", imgPrompt);
+    daForm.append("width", "640");
+    daForm.append("height", "640");
+    daForm.append("image_generator_version", "hd");
+    daForm.append("quality", "true");
+    daForm.append("generation_source", "img");
+
+    const daRes = await axios.post("https://api.deepai.org/api/text2img", daForm, {
+        timeout: 60000,
+        headers: { "api-key": apiKey, "User-Agent": ua, "Origin": "https://deepai.org", ...daForm.getHeaders() }
+    });
+
+    const imgUrl = daRes.data?.output_url;
+    if (!imgUrl) return res.status(500).json({ status: false, creator: "InuuTyzDev", message: "Gagal generate gambar DeepAI." });
+    return res.status(200).json({ status: true, creator: "InuuTyzDev", result: { model: "deepai-text2img", prompt: imgPrompt, image_url: imgUrl } });
+}
             else {
                 return res.status(404).json({ status: false, message: `Type '${type}' tidak ditemukan.` });
             }
