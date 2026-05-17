@@ -1,4 +1,3 @@
-
 // Import semua library yang dibutuhkan di sini (axios, cheerio, dll)
 import axios from 'axios';
 import * as cheerio from 'cheerio';
@@ -113,6 +112,409 @@ export default async function handler(req, res) {
 
                 return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
             }
+            else if (type === 'deepseekv4') {
+    // Base: notegpt.io — deepseek-v4-flash thinking mode (by Ditzzx)
+    if (!prompt) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
+
+    const convId = crypto.randomUUID();
+    const now = Math.floor(Date.now() / 1000);
+    const rnd = (n) => Array.from({length: n}, () => Math.floor(Math.random() * 10)).join('');
+    const sboxGuid = Buffer.from(`${now}|762|${rnd(9)}`).toString('base64');
+    const anonId = crypto.randomUUID();
+    const cookieHeader = [
+        `_ga_PFX3BRW5RQ=GS2.1.s${now}$o1$g0$t${now}$j60$l0$h${rnd(9)}`,
+        `_ga=GA1.2.${rnd(9)}.${now}`,
+        `_gid=GA1.2.${rnd(9)}.${now}`,
+        `_gat_gtag_UA_252982427_14=1`,
+        `sbox-guid=${encodeURIComponent(sboxGuid)}`,
+        `anonymous_user_id=${anonId}`
+    ].join('; ');
+
+    const payload = {
+        message: prompt,
+        language: "auto",
+        model: "deepseek-v4-flash",
+        tone: "default",
+        length: "moderate",
+        conversation_id: convId,
+        image_urls: [],
+        history_messages: [],
+        chat_mode: "deep_think"
+    };
+
+    const dsRes = await axios.post("https://notegpt.io/api/v2/chat/stream", JSON.stringify(payload), {
+        timeout: 60000,
+        responseType: "stream",
+        validateStatus: () => true,
+        headers: {
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36",
+            "Content-Type": "application/json",
+            "Origin": "https://notegpt.io",
+            "Referer": "https://notegpt.io/chat-deepseek",
+            "Accept": "*/*",
+            "Cookie": cookieHeader
+        }
+    });
+
+    let rawBody = "";
+    dsRes.data.setEncoding("utf8");
+    dsRes.data.on("data", (chunk) => { rawBody += chunk; });
+    await new Promise((resolve) => dsRes.data.on("end", resolve));
+
+    let answer = "", reasoning = "";
+    for (const line of rawBody.split(/\r?\n/)) {
+        const clean = line.trim();
+        if (!clean.startsWith("data:")) continue;
+        const raw = clean.replace(/^data:\s*/, "").trim();
+        if (!raw || raw === "[DONE]") continue;
+        try {
+            const json = JSON.parse(raw);
+            if (json.reasoning) reasoning += json.reasoning;
+            if (json.text) answer += json.text;
+        } catch {}
+    }
+
+    if (!answer && !reasoning) return res.status(500).json({ status: false, creator: "InuuTyzDev", message: "Gagal mendapat respons DeepSeek." });
+    return res.status(200).json({
+        status: true, creator: "InuuTyzDev",
+        result: { model: "deepseek-v4-flash", mode: "deep_think", reasoning, answer }
+    });
+}
+else if (type === 'claudehaiku') {
+    // Base: overchat.ai — claude-haiku-4-5 (by Ditzzx)
+    if (!prompt) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
+
+    const chatId = crypto.randomUUID();
+    const deviceId = crypto.randomUUID();
+
+    const body = {
+        chatId,
+        model: "claude-haiku-4-5-20251001",
+        messages: [
+            { id: crypto.randomUUID(), role: "user", content: prompt },
+            { id: crypto.randomUUID(), role: "system", content: system || "Ikuti bahasa user dan jawab dengan gaya natural, singkat, dan jelas." }
+        ],
+        personaId: "claude-haiku-4-5-landing",
+        frequency_penalty: 0,
+        max_tokens: 4000,
+        presence_penalty: 0,
+        stream: true,
+        temperature: 0.5,
+        top_p: 0.95
+    };
+
+    const chRes = await axios.post("https://api.overchat.ai/v1/chat/completions", JSON.stringify(body), {
+        timeout: 60000,
+        responseType: "stream",
+        validateStatus: () => true,
+        headers: {
+            "x-device-uuid": deviceId,
+            "x-device-language": "id-ID",
+            "x-device-platform": "web",
+            "x-device-version": "1.0.44",
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36",
+            "Content-Type": "application/json",
+            "Origin": "https://overchat.ai",
+            "Referer": "https://overchat.ai/",
+            "Accept": "*/*"
+        }
+    });
+
+    let rawBody = "";
+    chRes.data.setEncoding("utf8");
+    chRes.data.on("data", (chunk) => { rawBody += chunk; });
+    await new Promise((resolve) => chRes.data.on("end", resolve));
+
+    let answer = "";
+    for (const line of rawBody.split("\n")) {
+        const clean = line.trim();
+        if (!clean.startsWith("data:")) continue;
+        const data = clean.slice(5).trim();
+        if (!data || data === "[DONE]") continue;
+        try {
+            const json = JSON.parse(data);
+            const content = json.choices?.[0]?.delta?.content;
+            if (typeof content === "string") answer += content;
+        } catch {}
+    }
+
+    if (!answer) return res.status(500).json({ status: false, creator: "InuuTyzDev", message: "Gagal mendapat respons Claude Haiku." });
+    return res.status(200).json({
+        status: true, creator: "InuuTyzDev",
+        result: { model: "claude-haiku-4-5-20251001", answer }
+    });
+}
+else if (type === 'qwen3') {
+    // Base: overchat.ai — qwen3-next-80b (by Ditzzx)
+    if (!prompt) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
+
+    const chatId = crypto.randomUUID();
+    const deviceId = crypto.randomUUID();
+
+    const body = {
+        chatId,
+        model: "alibaba/qwen3-next-80b-a3b-instruct",
+        messages: [
+            { id: crypto.randomUUID(), role: "user", content: prompt },
+            { id: crypto.randomUUID(), role: "system", content: system || "Ikuti bahasa user dan jawab dengan gaya natural, singkat, dan jelas." }
+        ],
+        personaId: "qwen-3-landing",
+        frequency_penalty: 0,
+        max_tokens: 4000,
+        presence_penalty: 0,
+        stream: true,
+        temperature: 0.5,
+        top_p: 0.95
+    };
+
+    const qwRes = await axios.post("https://api.overchat.ai/v1/chat/completions", JSON.stringify(body), {
+        timeout: 60000,
+        responseType: "stream",
+        validateStatus: () => true,
+        headers: {
+            "x-device-uuid": deviceId,
+            "x-device-language": "id-ID",
+            "x-device-platform": "web",
+            "x-device-version": "1.0.44",
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36",
+            "Content-Type": "application/json",
+            "Origin": "https://overchat.ai",
+            "Referer": "https://overchat.ai/",
+            "Accept": "*/*"
+        }
+    });
+
+    let rawBody = "";
+    qwRes.data.setEncoding("utf8");
+    qwRes.data.on("data", (chunk) => { rawBody += chunk; });
+    await new Promise((resolve) => qwRes.data.on("end", resolve));
+
+    let answer = "";
+    for (const line of rawBody.split("\n")) {
+        const clean = line.trim();
+        if (!clean.startsWith("data:")) continue;
+        const data = clean.slice(5).trim();
+        if (!data || data === "[DONE]") continue;
+        try {
+            const json = JSON.parse(data);
+            const content = json.choices?.[0]?.delta?.content;
+            if (typeof content === "string") answer += content;
+        } catch {}
+    }
+
+    if (!answer) return res.status(500).json({ status: false, creator: "InuuTyzDev", message: "Gagal mendapat respons Qwen-3." });
+    return res.status(200).json({
+        status: true, creator: "InuuTyzDev",
+        result: { model: "alibaba/qwen3-next-80b-a3b-instruct", answer }
+    });
+}
+else if (type === 'olabiba') {
+    // Base: olabiba.com — SSE stream (by Ditzzx)
+    if (!prompt) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
+
+    const OLA_BASE = "https://www.olabiba.com";
+    const OLA_UA = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36";
+
+    // Buat cookie consent sederhana (stateless — cocok untuk Vercel serverless)
+    const now3 = Math.floor(Date.now() / 1000);
+    const consentUUID = crypto.randomUUID();
+    const fccdcf = encodeURIComponent(JSON.stringify([null, null, null, null, null, null, [[[32, JSON.stringify([consentUUID, [now3, 895000000]])]]]]));
+    const olaCookie = `olabiba_consent=true%3A${now3 + 604800}; FCCDCF=${fccdcf}`;
+
+    const olaHeaders = {
+        "User-Agent": OLA_UA,
+        "Accept-Language": "id-ID,id;q=0.9",
+        "Origin": OLA_BASE,
+        "Referer": `${OLA_BASE}/`,
+        "Cookie": olaCookie
+    };
+
+    // Step 1: warmup
+    await axios.get(OLA_BASE, { headers: olaHeaders, validateStatus: () => true }).catch(() => {});
+
+    // Step 2: kirim pesan
+    const olaForm = new URLSearchParams();
+    olaForm.append("text", prompt);
+    olaForm.append("mood", "friendly");
+    olaForm.append("lang", "id");
+    olaForm.append("adblock", "No");
+    olaForm.append("theme", "light");
+
+    await axios.post(`${OLA_BASE}/php/message.php`, olaForm.toString(), {
+        timeout: 30000,
+        headers: { ...olaHeaders, "Content-Type": "application/x-www-form-urlencoded" },
+        validateStatus: () => true
+    });
+
+    // Step 3: baca SSE stream
+    const streamRes = await axios.get(`${OLA_BASE}/php/stream.php`, {
+        timeout: 30000,
+        responseType: "stream",
+        headers: { ...olaHeaders, "Accept": "text/event-stream", "Cache-Control": "no-cache" },
+        validateStatus: () => true
+    });
+
+    let rawOla = "";
+    streamRes.data.setEncoding("utf8");
+    streamRes.data.on("data", (chunk) => { rawOla += chunk; });
+    await new Promise((resolve) => streamRes.data.on("end", resolve));
+
+    let olaAnswer = "";
+    for (const line of rawOla.split(/\r?\n/)) {
+        const clean = line.trim();
+        if (!clean.startsWith("data:")) continue;
+        const data = clean.slice(5).trim();
+        if (!data || data === "[DONE]") continue;
+        olaAnswer += data
+            .replaceAll("&nbsp;", " ").replaceAll("&amp;", "&")
+            .replaceAll("&lt;", "<").replaceAll("&gt;", ">")
+            .replaceAll("&quot;", '"');
+    }
+
+    // Bersihkan tag dan token internal olabiba
+    olaAnswer = olaAnswer
+        .replace(/<!--[\s\S]*?-->/g, "")
+        .replace(/\[ELABORATE\]/gi, "")
+        .replace(/\[FOLLOWUP(?::[^\]]*)?\][\s\S]*?(?:\[\/FOLLOWUP\])?/gi, "")
+        .replace(/\s+/g, " ").trim();
+
+    const queryIdx = olaAnswer.indexOf("<!--QUERY:");
+    if (queryIdx !== -1) olaAnswer = olaAnswer.slice(0, queryIdx).trim();
+
+    if (!olaAnswer) return res.status(500).json({ status: false, creator: "InuuTyzDev", message: "Gagal mendapat respons Olabiba." });
+    return res.status(200).json({
+        status: true, creator: "InuuTyzDev",
+        result: { model: "olabiba-ai", answer: olaAnswer }
+    });
+}
+else if (type === 'gpt5nano') {
+    // Base: overchat.ai — openai/gpt-4o (by Ditzzx)
+    if (!prompt) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
+
+    const chatId = crypto.randomUUID();
+    const deviceId = crypto.randomUUID();
+    const userMsgId = crypto.randomUUID();
+    const sysMsgId = crypto.randomUUID();
+
+    const messages = [
+        { id: userMsgId, role: "user", content: prompt },
+        { id: sysMsgId, role: "system", content: system || "Ikuti bahasa user dan jawab dengan gaya natural, singkat, dan jelas." }
+    ];
+
+    const body = {
+        chatId,
+        model: "openai/gpt-4o",
+        messages,
+        personaId: "gpt-4o-landing",
+        frequency_penalty: 0,
+        max_tokens: 4000,
+        presence_penalty: 0,
+        stream: true,
+        temperature: 0.5,
+        top_p: 0.95
+    };
+
+    const ocRes = await axios.post("https://api.overchat.ai/v1/chat/completions", JSON.stringify(body), {
+        timeout: 60000,
+        responseType: "stream",
+        validateStatus: () => true,
+        headers: {
+            "x-device-uuid": deviceId,
+            "x-device-language": "id-ID",
+            "x-device-platform": "web",
+            "x-device-version": "1.0.44",
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36",
+            "Content-Type": "application/json",
+            "Origin": "https://overchat.ai",
+            "Referer": "https://overchat.ai/",
+            "Accept": "*/*"
+        }
+    });
+
+    let rawBody = "";
+    ocRes.data.setEncoding("utf8");
+    ocRes.data.on("data", (chunk) => { rawBody += chunk; });
+    await new Promise((resolve) => ocRes.data.on("end", resolve));
+
+    let answer = "";
+    for (const line of rawBody.split("\n")) {
+        const clean = line.trim();
+        if (!clean.startsWith("data:")) continue;
+        const data = clean.slice(5).trim();
+        if (!data || data === "[DONE]") continue;
+        try {
+            const json = JSON.parse(data);
+            const content = json.choices?.[0]?.delta?.content;
+            if (typeof content === "string") answer += content;
+        } catch {}
+    }
+
+    if (!answer) return res.status(500).json({ status: false, creator: "InuuTyzDev", message: "Gagal mendapat respons GPT." });
+    return res.status(200).json({
+        status: true, creator: "InuuTyzDev",
+        result: { model: "openai/gpt-4o", answer }
+    });
+}
+            else if (type === 'gemini31') {
+    // Base: notegpt.io — model gemini-3.1-flash-lite-preview (by Ditzzx)
+    if (!prompt) return res.status(400).json({ status: false, message: "Parameter 'prompt' wajib diisi!" });
+
+    const convId = crypto.randomUUID();
+    const now = Math.floor(Date.now() / 1000);
+    const rnd = (n) => Array.from({length: n}, () => Math.floor(Math.random() * 10)).join('');
+    const sboxGuid = Buffer.from(`${now}|13|${rnd(9)}`).toString('base64');
+    const anonId = crypto.randomUUID();
+    const cookieHeader = [
+        `sbox-guid=${encodeURIComponent(sboxGuid)}`,
+        `anonymous_user_id=${anonId}`,
+        `_gid=GA1.2.${rnd(9)}.${now}`,
+        `_ga=GA1.2.${rnd(9)}.${now}`
+    ].join('; ');
+
+    const payload = {
+        message: prompt,
+        language: "auto",
+        model: "gemini-3.1-flash-lite-preview",
+        tone: "default",
+        length: "moderate",
+        conversation_id: convId,
+        image_urls: [],
+        history_messages: [],
+        chat_mode: "standard"
+    };
+
+    const notegptRes = await axios.post("https://notegpt.io/api/v2/chat/stream", JSON.stringify(payload), {
+        timeout: 60000,
+        responseType: "stream",
+        validateStatus: () => true,
+        headers: {
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36",
+            "Content-Type": "application/json",
+            "Origin": "https://notegpt.io",
+            "Referer": "https://notegpt.io/ai-chat",
+            "Accept": "*/*",
+            "Cookie": cookieHeader
+        }
+    });
+
+    let rawBody = "";
+    notegptRes.data.setEncoding("utf8");
+    notegptRes.data.on("data", (chunk) => { rawBody += chunk; });
+
+    await new Promise((resolve) => notegptRes.data.on("end", resolve));
+
+    let answer = "";
+    for (const line of rawBody.split(/\r?\n/)) {
+        const clean = line.trim();
+        if (!clean.startsWith("data:")) continue;
+        const raw = clean.replace(/^data:\s*/, "").trim();
+        if (!raw || raw === "[DONE]") continue;
+        try { const json = JSON.parse(raw); if (json.text) answer += json.text; } catch {}
+    }
+
+    if (!answer) return res.status(500).json({ status: false, creator: "InuuTyzDev", message: "Gagal mendapat respons dari Gemini 3.1." });
+    return res.status(200).json({ status: true, creator: "InuuTyzDev", result: { model: "gemini-3.1-flash-lite-preview", answer } });
+}
 
             else {
                 return res.status(404).json({ error: `Endpoint AI '${type}' tidak ada` });
@@ -123,21 +525,25 @@ export default async function handler(req, res) {
         // 2. KATEGORI: MAKER
         // ==========================================
         else if (kategori === 'maker') {
-            if (type === 'ektp') {
-                const required = ['provinsi', 'kota', 'nik', 'nama', 'ttl', 'jenis_kelamin', 'alamat', 'kecamatan', 'agama', 'status', 'pekerjaan', 'pas_photo'];
-                for (const field of required) {
-                    if (!req.query[field]) return res.status(400).json({ status: false, message: `Parameter '${field}' wajib diisi!` });
-                }
+    if (type === 'ektp') {
+        const required = ['provinsi', 'kota', 'nik', 'nama', 'ttl', 'jenis_kelamin', 'alamat', 'kecamatan', 'agama', 'status', 'pekerjaan'];
+        for (const field of required) {
+            if (!req.query[field]) return res.status(400).json({ status: false, message: `Parameter '${field}' wajib diisi!` });
+        }
 
-                const rt_rw = req.query['rt/rw'] || "000/000";
-                const kel_desa = req.query['kel/desa'] || "Desa";
+        // Fix: tangkap semua kemungkinan nama param foto
+        const pasPhoto = req.query.pas_photo || req.query.Pas_Photo || req.query.image || "";
+        if (!pasPhoto) return res.status(400).json({ status: false, message: "Parameter 'pas_photo' (Link Foto) wajib diisi!" });
 
-                const targetUrl = `https://api.siputzx.my.id/api/canvas/ektp?provinsi=${encodeURIComponent(provinsi)}&kota=${encodeURIComponent(kota)}&nik=${encodeURIComponent(nik)}&nama=${encodeURIComponent(nama)}&ttl=${encodeURIComponent(ttl)}&jenis_kelamin=${encodeURIComponent(jenis_kelamin)}&golongan_darah=${encodeURIComponent(golongan_darah || '-')}&alamat=${encodeURIComponent(alamat)}&rt%2Frw=${encodeURIComponent(rt_rw)}&kel%2Fdesa=${encodeURIComponent(kel_desa)}&kecamatan=${encodeURIComponent(kecamatan)}&agama=${encodeURIComponent(agama)}&status=${encodeURIComponent(status)}&pekerjaan=${encodeURIComponent(pekerjaan)}&kewarganegaraan=${encodeURIComponent(kewarganegaraan || 'WNI')}&masa_berlaku=${encodeURIComponent(masa_berlaku || 'Seumur Hidup')}&terbuat=${encodeURIComponent(terbuat || '01-01-2024')}&pas_photo=${encodeURIComponent(pas_photo)}`;
+        const rt_rw = req.query['rt/rw'] || "000/000";
+        const kel_desa = req.query['kel/desa'] || "Desa";
 
-                const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
-                res.setHeader('Content-Type', 'image/jpeg');
-                return res.status(200).send(response.data);
-            }
+        const targetUrl = `https://api.siputzx.my.id/api/canvas/ektp?provinsi=${encodeURIComponent(provinsi)}&kota=${encodeURIComponent(kota)}&nik=${encodeURIComponent(nik)}&nama=${encodeURIComponent(nama)}&ttl=${encodeURIComponent(ttl)}&jenis_kelamin=${encodeURIComponent(jenis_kelamin)}&golongan_darah=${encodeURIComponent(golongan_darah || '-')}&alamat=${encodeURIComponent(alamat)}&rt%2Frw=${encodeURIComponent(rt_rw)}&kel%2Fdesa=${encodeURIComponent(kel_desa)}&kecamatan=${encodeURIComponent(kecamatan)}&agama=${encodeURIComponent(agama)}&status=${encodeURIComponent(status)}&pekerjaan=${encodeURIComponent(pekerjaan)}&kewarganegaraan=${encodeURIComponent(kewarganegaraan || 'WNI')}&masa_berlaku=${encodeURIComponent(masa_berlaku || 'Seumur Hidup')}&terbuat=${encodeURIComponent(terbuat || '01-01-2024')}&pas_photo=${encodeURIComponent(pasPhoto)}`;
+
+        const response = await axios.get(targetUrl, { responseType: 'arraybuffer' });
+        res.setHeader('Content-Type', 'image/jpeg');
+        return res.status(200).send(response.data);
+    }
 
             else if (type === 'fbcommand') {
                 if (!name || !comment || !ppurl) {
@@ -272,7 +678,56 @@ export default async function handler(req, res) {
 
                 return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
             }
+else if (type === 'youtube_v2') {
+    // Base: ytdown.to (by Ditzzx)
+    if (!url) return res.status(400).json({ status: false, message: "Parameter 'url' wajib diisi!" });
 
+    const YT_BASE = "https://app.ytdown.to";
+    const YT_PAGE = `${YT_BASE}/en27/`;
+    const YT_API  = `${YT_BASE}/proxy.php`;
+    const YT_UA   = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36";
+
+    // Step 1: warmup — ambil cookie
+    const warmupRes = await axios.get(YT_PAGE, {
+        headers: { "User-Agent": YT_UA, "Accept-Language": "id-ID,id;q=0.9" },
+        validateStatus: () => true
+    });
+    const rawCookie = warmupRes.headers['set-cookie'];
+    let cookieStr = "";
+    if (rawCookie) {
+        cookieStr = (Array.isArray(rawCookie) ? rawCookie : [rawCookie])
+            .map(c => c.split(";")[0].trim()).join("; ");
+    }
+    const now2 = Math.floor(Date.now() / 1000);
+    const ga = `_ga=GA1.1.${Math.floor(Math.random() * 1e10)}.${now2}`;
+    const ga2 = `_ga_2K69M9RN1B=GS2.1.s${now2}$o1$g1$t${now2}$j49$l0$h0`;
+    const finalCookie = [cookieStr, ga, ga2].filter(Boolean).join("; ");
+
+    // Step 2: request download
+    const ytBody = new URLSearchParams({ url });
+    const ytRes = await axios.post(YT_API, ytBody.toString(), {
+        timeout: 30000,
+        headers: {
+            "User-Agent": YT_UA,
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "Origin": YT_BASE,
+            "Referer": YT_PAGE,
+            "x-requested-with": "XMLHttpRequest",
+            "sec-ch-ua-mobile": "?1",
+            "sec-ch-ua-platform": '"Android"',
+            "Accept-Language": "id-ID,id;q=0.9",
+            "Cookie": finalCookie
+        },
+        validateStatus: () => true
+    });
+
+    const ytData = ytRes.data;
+    if (!ytData || ytRes.status !== 200) {
+        return res.status(500).json({ status: false, creator: "InuuTyzDev", message: "Gagal mengambil data YouTube." });
+    }
+
+    return res.status(200).json({ status: true, creator: "InuuTyzDev", result: ytData });
+}
             else if (type === 'spotify') {
                 const response = await axios.get(`https://api.yupra.my.id/api/downloader/spotify?url=${encodeURIComponent(url)}`);
 
@@ -356,6 +811,63 @@ export default async function handler(req, res) {
                     });
                 }
             }
+            else if (type === 'ig_v2') {
+    // Base: engine.web.id (by Ditzzx)
+    const igHeaders = {
+        "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Origin": "https://engine.web.id",
+        "Referer": "https://engine.web.id/"
+    };
+    const body = new URLSearchParams();
+    body.append("url", url);
+    const igRes = await axios.post("https://engine.web.id/download", body.toString(), {
+        timeout: 60000,
+        headers: igHeaders,
+        responseType: "text",
+        validateStatus: () => true
+    });
+    const $ig = cheerio.load(String(igRes.data || ""));
+    const media = [];
+    const seen = new Set();
+    $ig("video source").each((_, el) => {
+        const src = $ig(el).attr("src")?.replace(/&amp;/g, '&') || "";
+        if (src && !seen.has(src)) { seen.add(src); media.push({ type: "video", url: src }); }
+    });
+    $ig(".media-container img").each((_, el) => {
+        const src = $ig(el).attr("src")?.replace(/&amp;/g, '&') || "";
+        if (src && !seen.has(src)) { seen.add(src); media.push({ type: "image", url: src }); }
+    });
+    for (const match of String(igRes.data).matchAll(/forceDownload\('([^']+)'/g)) {
+        const u = match[1].replace(/&amp;/g, '&');
+        if (!seen.has(u)) { seen.add(u); media.push({ type: u.includes('.mp4') ? 'video' : 'image', url: u }); }
+    }
+    if (media.length === 0) return res.status(404).json({ status: false, creator: "InuuTyzDev", message: "Media tidak ditemukan." });
+    return res.status(200).json({ status: true, creator: "InuuTyzDev", result: { total: media.length, media } });
+}
+
+else if (type === 'tiktok_v3') {
+    // Base: tiktokdl.web.id (by Ryza)
+    const tikRes = await axios.get('https://www.tiktokdl.web.id/api/tiktok', {
+        params: { url },
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+    });
+    const d = tikRes.data;
+    return res.status(200).json({
+        status: true,
+        creator: "InuuTyzDev",
+        result: {
+            id: d.id,
+            description: d.description,
+            author: d.author,
+            duration: d.duration,
+            stats: { likes: d.stats?.like, views: d.stats?.views, shares: d.stats?.share, comments: d.stats?.comment },
+            music: { title: d.music?.title, author: d.music?.author, duration: d.music?.duration },
+            video_url: d.videoId,
+            audio_url: d.audioId
+        }
+    });
+}
 
             else {
                 return res.status(400).json({ status: false, message: `Type downloader '${type}' tidak valid` });
@@ -1672,8 +2184,8 @@ else if (kategori === 'entertainment') {
 
         const targetSearch = queryMap[type.toLowerCase()] || `${type} kpop`;
 
-        // 2. Tembak API Danzy Pinterest Search
-        const danzyApiUrl = `https://api.danzy.web.id/api/search/pinterest?q=${encodeURIComponent(targetSearch)}`;
+        // 🌟 PERBAIKAN 1: Tambahkan &cb=${Date.now()} sebagai Cache Buster agar API Danzy selalu memberikan data baru
+        const danzyApiUrl = `https://api.danzy.web.id/api/search/pinterest?q=${encodeURIComponent(targetSearch)}&cb=${Date.now()}`;
         
         const { data } = await axios.get(danzyApiUrl, {
             headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
@@ -1698,14 +2210,16 @@ else if (kategori === 'entertainment') {
             responseType: 'arraybuffer',
             timeout: 15000,
             headers: { 
-                // Header wajib agar Pinterest mengira ini adalah request dari browser asli, bukan bot Vercel
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.9,id;q=0.8',
-                'Referer': 'https://www.pinterest.com/' // Berpura-pura seolah kita melihat gambar dari web Pinterest langsung
+                'Referer': 'https://www.pinterest.com/' 
             }
         });
 
+        // 🌟 PERBAIKAN 2: Paksa Browser & Vercel Network untuk TIDAK MENYIMPAN CACHE gambar ini
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+        
         // Set header content-type sesuai tipe gambar asli lalu kirim buffernya
         res.setHeader('Content-Type', imageResponse.headers['content-type'] || 'image/jpeg');
         return res.status(200).send(imageResponse.data);
@@ -1719,6 +2233,7 @@ else if (kategori === 'entertainment') {
         });
     }
 }
+
 
 
         // ==========================================
