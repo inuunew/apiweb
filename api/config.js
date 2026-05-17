@@ -77,7 +77,58 @@ export default async function handler(req, res) {
                         { "name": "system", "required": false, "description": "Instruksi sistem (opsional)" },
                         { "name": "temperature", "required": false, "description": "Kreativitas (Contoh: 0.7)" }
                     ]
-                }
+                }, 
+                {
+    "name": "Gemini 3.1 Flash Lite",
+    "endpoint": "/api/ai/gemini31",
+    "method": "GET",
+    "params": [
+        { "name": "prompt", "required": true, "description": "Pertanyaan untuk Gemini 3.1" }
+    ]
+},
+{
+    "name": "DeepSeek V4 Flash (Thinking)",
+    "endpoint": "/api/ai/deepseekv4",
+    "method": "GET",
+    "params": [
+        { "name": "prompt", "required": true, "description": "Pertanyaan dengan mode deep thinking" }
+    ]
+},
+{
+    "name": "GPT-5 Nano (gpt-4o)",
+    "endpoint": "/api/ai/gpt5nano",
+    "method": "GET",
+    "params": [
+        { "name": "prompt", "required": true, "description": "Pertanyaan untuk GPT-5 Nano" },
+        { "name": "system", "required": false, "description": "Instruksi sistem (opsional)" }
+    ]
+},
+{
+    "name": "Claude Haiku 4.5",
+    "endpoint": "/api/ai/claudehaiku",
+    "method": "GET",
+    "params": [
+        { "name": "prompt", "required": true, "description": "Pertanyaan untuk Claude Haiku" },
+        { "name": "system", "required": false, "description": "Instruksi sistem (opsional)" }
+    ]
+},
+{
+    "name": "Qwen-3 (80B)",
+    "endpoint": "/api/ai/qwen3",
+    "method": "GET",
+    "params": [
+        { "name": "prompt", "required": true, "description": "Pertanyaan untuk Qwen-3" },
+        { "name": "system", "required": false, "description": "Instruksi sistem (opsional)" }
+    ]
+},
+{
+    "name": "Olabiba AI",
+    "endpoint": "/api/ai/olabiba",
+    "method": "GET",
+    "params": [
+        { "name": "prompt", "required": true, "description": "Pertanyaan untuk Olabiba AI" }
+    ]
+}
             ],
             "ai-image": [
         {
@@ -143,7 +194,7 @@ export default async function handler(req, res) {
                         { "name": "status", "required": true, "description": "Contoh: Belum Kawin" },
                         { "name": "pekerjaan", "required": true, "description": "Pekerjaan" },
                         // 👇 KUNCI PERUBAHAN: pas_photo diubah jadi image 👇
-                        { "name": "image", "required": true, "description": "Link Foto (URL) / Upload Galeri" }
+                        { "name": "pas_photo", "required": true, "description": "Link Foto (URL)" }
                     ]
                 },
                 {
@@ -259,7 +310,25 @@ export default async function handler(req, res) {
                     "endpoint": "/api/download/fastdl",
                     "method": "GET",
                     "params": [{ "name": "url", "required": true, "description": "Link FastDL" }]
-                }
+                }, 
+                {
+    "name": "Instagram V2",
+    "endpoint": "/api/download/ig_v2",
+    "method": "GET",
+    "params": [{ "name": "url", "required": true, "description": "Link post/reels Instagram" }]
+},
+{
+    "name": "TikTok V3",
+    "endpoint": "/api/download/tiktok_v3",
+    "method": "GET",
+    "params": [{ "name": "url", "required": true, "description": "Link video TikTok (dengan stats)" }]
+},
+{
+    "name": "YouTube V2",
+    "endpoint": "/api/download/youtube_v2",
+    "method": "GET",
+    "params": [{ "name": "url", "required": true, "description": "Link video YouTube" }]
+}
             ],
 "search": [
     {
