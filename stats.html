@@ -317,189 +317,222 @@
 
     <script>
         // LOAD SAVED THEME
-        const savedTheme = localStorage.getItem('cuki-theme');
-        if (savedTheme) document.documentElement.className = savedTheme;
+const savedTheme = localStorage.getItem('cuki-theme');
+if (savedTheme) document.documentElement.className = savedTheme;
 
-        function toggleThemeModal() {
-            const modal = document.getElementById('theme-modal');
-            modal.classList.toggle('hidden');
-        }
+function toggleThemeModal() {
+    const modal = document.getElementById('theme-modal');
+    modal.classList.toggle('hidden');
+}
 
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('#theme-modal') && !e.target.closest('[onclick="toggleThemeModal()"]')) {
-                document.getElementById('theme-modal').classList.add('hidden');
-            }
-        });
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('#theme-modal') && !e.target.closest('[onclick="toggleThemeModal()"]')) {
+        document.getElementById('theme-modal').classList.add('hidden');
+    }
+});
 
-        function changeTheme(themeClass) {
-            document.documentElement.className = themeClass; 
-            localStorage.setItem('cuki-theme', themeClass);  
-            toggleThemeModal();
-        }
+function changeTheme(themeClass) {
+    document.documentElement.className = themeClass; 
+    localStorage.setItem('cuki-theme', themeClass);  
+    toggleThemeModal();
+}
 
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            if (sidebar.classList.contains('-translate-x-full')) {
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden');
-            } else {
-                sidebar.classList.add('-translate-x-full');
-                overlay.classList.add('hidden');
-            }
-        }
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    if (sidebar.classList.contains('-translate-x-full')) {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+    } else {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+    }
+}
 
-        // ==========================================
-        // MENGAMBIL DATA DARI CONFIG.JS SECARA ASLI
-        // ==========================================
+// ==========================================
+// MENGAMBIL DATA DARI CONFIG.JS SECARA ASLI
+// ==========================================
+
+// Array untuk menyimpan endpoint asli dari config.js
+let realEndpoints = [];
+
+async function fetchConfigData() {
+    try {
+        const response = await fetch('/api/config');
+        const configData = await response.json();
         
-        // Array untuk menyimpan endpoint asli dari config.js
-        let realEndpoints = [];
+        let totalEp = 0;
+        let catCount = 0;
         
-        async function fetchConfigData() {
-            try {
-                const response = await fetch('/api/config');
-                const configData = await response.json();
-                
-                let totalEp = 0;
-                let catCount = 0;
-                
-                if (configData.tags) {
-                    catCount = Object.keys(configData.tags).length;
-                    for (const cat in configData.tags) {
-                        if (Array.isArray(configData.tags[cat])) {
-                            totalEp += configData.tags[cat].length;
-                            
-                            // Ekstrak URL asli untuk digunakan di Realtime Logs nanti
-                            configData.tags[cat].forEach(route => {
-                                realEndpoints.push({
-                                    method: route.method || "GET",
-                                    url: route.endpoint
-                                });
-                            });
-                        }
-                    }
+        if (configData.tags) {
+            catCount = Object.keys(configData.tags).length;
+            for (const cat in configData.tags) {
+                if (Array.isArray(configData.tags[cat])) {
+                    totalEp += configData.tags[cat].length;
+                    
+                    // Ekstrak URL asli untuk digunakan di Realtime Logs nanti
+                    configData.tags[cat].forEach(route => {
+                        realEndpoints.push({
+                            method: route.method || "GET",
+                            url: route.endpoint
+                        });
+                    });
                 }
-                
-                // Tembak langsung angka aslinya
-                document.getElementById('stat-categories').innerText = catCount;
-                document.getElementById('stat-endpoints').innerText = totalEp;
-                document.getElementById('total-endpoints-card').innerText = totalEp + ' APIs';
-                
-                if(configData.settings && configData.settings.visitors) {
-                    document.getElementById('stat-visitors').innerText = configData.settings.visitors;
-                }
-            } catch (e) {
-                console.error("Gagal mengambil config:", e);
-                document.getElementById('stat-categories').innerText = 'Err';
-                document.getElementById('stat-endpoints').innerText = 'Err';
-                document.getElementById('total-endpoints-card').innerText = 'Error';
             }
         }
-
-        // ==========================================
-        // SISTEM SIMULASI STATS & LOGS (TANPA API/STATS)
-        // ==========================================
-        let mockStartTime = Date.now() - (1000 * 60 * 60 * 24 * 3 + 1000 * 60 * 45); // Server pura-pura nyala dari 3 hari lalu
-        let mockLogs = [];
-
-        function formatUptime(ms) {
-            let totalSeconds = Math.floor(ms / 1000);
-            let days = Math.floor(totalSeconds / 86400);
-            let hours = Math.floor((totalSeconds % 86400) / 3600);
-            let minutes = Math.floor((totalSeconds % 3600) / 60);
-            let seconds = totalSeconds % 60;
-            return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        
+        // Tembak langsung angka aslinya
+        document.getElementById('stat-categories').innerText = catCount;
+        document.getElementById('stat-endpoints').innerText = totalEp;
+        document.getElementById('total-endpoints-card').innerText = totalEp + ' APIs';
+        
+        if(configData.settings && configData.settings.visitors) {
+            document.getElementById('stat-visitors').innerText = configData.settings.visitors;
         }
+    } catch (e) {
+        console.error("Gagal mengambil config:", e);
+        document.getElementById('stat-categories').innerText = 'Err';
+        document.getElementById('stat-endpoints').innerText = 'Err';
+        document.getElementById('total-endpoints-card').innerText = 'Error';
+    }
+}
 
-        function simulateServerStats() {
-            // --- UPDATE DATA STATIS ---
-            document.getElementById('platform').innerText = "Vercel Edge OS";
-            document.getElementById('arch').innerText = "x64";
-            document.getElementById('node-ver').innerText = "v20.11.0";
-            document.getElementById('cpu-model').innerText = `AMD EPYC 7B12 (${navigator.hardwareConcurrency || 8} Cores)`;
+// ==========================================
+// SISTEM SIMULASI STATS & RAM/CPU
+// ==========================================
+let mockStartTime = Date.now() - (1000 * 60 * 60 * 24 * 3 + 1000 * 60 * 45); 
+let mockLogs = [];
 
-            // --- UPDATE DATA DINAMIS ---
-            const uptimeMs = Date.now() - mockStartTime;
-            document.getElementById('uptime').innerText = formatUptime(uptimeMs);
+function formatUptime(ms) {
+    let totalSeconds = Math.floor(ms / 1000);
+    let days = Math.floor(totalSeconds / 86400);
+    let hours = Math.floor((totalSeconds % 86400) / 3600);
+    let minutes = Math.floor((totalSeconds % 3600) / 60);
+    let seconds = totalSeconds % 60;
+    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+}
 
-            // CPU
-            let cpuLoad = (Math.random() * 13 + 2).toFixed(1);
-            document.getElementById('cpu-load').innerText = `${cpuLoad}%`;
+function simulateServerStats() {
+    // --- UPDATE DATA STATIS ---
+    document.getElementById('platform').innerText = "Vercel Edge OS";
+    document.getElementById('arch').innerText = "x64";
+    document.getElementById('node-ver').innerText = "v20.11.0";
+    document.getElementById('cpu-model').innerText = `AMD EPYC 7B12 (${navigator.hardwareConcurrency || 8} Cores)`;
 
-            // RAM
-            let totalRam = 8.0;
-            let usedRam = (Math.random() * 1.5 + 2.0).toFixed(2);
-            let freeRam = (totalRam - usedRam).toFixed(2);
-            let percentRam = Math.floor((usedRam / totalRam) * 100);
+    // --- UPDATE DATA DINAMIS ---
+    const uptimeMs = Date.now() - mockStartTime;
+    document.getElementById('uptime').innerText = formatUptime(uptimeMs);
 
-            document.getElementById('mem-used').innerText = `${usedRam} GB`;
-            document.getElementById('mem-total').innerText = `${totalRam.toFixed(2)} GB`;
-            document.getElementById('mem-free').innerText = `${freeRam} GB`;
+    // CPU
+    let cpuLoad = (Math.random() * 13 + 2).toFixed(1);
+    document.getElementById('cpu-load').innerText = `${cpuLoad}%`;
 
-            const ramBar = document.getElementById('ram-bar');
-            const ramPct = document.getElementById('ram-percent');
-            ramBar.style.width = `${percentRam}%`;
-            ramPct.innerText = `${percentRam}%`;
+    // RAM
+    let totalRam = 8.0;
+    let usedRam = (Math.random() * 1.5 + 2.0).toFixed(2);
+    let freeRam = (totalRam - usedRam).toFixed(2);
+    let percentRam = Math.floor((usedRam / totalRam) * 100);
+
+    document.getElementById('mem-used').innerText = `${usedRam} GB`;
+    document.getElementById('mem-total').innerText = `${totalRam.toFixed(2)} GB`;
+    document.getElementById('mem-free').innerText = `${freeRam} GB`;
+
+    const ramBar = document.getElementById('ram-bar');
+    const ramPct = document.getElementById('ram-percent');
+    ramBar.style.width = `${percentRam}%`;
+    ramPct.innerText = `${percentRam}%`;
+    
+    if(percentRam > 90) ramBar.style.backgroundColor = '#ef4444'; // Red
+    else if(percentRam > 70) ramBar.style.backgroundColor = '#eab308'; // Yellow
+    else ramBar.style.backgroundColor = 'var(--theme-main)'; // Warna tema
+}
+
+// ==========================================
+// FUNGSI BARU: PING ENDPOINT SUNGGUHAN
+// ==========================================
+async function pingRealtimeEndpoint() {
+    // Tunggu sampai fetchConfigData selesai mengisi array realEndpoints
+    if(realEndpoints.length === 0) return;
+
+    // Pilih API secara acak dari data asli
+    let randomApi = realEndpoints[Math.floor(Math.random() * realEndpoints.length)];
+    let method = randomApi.method || "GET";
+    let url = randomApi.url;
+    
+    // Asumsi di deploy di origin (Vercel) yang sama, kita bisa pakai relative URL
+    let fetchUrl = url.startsWith('/') ? url : `/${url}`;
+
+    try {
+        // Tembak endpoint secara sungguhan
+        const response = await fetch(fetchUrl, { method: method });
+        
+        // Ambil status HTTP asli dari server (200, 404, 403, 500, dll)
+        let status = response.status;
+        
+        mockLogs.push(`[${method}] [${status}] ${url}`);
+    } catch (error) {
+        // Jika server down, RTO, atau masalah CORS/Jaringan
+        mockLogs.push(`[${method}] [500] ${url}`);
+    }
+
+    if(mockLogs.length > 20) mockLogs.shift();
+    renderLogs(mockLogs);
+}
+
+function renderLogs(logs) {
+    const container = document.getElementById('realtime-logs');
+    container.innerHTML = ''; 
+
+    logs.forEach(log => {
+        const div = document.createElement('div');
+        div.className = "break-all hover:bg-slate-700 px-2 py-1 rounded transition-colors flex gap-3";
+        
+        const match = log.match(/^\[([A-Z]+)\] \[(\d+)\] (.*)$/);
+        
+        if (match) {
+            const method = match[1];
+            const status = match[2];
+            const url = match[3];
             
-            if(percentRam > 90) ramBar.style.backgroundColor = '#ef4444'; // Red
-            else if(percentRam > 70) ramBar.style.backgroundColor = '#eab308'; // Yellow
-            else ramBar.style.backgroundColor = 'var(--theme-main)'; // Warna tema
+            let methodColor = 'text-[#3b82f6]'; 
+            if(method === 'POST') methodColor = 'text-[#22c55e]'; 
+            
+            let statusColor = 'text-green-400'; // Default 2xx
+            let numStatus = parseInt(status);
+            if (numStatus >= 300 && numStatus < 400) statusColor = 'text-blue-400'; // Redirect 3xx
+            else if (numStatus >= 400 && numStatus < 500) statusColor = 'text-yellow-400'; // Client Error 4xx
+            else if (numStatus >= 500) statusColor = 'text-red-500'; // Server Error 5xx
 
-            // --- LOG TRAFFIC (HANYA MENGGUNAKAN DATA ASLI DARI CONFIG.JS & SELALU 200 OK) ---
-            if(realEndpoints.length > 0 && Math.random() > 0.6) {
-                // Pilih API secara acak dari data asli
-                let randomApi = realEndpoints[Math.floor(Math.random() * realEndpoints.length)];
-                
-                let method = randomApi.method;
-                let status = "200"; // Paksa selalu 200 OK
-                let url = randomApi.url;
-                
-                mockLogs.push(`[${method}] [${status}] ${url}`);
-                if(mockLogs.length > 20) mockLogs.shift();
-                
-                renderLogs(mockLogs);
-            }
+            div.innerHTML = `
+                <span class="${methodColor} font-bold w-12 shrink-0">[${method}]</span>
+                <span class="${statusColor} font-bold w-10 shrink-0 text-center">${status}</span>
+                <span class="text-slate-300 truncate">${url}</span>
+            `;
+        } else {
+            div.innerText = log;
         }
+        
+        container.appendChild(div);
+    });
+    container.scrollTop = container.scrollHeight;
+}
 
-        function renderLogs(logs) {
-            const container = document.getElementById('realtime-logs');
-            container.innerHTML = ''; 
+// ==========================================
+// INITIALIZATION & INTERVALS
+// ==========================================
 
-            logs.forEach(log => {
-                const div = document.createElement('div');
-                div.className = "break-all hover:bg-slate-700 px-2 py-1 rounded transition-colors flex gap-3";
-                
-                const match = log.match(/^\[([A-Z]+)\] \[(\d+)\] (.*)$/);
-                
-                if (match) {
-                    const method = match[1];
-                    const status = match[2];
-                    const url = match[3];
-                    
-                    let methodColor = 'text-[#3b82f6]'; 
-                    if(method === 'POST') methodColor = 'text-[#22c55e]'; 
-                    
-                    let statusColor = 'text-green-400';
+// 1. Ambil data config API
+fetchConfigData();
 
-                    div.innerHTML = `
-                        <span class="${methodColor} font-bold w-12 shrink-0">[${method}]</span>
-                        <span class="${statusColor} font-bold w-10 shrink-0 text-center">${status}</span>
-                        <span class="text-slate-300 truncate">${url}</span>
-                    `;
-                } else {
-                    div.innerText = log;
-                }
-                
-                container.appendChild(div);
-            });
-            container.scrollTop = container.scrollHeight;
-        }
+// 2. Jalankan tampilan CPU & RAM pertama kali
+simulateServerStats();
 
-        // Panggil fungsi inisialisasi
-        fetchConfigData();
-        simulateServerStats();
-        setInterval(simulateServerStats, 1000);
+// 3. Update animasi grafik CPU & RAM setiap 1 detik
+setInterval(simulateServerStats, 1000); 
+
+// 4. Lakukan ping real-time ke endpoint API setiap 2 detik 
+setInterval(pingRealtimeEndpoint, 2000);
+
     </script>
 </body>
 </html>
