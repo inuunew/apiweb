@@ -1354,87 +1354,100 @@ else if (type === 'pinterest') {
     if (!keyword) return res.status(400).json({ status: false, message: "Parameter 'q' wajib diisi!" });
 
     try {
-        const pinHeaders = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'application/json, text/javascript, */*; q=0.01',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Referer': 'https://www.pinterest.com/',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-Pinterest-AppState': 'active'
-        };
+        // Scrape via Google Images filter site:pinterest.com
+        const searchQuery = `${keyword} site:pinterest.com`;
+        const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}&tbm=isch&num=20`;
 
-        // Step 1: ambil CSRFToken dari homepage
-        const homeRes = await axios.get('https://www.pinterest.com/', {
-            headers: { ...pinHeaders, 'Accept': 'text/html' },
-            timeout: 10000
-        });
-        const csrfMatch = homeRes.data.match(/csrftoken["\s:=]+([a-zA-Z0-9]+)/);
-        const csrf = csrfMatch?.[1] || '';
-        const cookies = (homeRes.headers['set-cookie'] || []).map(c => c.split(';')[0]).join('; ');
-
-        // Step 2: hit Pinterest resource API search
-        const searchRes = await axios.get('https://www.pinterest.com/resource/BaseSearchResource/get/', {
-            params: {
-                source_url: `/search/pins/?q=${encodeURIComponent(keyword)}`,
-                data: JSON.stringify({
-                    options: {
-                        query: keyword,
-                        scope: 'pins',
-                        no_fetch_context_on_resource: false,
-                        rs: 'typed'
-                    },
-                    context: {}
-                }),
-                _: Date.now()
-            },
+        const { data: html } = await axios.get(googleUrl, {
             headers: {
-                ...pinHeaders,
-                'Cookie': cookies,
-                'X-CSRFToken': csrf
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Referer': 'https://www.google.com/'
             },
             timeout: 15000
         });
 
-        const pins = searchRes.data?.resource_response?.data?.results || [];
+        const $ = cheerio.load(html);
+        const results = [];
 
-        if (!pins.length) {
+        // Extract image data dari Google Images
+        const imgDataMatches = html.matchAll(/\["(https:\/\/[^"]+\.(?:jpg|jpeg|png|webp))",(\d+),(\d+)\]/g);
+        for (const match of imgDataMatches) {
+            const imgUrl = match[1];
+            // Filter hanya gambar dari Pinterest atau i.pinimg.com
+            if (imgUrl.includes('pinimg.com') || imgUrl.includes('pinterest.com')) {
+                results.push({ image: imgUrl, width: parseInt(match[3]) || null, height: parseInt(match[2]) || null });
+            }
+        }
+
+        // Fallback: cari semua URL pinimg dari HTML
+        if (results.length === 0) {
+            const pinImgMatches = html.matchAll(/https:\/\/i\.pinimg\.com\/[^"'\s\\]+\.(?:jpg|jpeg|png|webp)/g);
+            for (const match of pinImgMatches) {
+                const url = match[0];
+                if (!results.find(r => r.image === url)) {
+                    results.push({ image: url, width: null, height: null });
+                }
+            }
+        }
+
+        // Fallback ke-2: DuckDuckGo Images
+        if (results.length === 0) {
+            const ddgRes = await axios.get(`https://duckduckgo.com/`, {
+                params: { q: `${keyword} pinterest`, ia: 'images', iax: 'images' },
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Accept': 'text/html'
+                },
+                timeout: 10000
+            });
+
+            const vqdMatch = ddgRes.data.match(/vqd=([\d-]+)/);
+            const vqd = vqdMatch?.[1];
+
+            if (vqd) {
+                const imgRes = await axios.get('https://duckduckgo.com/i.js', {
+                    params: { l: 'id-id', o: 'json', q: `${keyword} pinterest`, vqd, f: ',,,,,', p: '1' },
+                    headers: { 'User-Agent': 'Mozilla/5.0', 'Referer': 'https://duckduckgo.com/' },
+                    timeout: 10000
+                });
+
+                const ddgResults = imgRes.data?.results || [];
+                for (const item of ddgResults.slice(0, 20)) {
+                    if (item.image?.includes('pinimg.com') || item.thumbnail?.includes('pinimg.com')) {
+                        results.push({
+                            image: item.image || item.thumbnail,
+                            thumbnail: item.thumbnail || "",
+                            title: item.title || "",
+                            width: item.width || null,
+                            height: item.height || null,
+                            source: item.url || ""
+                        });
+                    }
+                }
+            }
+        }
+
+        if (results.length === 0) {
             return res.status(404).json({
-                status: false,
-                creator: "InuuTyzDev",
-                message: "Hasil pencarian Pinterest tidak ditemukan."
+                status: false, creator: "InuuTyzDev",
+                message: "Tidak ada hasil Pinterest ditemukan untuk keyword tersebut."
             });
         }
 
-        const result = pins
-            .filter(pin => pin?.images)
-            .slice(0, 20)
-            .map(pin => ({
-                id: pin.id,
-                title: pin.title || pin.grid_title || "",
-                description: pin.description || "",
-                image: pin.images?.orig?.url || pin.images?.['736x']?.url || "",
-                thumbnail: pin.images?.['236x']?.url || "",
-                width: pin.images?.orig?.width || null,
-                height: pin.images?.orig?.height || null,
-                link: pin.link || `https://www.pinterest.com/pin/${pin.id}/`,
-                pinner: pin.pinner?.username || null,
-                board: pin.board?.name || null,
-                dominant_color: pin.dominant_color || null
-            }));
-
         return res.status(200).json({
-            status: true,
-            creator: "InuuTyzDev",
-            result
+            status: true, creator: "InuuTyzDev",
+            result: results.slice(0, 20)
         });
 
     } catch (e) {
         return res.status(500).json({
-            status: false,
-            creator: "InuuTyzDev",
+            status: false, creator: "InuuTyzDev",
             message: "Gagal scrape Pinterest: " + e.message
         });
     }
+}
 }
 else if (type === 'spotify-search') {
     if (!keyword) return res.status(400).json({ status: false, message: "Parameter 'q' wajib diisi!" });
