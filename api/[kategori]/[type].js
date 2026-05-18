@@ -1,6 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import crypto from 'crypto';
+import sharp from 'sharp';
 import QRCode from 'qrcode-svg';
 import xml2js from 'xml2js';
 import FormData from 'form-data';           // ← tambah ini (untuk gptonline & deepaitxt2img)
@@ -32,6 +33,144 @@ function parseColor(input, defaultHex) {
         return colorDictionary[cleanInput];
     }
     return cleanInput.replace('#', '');
+}
+
+// =============================================
+// SPOTIFY CLASS (by Ditzzx)
+// =============================================
+class Parser {
+  _getImg(o) { return (o?.sources||[]).map(s=>({url:s.url,width:s.width||s.maxWidth||null,height:s.height||s.maxHeight||null})); }
+  _getCol(o) { return o?.extractedColors?.colorRaw?.hex||o?.extractedColors?.colorDark?.hex||null; }
+  _getVI(v) { return v?.squareCoverImage?.extractedColorSet?{text_color:v.squareCoverImage.extractedColorSet.encoreBaseSetTextColor||null,high_contrast:v.squareCoverImage.extractedColorSet.highContrast||null,higher_contrast:v.squareCoverImage.extractedColorSet.higherContrast||null,min_contrast:v.squareCoverImage.extractedColorSet.minContrast||null}:null; }
+  _getLink(uri) { if(!uri)return{id:null,url:null};const p=uri.split(':');return{uri,id:p[2]||null,url:p[2]?`https://open.spotify.com/${p[1]}/${p[2]}`:null}; }
+
+  parseSearch(res) {
+    if (!res) return null;
+    const parse = (arr, mapFn, isTrack = false) => (arr || []).reduce((acc, node) => {
+      const d = isTrack ? node.item?.data : node.data;
+      if (d) acc.push({ ...mapFn(d), ...(node.matchedFields && { matched_fields: node.matchedFields }) });
+      return acc;
+    }, []);
+    const trackItems = res.tracksV2?.items?.length ? res.tracksV2.items : res.topResultsV2?.itemsV2?.filter(i => i.item?.__typename === "TrackResponseWrapper");
+    return {
+      top_results: (res.topResultsV2?.itemsV2||[]).reduce((acc,node)=>{const wrap=node.item;const d=wrap?.data;if(!d)return acc;const type=wrap.__typename?.replace('ResponseWrapper','')||'Unknown';acc.push({type,...this._getLink(d.uri),name:d.name||d.profile?.name||d.displayName||null,images:this._getImg(d.coverArt||d.visuals?.avatarImage||d.images?.items?.[0]||d.avatar),matched_fields:node.matchedFields||[]});return acc;},[]),
+      tracks: parse(trackItems, t => ({...this._getLink(t.uri),name:t.name||null,duration_ms:t.duration?.totalMilliseconds||0,explicit:t.contentRating?.label==="EXPLICIT",artists:(t.artists?.items||[]).map(a=>({...this._getLink(a.uri),name:a.profile?.name})),album:{...this._getLink(t.albumOfTrack?.uri),name:t.albumOfTrack?.name||null,images:this._getImg(t.albumOfTrack?.coverArt)}}), true),
+      albums: parse(res.albumsV2?.items, a => ({...this._getLink(a.uri),name:a.name||null,type:a.type||null,release_year:a.date?.year||null,artists:(a.artists?.items||[]).map(art=>({...this._getLink(art.uri),name:art.profile?.name})),images:this._getImg(a.coverArt)})),
+      artists: parse(res.artists?.items, art => ({...this._getLink(art.uri),name:art.profile?.name||null,images:this._getImg(art.visuals?.avatarImage)})),
+      playlists: parse(res.playlists?.items, pl => ({...this._getLink(pl.uri),name:pl.name||null,description:pl.description||null,images:this._getImg(pl.images?.items?.[0]),owner:{display_name:pl.ownerV2?.data?.name||null}}))
+    };
+  }
+  parseTrack(data) { const t=data?.track||data;if(!t||t.__typename!=='Track')return null;const allArtists=[...(t.firstArtist?.items||[]),...(t.otherArtists?.items||[])];return{...this._getLink(t.uri),name:t.name||null,duration_ms:t.duration?.totalMilliseconds||0,playcount:parseInt(t.playcount)||0,explicit:t.contentRating?.label==="EXPLICIT",album:{...this._getLink(t.albumOfTrack?.uri),name:t.albumOfTrack?.name||null,images:this._getImg(t.albumOfTrack?.coverArt)},artists:allArtists.map(node=>({...this._getLink(node.uri),name:node.profile?.name||null}))}; }
+  parseArtist(data) { const a=data?.artist||data;if(!a||a.__typename!=='Artist')return null;return{...this._getLink(a.uri||`spotify:artist:${a.id}`),name:a.profile?.name||null,verified:!!a.profile?.verified,images:this._getImg(a.visuals?.avatarImage),statistics:{followers:a.stats?.followers||0,monthly_listeners:a.stats?.monthlyListeners||0},top_tracks:(a.discography?.topTracks?.items||[]).map(node=>({...this._getLink(node.track?.uri),name:node.track?.name||null,playcount:parseInt(node.track?.playcount)||0,album:{...this._getLink(node.track?.albumOfTrack?.uri),name:node.track?.albumOfTrack?.name||null,images:this._getImg(node.track?.albumOfTrack?.coverArt)}}))}; }
+  parseAlbum(data) { const al=data?.albumUnion||data?.album||data;if(!al||(al.__typename!=='Album'&&al.__typename!=='AlbumRelease'))return null;return{...this._getLink(al.uri),name:al.name||null,type:al.type||null,release_date:al.date?.isoString||al.date?.year||null,label:al.label||null,images:this._getImg(al.coverArt),artists:(al.artists?.items||[]).map(art=>({...this._getLink(art.uri),name:art.profile?.name||null})),tracks:(al.tracks?.items||al.tracksV2?.items||[]).map(node=>{const t=node.track||node;return{...this._getLink(t.uri),name:t.name||null,duration_ms:t.duration?.totalMilliseconds||0,artists:(t.artists?.items||[]).map(a=>({...this._getLink(a.uri),name:a.profile?.name}))};})}; }
+  parsePlaylist(data) { const pl=data?.playlistV2||data?.playlist||data;if(!pl||(pl.__typename!=='Playlist'&&pl.__typename!=='PlaylistResponseWrapper'))return null;return{...this._getLink(pl.uri),name:pl.name||null,description:pl.description||null,images:this._getImg(pl.images?.items?.[0]||pl.image),owner:{display_name:pl.ownerV2?.data?.name||null,username:pl.ownerV2?.data?.username||null},tracks:(pl.content?.items||pl.tracks?.items||[]).map(node=>{const t=node.item?.data||node.track||node;if(!t||t.__typename!=='Track')return null;return{...this._getLink(t.uri),name:t.name||null,duration_ms:t.duration?.totalMilliseconds||0,album:{...this._getLink(t.albumOfTrack?.uri),name:t.albumOfTrack?.name||null,images:this._getImg(t.albumOfTrack?.coverArt)},artists:(t.artists?.items||[]).map(a=>({...this._getLink(a.uri),name:a.profile?.name}))};}).filter(Boolean)}; }
+}
+
+class Spotify {
+  constructor() {
+    this.cfg = {
+      secret: '376136387538459893883312310911992847112448894410210511297108',
+      version: 61,
+      client_version: '1.2.88.61.ge172202b',
+      query: {
+        search: { opt: "searchDesktop", sha: "21b3fe49546912ba782db5c47e9ef5a7dbd20329520ba0c7d0fcfadee671d24e" },
+        track:  { opt: "getTrack",      sha: "612585ae06ba435ad26369870deaae23b5c8800a256cd8a57e08eddc25a37294" },
+        artist: { opt: "queryArtistOverview", sha: "5b9e64f43843fa3a9b6a98543600299b0a2cbbbccfdcdcef2402eb9c1017ca4c" },
+        album:  { opt: "getAlbum",      sha: "b9bfabef66ed756e5e13f68a942deb60bd4125ec1f1be8cc42769dc0259b4b10" },
+        playlist: { opt: "fetchPlaylist", sha: "32b05e92e438438408674f95d0fdad8082865dc32acd55bd97f5113b8579092b" }
+      }
+    };
+    this.is = axios.create({ headers: { 'referer':'https://open.spotify.com/','origin':'https://open.spotify.com','content-type':'application/json','accept':'application/json','user-agent':'Mozilla/5.0 (Linux; Android 16; NX729J) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.34 Mobile Safari/537.36' } });
+    this.parser = new Parser();
+  }
+
+  generateTOTP(tsms) {
+    const counter = Math.floor((tsms / 1000) / 30);
+    const buffer = Buffer.alloc(8);
+    buffer.writeBigInt64BE(BigInt(counter));
+    const hmac = crypto.createHmac('sha1', Buffer.from(this.cfg.secret, "utf8")).update(buffer);
+    const digest = hmac.digest();
+    const offset = digest[digest.length - 1] & 0xf;
+    const code = (digest.readUInt32BE(offset) & 0x7fffffff) % 1000000;
+    return code.toString().padStart(6, '0');
+  }
+
+  async getToken() {
+    try {
+      if (this.is.defaults.headers.authorization) return true;
+      const sts = Math.floor(Date.now() / 1000);
+      const { data: token } = await this.is.get("https://open.spotify.com/api/token", { params: { reason:"init", productType:"web-player", totp:this.generateTOTP(Date.now()), totpServer:this.generateTOTP(sts*1000), totpVer:String(this.cfg.version) } });
+      const { data: client } = await this.is.post('https://clienttoken.spotify.com/v1/clienttoken', { client_data: { client_version:this.cfg.client_version, client_id:token.clientId, js_sdk_data: { device_brand:"unknown", device_model:"unknown", os:"linux", os_version:"24.04", device_id:crypto.randomUUID(), device_type:"computer" } } });
+      Object.assign(this.is.defaults.headers, { 'accept-language':'en','app-platform':'WebPlayer','authorization':`Bearer ${token.accessToken}`,'client-token':client.granted_token.token,'spotify-app-version':this.cfg.client_version });
+      return true;
+    } catch { return false; }
+  }
+
+  async query(name, vars) {
+    if (!(await this.getToken())) return;
+    const sel = this.cfg.query[name];
+    const { data: res } = await this.is.post('https://api-partner.spotify.com/pathfinder/v2/query', { variables:vars, operationName:sel.opt, extensions:{ persistedQuery:{ version:1, sha256Hash:sel.sha } } });
+    return res;
+  }
+
+  async search(query)   { const res = await this.query("search",   { searchTerm:query, offset:0, limit:10, numberOfTopResults:5, includeAudiobooks:true, includeArtistHasConcertsField:false, includePreReleases:true, includeAuthors:false, includeEpisodeContentRatingsV2:false }); return this.parser.parseSearch(res.data.searchV2); }
+  async track(id)       { const res = await this.query("track",    { uri:`spotify:track:${id}` }); return this.parser.parseTrack(res.data.trackUnion); }
+  async artist(id)      { const res = await this.query("artist",   { uri:`spotify:artist:${id}`, locale:"", preReleaseV2:false }); return this.parser.parseArtist(res.data.artistUnion); }
+  async album(id)       { const res = await this.query("album",    { uri:`spotify:album:${id}`, locale:"", offset:0, limit:50 }); return this.parser.parseAlbum(res.data.albumUnion); }
+  async playlist(id)    { const res = await this.query("playlist", { uri:`spotify:playlist:${id}`, offset:0, limit:25, enableWatchFeedEntrypoint:false, includeEpisodeContentRatingsV2:false }); return this.parser.parsePlaylist(res.data.playlistV2); }
+}
+
+const spotifyClient = new Spotify();
+
+// Spotify Downloader
+async function SpotifyDl(url) {
+  try {
+    const { data: pp } = await axios.post('https://gamepvz.com/api/download/get-url', { url }, { headers: { 'content-type':'application/json','user-agent':'Mozilla/5.0' } });
+    return { status:true, title:pp.title, author:pp.authorName, cover:pp.coverUrl, dl:Buffer.from(pp.originalVideoUrl.split('url=')[1], 'base64').toString('utf-8') };
+  } catch { return { status: false }; }
+}
+
+// Spotify Card Image
+const escapeXml = (s) => (s||"").replace(/[<>&'"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'}[c]));
+function wrapText(text, maxCharsPerLine = 22) {
+  if (!text) return [];
+  const words = text.split(' ');
+  const lines = [];
+  let currentLine = '';
+  for (const word of words) {
+    if ((currentLine + word).length > maxCharsPerLine) { if (currentLine) lines.push(currentLine.trim()); currentLine = word + ' '; }
+    else { currentLine += word + ' '; }
+  }
+  if (currentLine) lines.push(currentLine.trim());
+  return lines;
+}
+async function loadImageFromURL(url) {
+  if (!url) return null;
+  if (Buffer.isBuffer(url)) return url;
+  try { const r = await axios.get(url, { responseType:'arraybuffer', timeout:4000 }); return Buffer.from(r.data,'binary'); } catch { return null; }
+}
+async function drawCardSpotify({ bg, cover, title, artist }) {
+  const { default: sharp } = await import('sharp');
+  const width=320,height=420,cardX=20,cardY=20,cardWidth=280,cardHeight=380,radius=20;
+  const coverBuffer = await loadImageFromURL(cover);
+  let dominantColor = '#222222';
+  if (coverBuffer) { try { const stats = await sharp(coverBuffer).stats(); const {r,g,b}=stats.dominant; dominantColor=`rgb(${r},${g},${b})`; } catch {} }
+  let baseImageBuffer;
+  if (bg) { const bgBuffer = await loadImageFromURL(bg); if (bgBuffer) baseImageBuffer = await sharp(bgBuffer).resize(width,height,{fit:'cover'}).toBuffer(); }
+  if (!baseImageBuffer) baseImageBuffer = await sharp({create:{width,height,channels:4,background:dominantColor}}).png().toBuffer();
+  const composites = [];
+  composites.push({ input: Buffer.from(`<svg width="${width}" height="${height}"><rect x="${cardX}" y="${cardY}" width="${cardWidth}" height="${cardHeight}" rx="${radius}" ry="${radius}" fill="rgba(0,0,0,0.7)"/></svg>`), top:0, left:0 });
+  if (coverBuffer) { const rc = await sharp(coverBuffer).resize(240,240,{fit:'cover'}).toBuffer(); composites.push({input:rc,left:cardX+20,top:cardY+20}); }
+  let currentY = cardY + 282;
+  let textSvg = `<svg width="${width}" height="${height}"><style>.t{font-family:sans-serif;font-weight:bold;font-size:22px;fill:white;}.a{font-family:sans-serif;font-size:16px;fill:rgba(255,255,255,0.8);}</style>`;
+  for (const line of wrapText((title||'').substring(0,26),20)) { textSvg += `<text x="${cardX+20}" y="${currentY}" class="t">${escapeXml(line)}</text>`; currentY += 26; }
+  currentY += 2;
+  for (const line of wrapText(artist||'',28)) { textSvg += `<text x="${cardX+20}" y="${currentY}" class="a">${escapeXml(line)}</text>`; currentY += 20; }
+  textSvg += `<text x="${cardX+40}" y="${cardY+370}" font-family="sans-serif" font-weight="bold" font-size="14px" fill="white">Spotify</text></svg>`;
+  composites.push({ input: Buffer.from(textSvg), top:0, left:0 });
+  const logoBuffer = await loadImageFromURL("https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_White-300x300.png");
+  if (logoBuffer) { const lr = await sharp(logoBuffer).resize(20,20).toBuffer(); composites.push({input:lr,top:cardY+354,left:cardX+14}); }
+  return await sharp(baseImageBuffer).composite(composites).png().toBuffer();
 }
 
 
@@ -749,55 +888,207 @@ else if (type === 'gptonline') {
         // 3. KATEGORI: STALKER
         // ==========================================
         else if (kategori === 'stalker') {
-            const target = q || user || username;
+    const target = q || user || username;
+    if (!target) return res.status(400).json({ status: false, message: "Parameter username/target wajib diisi!" });
 
-            if (!target) return res.status(400).json({ status: false, message: "Parameter username/target wajib diisi!" });
+    const scrapeHeaders = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/html, */*',
+        'Accept-Language': 'en-US,en;q=0.9'
+    };
 
-            const pixxxryTypes = ['tiktok', 'replit', 'steam', 'reddit', 'youtube', 'twitter', 'threads', 'npm', 'roblox'];
-            const siputzxTypes = ['pinterest', 'github'];
-
-            if (pixxxryTypes.includes(type)) {
-                try {
-                    let paramName = (type === 'youtube') ? 'q' : 'username';
-                    const targetUrl = `https://api.pixxxry.eu.cc/stalk/${type}?${paramName}=${encodeURIComponent(target)}`;
-
-                    const response = await axios.get(targetUrl);
-
-                    let cleanData = response.data.data || response.data;
-                    if (cleanData && typeof cleanData === 'object') {
-                        delete cleanData.creator;
-                        delete cleanData.status;
-                    }
-
-                    return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
-                } catch (e) {
-                    return res.status(500).json({ status: false, message: `Gagal stalk ${type}: ` + e.message });
-                }
-            }
-
-            else if (siputzxTypes.includes(type)) {
-                try {
-                    let paramName = (type === 'pinterest') ? 'q' : 'user';
-                    const targetUrl = `https://api.siputzx.my.id/api/stalk/${type}?${paramName}=${encodeURIComponent(target)}`;
-
-                    const response = await axios.get(targetUrl);
-
-                    let cleanData = response.data.data || response.data;
-                    if (cleanData && typeof cleanData === 'object') {
-                        delete cleanData.creator;
-                        delete cleanData.status;
-                    }
-
-                    return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
-                } catch (e) {
-                    return res.status(500).json({ status: false, message: `Gagal stalk ${type}: ` + e.message });
-                }
-            }
-
-            else {
-                return res.status(400).json({ status: false, message: `Type stalker '${type}' tidak valid atau belum didukung` });
-            }
+    try {
+        // ── GITHUB ──────────────────────────────────────────
+        if (type === 'github') {
+            const { data } = await axios.get(`https://api.github.com/users/${encodeURIComponent(target)}`, { headers: scrapeHeaders });
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: {
+                username: data.login, name: data.name, bio: data.bio,
+                avatar: data.avatar_url, url: data.html_url,
+                followers: data.followers, following: data.following,
+                public_repos: data.public_repos, public_gists: data.public_gists,
+                company: data.company, location: data.location,
+                blog: data.blog, twitter: data.twitter_username,
+                created_at: data.created_at
+            }});
         }
+
+        // ── NPM ──────────────────────────────────────────────
+        else if (type === 'npm') {
+            const { data } = await axios.get(`https://registry.npmjs.org/${encodeURIComponent(target)}`, { headers: scrapeHeaders });
+            const latest = data['dist-tags']?.latest;
+            const ver = data.versions?.[latest] || {};
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: {
+                name: data.name, description: data.description,
+                version: latest, license: ver.license || data.license,
+                author: ver.author?.name || data.author?.name,
+                homepage: data.homepage, repository: data.repository?.url,
+                keywords: data.keywords, created: data.time?.created,
+                modified: data.time?.modified,
+                weekly_downloads: null
+            }});
+        }
+
+        // ── REDDIT ───────────────────────────────────────────
+        else if (type === 'reddit') {
+            const { data } = await axios.get(`https://www.reddit.com/user/${encodeURIComponent(target)}/about.json`, { headers: scrapeHeaders });
+            const d = data?.data;
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: {
+                username: d.name, id: d.id,
+                karma_post: d.link_karma, karma_comment: d.comment_karma,
+                total_karma: d.total_karma,
+                avatar: d.icon_img?.split('?')[0] || null,
+                is_gold: d.is_gold, is_mod: d.is_mod,
+                verified: d.verified,
+                created_at: new Date(d.created * 1000).toISOString(),
+                url: `https://reddit.com/u/${d.name}`
+            }});
+        }
+
+        // ── ROBLOX ───────────────────────────────────────────
+        else if (type === 'roblox') {
+            const search = await axios.get(`https://users.roblox.com/v1/users/search?keyword=${encodeURIComponent(target)}&limit=1`, { headers: scrapeHeaders });
+            const userId = search.data?.data?.[0]?.id;
+            if (!userId) return res.status(404).json({ status: false, message: "User Roblox tidak ditemukan." });
+            const [profile, friends, followers] = await Promise.allSettled([
+                axios.get(`https://users.roblox.com/v1/users/${userId}`, { headers: scrapeHeaders }),
+                axios.get(`https://friends.roblox.com/v1/users/${userId}/friends/count`, { headers: scrapeHeaders }),
+                axios.get(`https://friends.roblox.com/v1/users/${userId}/followers/count`, { headers: scrapeHeaders })
+            ]);
+            const p = profile.value?.data;
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: {
+                id: p?.id, username: p?.name, display_name: p?.displayName,
+                description: p?.description, is_banned: p?.isBanned,
+                friends: friends.value?.data?.count || 0,
+                followers: followers.value?.data?.count || 0,
+                created_at: p?.created,
+                url: `https://www.roblox.com/users/${p?.id}/profile`
+            }});
+        }
+
+        // ── STEAM ────────────────────────────────────────────
+        else if (type === 'steam') {
+            // Coba resolve vanity URL dulu
+            let steamId = target;
+            if (!/^\d{17}$/.test(target)) {
+                try {
+                    const van = await axios.get(`https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?key=STEAM_API_KEY&vanityurl=${encodeURIComponent(target)}`, { headers: scrapeHeaders });
+                    steamId = van.data?.response?.steamid || target;
+                } catch {}
+            }
+            const { data } = await axios.get(`https://steamcommunity.com/profiles/${steamId}/?xml=1`, { headers: scrapeHeaders });
+            // Parse XML sederhana
+            const get = (tag) => data.match(new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]></${tag}>`))?.[1] || data.match(new RegExp(`<${tag}[^>]*>([^<]*)</${tag}>`))?.[1] || null;
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: {
+                steamid: get('steamID64'), username: get('steamID'),
+                realname: get('realname'), avatar: get('avatarFull'),
+                location: get('location'), status: get('onlineState'),
+                member_since: get('memberSince'),
+                url: `https://steamcommunity.com/profiles/${get('steamID64')}`
+            }});
+        }
+
+        // ── TIKTOK ───────────────────────────────────────────
+        else if (type === 'tiktok') {
+            const { data: html } = await axios.get(`https://www.tiktok.com/@${encodeURIComponent(target)}`, {
+                headers: { ...scrapeHeaders, 'Accept': 'text/html' }
+            });
+            const jsonMatch = html.match(/<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([\s\S]*?)<\/script>/);
+            if (!jsonMatch) return res.status(404).json({ status: false, message: "Profil TikTok tidak ditemukan." });
+            const json = JSON.parse(jsonMatch[1]);
+            const userData = json?.['__DEFAULT_SCOPE__']?.['webapp.user-detail']?.userInfo;
+            const u = userData?.user;
+            const s = userData?.stats;
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: {
+                id: u?.id, username: u?.uniqueId, nickname: u?.nickname,
+                bio: u?.signature, avatar: u?.avatarLarger,
+                verified: u?.verified, private: u?.privateAccount,
+                region: u?.region,
+                following: s?.followingCount, followers: s?.followerCount,
+                likes: s?.heartCount, videos: s?.videoCount,
+                url: `https://www.tiktok.com/@${u?.uniqueId}`
+            }});
+        }
+
+        // ── THREADS ──────────────────────────────────────────
+        else if (type === 'threads') {
+            const { data: html } = await axios.get(`https://www.threads.net/@${encodeURIComponent(target)}`, {
+                headers: { ...scrapeHeaders, 'Accept': 'text/html', 'sec-fetch-mode': 'navigate' }
+            });
+            const match = html.match(/"user":\{"pk":"(\d+)","username":"([^"]+)","full_name":"([^"]*)","is_verified":(true|false),"profile_pic_url":"([^"]+)","biography":"([^"]*)","follower_count":(\d+)/);
+            if (!match) return res.status(404).json({ status: false, message: "Profil Threads tidak ditemukan." });
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: {
+                id: match[1], username: match[2], name: match[3],
+                verified: match[4] === 'true',
+                avatar: match[5].replace(/\\/g, ''),
+                bio: match[6], followers: parseInt(match[7]),
+                url: `https://www.threads.net/@${match[2]}`
+            }});
+        }
+
+        // ── YOUTUBE ──────────────────────────────────────────
+        else if (type === 'youtube') {
+            const searchUrl = `https://www.youtube.com/@${encodeURIComponent(target)}/about`;
+            const { data: html } = await axios.get(searchUrl, {
+                headers: { ...scrapeHeaders, 'Accept': 'text/html' }
+            });
+            const ytInitData = html.match(/var ytInitialData = ([\s\S]*?);<\/script>/)?.[1];
+            if (!ytInitData) return res.status(404).json({ status: false, message: "Channel YouTube tidak ditemukan." });
+            const json = JSON.parse(ytInitData);
+            const header = json?.header?.c4TabbedHeaderRenderer || json?.header?.pageHeaderRenderer;
+            const meta = json?.metadata?.channelMetadataRenderer;
+            const badges = header?.badges || [];
+            const isVerified = badges.some(b => b?.metadataBadgeRenderer?.style?.includes('VERIFIED'));
+            const subsText = header?.subscriberCountText?.simpleText || header?.subscriberCountText?.runs?.[0]?.text || "N/A";
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: {
+                channel_id: meta?.externalId, name: meta?.title,
+                description: meta?.description?.substring(0, 300),
+                avatar: header?.avatar?.thumbnails?.slice(-1)[0]?.url || null,
+                banner: header?.banner?.thumbnails?.slice(-1)[0]?.url || null,
+                subscribers: subsText, verified: isVerified,
+                country: meta?.country || null,
+                url: meta?.channelUrl || `https://youtube.com/@${target}`
+            }});
+        }
+
+        // ── TWITTER/X ────────────────────────────────────────
+        else if (type === 'twitter') {
+            const guestToken = await axios.post('https://api.twitter.com/1.1/guest/activate.json', {}, {
+                headers: {
+                    ...scrapeHeaders,
+                    'Authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA'
+                }
+            });
+            const gt = guestToken.data?.guest_token;
+            const { data } = await axios.get(`https://api.twitter.com/graphql/G3KGOASz96M-Qu0nwmGXNg/UserByScreenName?variables=%7B%22screen_name%22%3A%22${encodeURIComponent(target)}%22%2C%22withSafetyModeUserFields%22%3Atrue%7D&features=%7B%22hidden_profile_subscriptions_enabled%22%3Atrue%7D`, {
+                headers: {
+                    ...scrapeHeaders,
+                    'Authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA',
+                    'x-guest-token': gt
+                }
+            });
+            const u = data?.data?.user?.result?.legacy;
+            const core = data?.data?.user?.result;
+            return res.status(200).json({ status: true, creator: "InuuTyzDev", result: {
+                id: core?.rest_id, username: u?.screen_name, name: u?.name,
+                bio: u?.description, location: u?.location,
+                avatar: u?.profile_image_url_https?.replace('_normal', '_400x400'),
+                banner: u?.profile_banner_url,
+                verified: u?.verified || core?.is_blue_verified || false,
+                followers: u?.followers_count, following: u?.friends_count,
+                tweets: u?.statuses_count, likes: u?.favourites_count,
+                created_at: u?.created_at,
+                url: `https://twitter.com/${u?.screen_name}`
+            }});
+        }
+
+        else {
+            return res.status(400).json({ status: false, message: `Type stalker '${type}' tidak valid atau belum didukung.` });
+        }
+
+    } catch (e) {
+        return res.status(500).json({ status: false, creator: "InuuTyzDev", message: `Gagal stalk ${type}: ${e.message}` });
+    }
+}
 
         // ==========================================
         // 4. KATEGORI: DOWNLOADER
@@ -895,7 +1186,12 @@ else if (type === 'youtube_v2') {
 
                 return res.status(200).json({ status: true, creator: "InuuTyzDev", result: cleanData });
             }
-
+else if (type === 'spotify-dl') {
+    if (!url) return res.status(400).json({ status: false, message: "Parameter 'url' (Spotify track URL) wajib diisi!" });
+    const result = await SpotifyDl(url);
+    if (!result.status) return res.status(500).json({ status: false, creator: "InuuTyzDev", message: "Gagal download lagu Spotify." });
+    return res.status(200).json({ status: true, creator: "InuuTyzDev", result });
+}
             else if (type === 'fb') {
                 const { data } = await axios.get('https://fdown.net');
                 const $ = cheerio.load(data);
@@ -1053,6 +1349,35 @@ else if (type === 'ytsearch') {
     const ytResult = await yt.default.search(keyword);
 
     return res.status(200).json({ status: true, creator: "InuuTyzDev", result: ytResult });
+}
+else if (type === 'spotify-search') {
+    if (!keyword) return res.status(400).json({ status: false, message: "Parameter 'q' wajib diisi!" });
+    const result = await spotifyClient.search(keyword);
+    return res.status(200).json({ status: true, creator: "InuuTyzDev", result });
+}
+
+else if (type === 'spotify-track') {
+    if (!keyword) return res.status(400).json({ status: false, message: "Parameter 'q' (Track ID) wajib diisi!" });
+    const result = await spotifyClient.track(keyword);
+    return res.status(200).json({ status: true, creator: "InuuTyzDev", result });
+}
+
+else if (type === 'spotify-artist') {
+    if (!keyword) return res.status(400).json({ status: false, message: "Parameter 'q' (Artist ID) wajib diisi!" });
+    const result = await spotifyClient.artist(keyword);
+    return res.status(200).json({ status: true, creator: "InuuTyzDev", result });
+}
+
+else if (type === 'spotify-album') {
+    if (!keyword) return res.status(400).json({ status: false, message: "Parameter 'q' (Album ID) wajib diisi!" });
+    const result = await spotifyClient.album(keyword);
+    return res.status(200).json({ status: true, creator: "InuuTyzDev", result });
+}
+
+else if (type === 'spotify-playlist') {
+    if (!keyword) return res.status(400).json({ status: false, message: "Parameter 'q' (Playlist ID) wajib diisi!" });
+    const result = await spotifyClient.playlist(keyword);
+    return res.status(200).json({ status: true, creator: "InuuTyzDev", result });
 }
             else if (type === 'lyrics') {
                 const response = await axios.get(`https://lrclib.net/api/search?q=${encodeURIComponent(keyword)}`);
@@ -2516,51 +2841,101 @@ if (type === 'quotes-anime') {
     const creator = "InuuTyzDev";
 
     try {
-        // Tembak langsung API quotes anime milik Danzy
-        const danzyQuotesUrl = 'https://api.danzy.web.id/api/random/quotesanime';
-        
-        const { data } = await axios.get(danzyQuotesUrl, {
-            headers: { 
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' 
-            },
-            timeout: 10000
-        });
+        // Source 1: animechan.io — API publik gratis
+        let result = null;
 
-        // Validasi response sukses dari API Danzy
-        if (!data || !data.status || !data.result) {
-            return res.status(404).json({ 
-                status: false, 
-                creator, 
-                message: "Quotes tidak ditemukan atau server sedang maintenance." 
+        try {
+            const { data } = await axios.get('https://animechan.io/api/v1/quotes/random', {
+                headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
+                timeout: 8000
             });
+            if (data?.data) {
+                const t = data.data;
+                result = {
+                    character: t.character?.name || "Tidak diketahui",
+                    anime: t.anime?.name || "Tidak diketahui",
+                    quote: (t.content || "").trim(),
+                    image: "",
+                    episode: ""
+                };
+            }
+        } catch {}
+
+        // Source 2: otakotaku scrape langsung per ID random
+        if (!result) {
+            try {
+                const randomId = Math.floor(Math.random() * 900) + 1;
+                const { data: html } = await axios.get(`https://otakotaku.com/quote/view/${randomId}`, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                        'Accept': 'text/html',
+                        'Accept-Language': 'id-ID,id;q=0.9'
+                    },
+                    timeout: 10000
+                });
+
+                const $ = cheerio.load(html);
+
+                // Coba berbagai selector umum
+                const quote =
+                    $('p.kotoba').text().trim() ||
+                    $('[itemprop="description"]').text().trim() ||
+                    $('blockquote').first().text().trim() ||
+                    $('p.quote').text().trim() ||
+                    $('div.quote-text').text().trim();
+
+                const character =
+                    $('span.char-name').text().trim() ||
+                    $('[itemprop="character"]').text().trim() ||
+                    $('a.char').text().trim() ||
+                    $('span.character').text().trim();
+
+                const anime =
+                    $('span.anime-name').text().trim() ||
+                    $('[itemprop="name"]').first().text().trim() ||
+                    $('a.anime').text().trim() ||
+                    $('span.anime').text().trim();
+
+                const image =
+                    $('img.char-img').attr('src') ||
+                    $('img.kotoba-img').attr('src') ||
+                    $('meta[property="og:image"]').attr('content') || "";
+
+                if (quote && quote.length > 5) {
+                    result = {
+                        character: character || "Tidak diketahui",
+                        anime: anime || "Tidak diketahui",
+                        quote: quote.replace(/\n+/g, ' ').trim(),
+                        image: image.startsWith('http') ? image : image ? `https://otakotaku.com${image}` : "",
+                        episode: "",
+                        source_url: `https://otakotaku.com/quote/view/${randomId}`
+                    };
+                }
+            } catch {}
         }
 
-        const target = data.result;
+        // Source 3: list hardcode fallback kalau semua gagal
+        if (!result) {
+            const fallbackQuotes = [
+                { quote: "Orang yang tidak bisa menyerah tidak akan pernah mati.", character: "Whitebeard", anime: "One Piece" },
+                { quote: "Saya tidak menangis karena lemah, tapi karena sudah lama kuat.", character: "Monkey D. Luffy", anime: "One Piece" },
+                { quote: "Jika kamu tidak bisa membagi rasa sakit dengan seseorang, kamu tidak akan bisa menjadi manusia seutuhnya.", character: "Pain", anime: "Naruto" },
+                { quote: "Tidak ada yang namanya kebetulan di dunia ini, yang ada hanyalah ketidakhindarannya.", character: "Yuko Ichihara", anime: "xxxHolic" },
+                { quote: "Masa lalu adalah sesuatu yang tidak bisa berubah, tapi masa depan adalah sesuatu yang bisa kamu ubah sekarang.", character: "Holo", anime: "Spice and Wolf" },
+                { quote: "Kekuatan sejati bukan berasal dari kemenangan. Perjuanganmu membangun kekuatanmu.", character: "Arnold Schwarzenegger", anime: "Gintama" },
+                { quote: "Apapun yang terjadi, aku tidak akan pernah menyerah.", character: "Naruto Uzumaki", anime: "Naruto" },
+                { quote: "Seorang pria tidak akan menangis kecuali di depan orang yang paling dia cintai.", character: "Renji Abarai", anime: "Bleach" }
+            ];
+            const pick = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
+            result = { ...pick, image: "", episode: "" };
+        }
 
-        // Bersihkan teks quote dari simbol \n (baris baru) agar JSON Anda rapi
-        const cleanQuote = target.quote ? target.quote.replace(/\\n|\n/g, ' ').trim() : "";
-
-        // Mengembalikan response dengan struktur yang sama persis seperti milik Danzy
-        return res.status(200).json({ 
-            status: true, 
-            creator, 
-            result: {
-                link: target.link || "",
-                image: target.image || "",
-                character: target.character || "Tidak diketahui",
-                anime: target.anime || "Tidak diketahui",
-                episode: target.episode || "",
-                date: target.date || "",
-                quote: cleanQuote
-            }
-        });
+        return res.status(200).json({ status: true, creator, result });
 
     } catch (e) {
-        console.error(e);
-        return res.status(500).json({ 
-            status: false, 
-            creator, 
-            message: "Gagal mengambil data: " + e.message 
+        return res.status(500).json({
+            status: false, creator,
+            message: "Gagal mengambil quotes anime: " + e.message
         });
     }
 }
