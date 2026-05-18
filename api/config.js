@@ -273,6 +273,12 @@ export default async function handler(req, res) {
                     "params": [{ "name": "url", "required": true, "description": "Link lagu Spotify" }]
                 },
                 {
+    "name": "Spotify Downloader V2",
+    "endpoint": "/api/download/spotify-dl",
+    "method": "GET",
+    "params": [{ "name": "url", "required": true, "description": "URL track Spotify" }]
+}, 
+                {
             "name": "SnackVideo Downloader",
             "endpoint": "/api/download/snackvideo",
             "method": "GET",
@@ -435,7 +441,37 @@ export default async function handler(req, res) {
         "endpoint": "/api/search/books",
         "method": "GET",
         "params": [{ "name": "q", "required": true, "description": "Judul buku" }]
-    }
+    }, 
+    {
+    "name": "Spotify Search",
+    "endpoint": "/api/search/spotify-search",
+    "method": "GET",
+    "params": [{ "name": "q", "required": true, "description": "Keyword lagu, artis, atau album" }]
+},
+{
+    "name": "Spotify Track Detail",
+    "endpoint": "/api/search/spotify-track",
+    "method": "GET",
+    "params": [{ "name": "q", "required": true, "description": "Track ID Spotify" }]
+},
+{
+    "name": "Spotify Artist Detail",
+    "endpoint": "/api/search/spotify-artist",
+    "method": "GET",
+    "params": [{ "name": "q", "required": true, "description": "Artist ID Spotify" }]
+},
+{
+    "name": "Spotify Album Detail",
+    "endpoint": "/api/search/spotify-album",
+    "method": "GET",
+    "params": [{ "name": "q", "required": true, "description": "Album ID Spotify" }]
+},
+{
+    "name": "Spotify Playlist Detail",
+    "endpoint": "/api/search/spotify-playlist",
+    "method": "GET",
+    "params": [{ "name": "q", "required": true, "description": "Playlist ID Spotify" }]
+}
 ], 
             "stalker": [
                 {
@@ -2047,6 +2083,17 @@ export default async function handler(req, res) {
                     ]
                 },
                 {
+    "name": "Spotify Card",
+    "endpoint": "/api/canvas/spotify-card",
+    "method": "GET",
+    "params": [
+        { "name": "cover", "required": true, "description": "URL cover album" },
+        { "name": "title", "required": true, "description": "Judul lagu" },
+        { "name": "artist", "required": true, "description": "Nama artis" },
+        { "name": "bg", "required": false, "description": "URL background (opsional)" }
+    ]
+}, 
+                {
                     "name": "Security Report",
                     "endpoint": "/api/canvas/security",
                     "method": "POST",
@@ -2178,6 +2225,7 @@ export default async function handler(req, res) {
                         { "name": "quality", "required": false, "description": "Kualitas Gambar (Opsional: 90)" }
                     ]
                 }
+                
             ]
         }
     });
