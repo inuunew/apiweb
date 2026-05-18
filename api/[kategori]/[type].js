@@ -1,14 +1,14 @@
-// Import semua library yang dibutuhkan di sini (axios, cheerio, dll)
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import crypto from 'crypto';
 import QRCode from 'qrcode-svg';
 import xml2js from 'xml2js';
+import FormData from 'form-data';           // ← tambah ini (untuk gptonline & deepaitxt2img)
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
 const entertainmentData = require('../../database/entertainment.json');
-const animeData = require('../../database/anime.json'); // Sesuaikan path-nya
+const animeData = require('../../database/anime.json');
 
 
 const colorDictionary = {
@@ -1611,19 +1611,30 @@ else if (type === 'ytsearch') {
     if (!url) return res.status(400).json({ status: false, message: "Parameter 'url' chapter wajib diisi!" });
 
     try {
-        // 1. Ambil data HTML dari web target
-        const response = await axios.get(url, {
+        // 1. Lakukan request menggunakan 'got' dengan fitur HTTP/2 aktif
+        const response = await got(url, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                'Referer': 'https://komikindo.ch/',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-                'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7'
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                'accept-language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+                'referer': 'https://komikindo.ch/',
+                'cache-control': 'max-age=0',
+                'sec-ch-ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"Windows"',
+                'sec-fetch-dest': 'document',
+                'sec-fetch-mode': 'navigate',
+                'sec-fetch-site': 'same-origin',
+                'sec-fetch-user': '?1',
+                'upgrade-insecure-requests': '1'
             },
-            timeout: 10000 
+            http2: true, // <-- Kunci utama untuk mengelabui Cloudflare
+            timeout: { request: 10000 },
+            retry: { limit: 1 }
         });
 
-        // 2. Load HTML pake cheerio yang sudah di-import di atas global
-        const $ = cheerio.load(response.data);
+        // 2. Load HTML menggunakan cheerio
+        const $ = cheerio.load(response.body); // Catatan: kalau 'got' pakainya .body, bukan .data
         const images = [];
         
         // 3. Scraping element gambar
@@ -1640,7 +1651,7 @@ else if (type === 'ytsearch') {
         if (images.length === 0) {
             return res.status(403).json({ 
                 status: false, 
-                message: "Gagal mengambil gambar. Website target kemungkinan memperketat proteksi Cloudflare." 
+                message: "Gagal mengambil gambar. Struktur HTML berubah atau proteksi terlalu ketat." 
             });
         }
 
@@ -1655,10 +1666,11 @@ else if (type === 'ytsearch') {
         });
 
     } catch (e) {
-        if (e.response && (e.response.status === 403 || e.response.status === 503)) {
+        // Tangani jika tetap diblokir
+        if (e.response && (e.response.statusCode === 403 || e.response.statusCode === 503)) {
             return res.status(403).json({ 
                 status: false, 
-                message: "diblokir oleh Cloudflare/WAF Komikindo." 
+                message: "Scraper HTTP/2 masih terdeteksi oleh Cloudflare Komikindo. Perlu taktik alternatif." 
             });
         }
         return res.status(500).json({ status: false, message: "Gagal mengambil isi chapter: " + e.message });
