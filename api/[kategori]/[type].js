@@ -1350,6 +1350,92 @@ else if (type === 'ytsearch') {
 
     return res.status(200).json({ status: true, creator: "InuuTyzDev", result: ytResult });
 }
+else if (type === 'pinterest') {
+    if (!keyword) return res.status(400).json({ status: false, message: "Parameter 'q' wajib diisi!" });
+
+    try {
+        const pinHeaders = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json, text/javascript, */*; q=0.01',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Referer': 'https://www.pinterest.com/',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-Pinterest-AppState': 'active'
+        };
+
+        // Step 1: ambil CSRFToken dari homepage
+        const homeRes = await axios.get('https://www.pinterest.com/', {
+            headers: { ...pinHeaders, 'Accept': 'text/html' },
+            timeout: 10000
+        });
+        const csrfMatch = homeRes.data.match(/csrftoken["\s:=]+([a-zA-Z0-9]+)/);
+        const csrf = csrfMatch?.[1] || '';
+        const cookies = (homeRes.headers['set-cookie'] || []).map(c => c.split(';')[0]).join('; ');
+
+        // Step 2: hit Pinterest resource API search
+        const searchRes = await axios.get('https://www.pinterest.com/resource/BaseSearchResource/get/', {
+            params: {
+                source_url: `/search/pins/?q=${encodeURIComponent(keyword)}`,
+                data: JSON.stringify({
+                    options: {
+                        query: keyword,
+                        scope: 'pins',
+                        no_fetch_context_on_resource: false,
+                        rs: 'typed'
+                    },
+                    context: {}
+                }),
+                _: Date.now()
+            },
+            headers: {
+                ...pinHeaders,
+                'Cookie': cookies,
+                'X-CSRFToken': csrf
+            },
+            timeout: 15000
+        });
+
+        const pins = searchRes.data?.resource_response?.data?.results || [];
+
+        if (!pins.length) {
+            return res.status(404).json({
+                status: false,
+                creator: "InuuTyzDev",
+                message: "Hasil pencarian Pinterest tidak ditemukan."
+            });
+        }
+
+        const result = pins
+            .filter(pin => pin?.images)
+            .slice(0, 20)
+            .map(pin => ({
+                id: pin.id,
+                title: pin.title || pin.grid_title || "",
+                description: pin.description || "",
+                image: pin.images?.orig?.url || pin.images?.['736x']?.url || "",
+                thumbnail: pin.images?.['236x']?.url || "",
+                width: pin.images?.orig?.width || null,
+                height: pin.images?.orig?.height || null,
+                link: pin.link || `https://www.pinterest.com/pin/${pin.id}/`,
+                pinner: pin.pinner?.username || null,
+                board: pin.board?.name || null,
+                dominant_color: pin.dominant_color || null
+            }));
+
+        return res.status(200).json({
+            status: true,
+            creator: "InuuTyzDev",
+            result
+        });
+
+    } catch (e) {
+        return res.status(500).json({
+            status: false,
+            creator: "InuuTyzDev",
+            message: "Gagal scrape Pinterest: " + e.message
+        });
+    }
+}
 else if (type === 'spotify-search') {
     if (!keyword) return res.status(400).json({ status: false, message: "Parameter 'q' wajib diisi!" });
     const result = await spotifyClient.search(keyword);
