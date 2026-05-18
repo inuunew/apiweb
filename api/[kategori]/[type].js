@@ -1354,98 +1354,49 @@ else if (type === 'pinterest') {
     if (!keyword) return res.status(400).json({ status: false, message: "Parameter 'q' wajib diisi!" });
 
     try {
-        // Scrape via Google Images filter site:pinterest.com
-        const searchQuery = `${keyword} site:pinterest.com`;
-        const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}&tbm=isch&num=20`;
+        const url = `https://id.pinterest.com/resource/BaseSearchResource/get/?source_url=/search/pins/?q=${encodeURIComponent(keyword)}&rs=rs&data=${encodeURIComponent(JSON.stringify({
+            options: {
+                query: keyword,
+                rs: "rs",
+                scope: "pins",
+                redux_normalize_feed: true,
+                source_url: `/search/pins/?q=${encodeURIComponent(keyword)}&rs=rs`
+            },
+            context: {}
+        }))}`;
 
-        const { data: html } = await axios.get(googleUrl, {
+        const response = await axios.get(url, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml',
-                'Accept-Language': 'en-US,en;q=0.9',
-                'Referer': 'https://www.google.com/'
+                "accept": "application/json, text/javascript, */*; q=0.01",
+                "x-pinterest-appstate": "active",
+                "x-pinterest-pws-handler": "www/search/[scope].js",
+                "x-requested-with": "XMLHttpRequest",
+                "user-agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36",
+                "referer": "https://id.pinterest.com/",
+                "accept-language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7"
             },
             timeout: 15000
         });
 
-        const $ = cheerio.load(html);
-        const results = [];
-
-        // Extract image data dari Google Images
-        const imgDataMatches = html.matchAll(/\["(https:\/\/[^"]+\.(?:jpg|jpeg|png|webp))",(\d+),(\d+)\]/g);
-        for (const match of imgDataMatches) {
-            const imgUrl = match[1];
-            // Filter hanya gambar dari Pinterest atau i.pinimg.com
-            if (imgUrl.includes('pinimg.com') || imgUrl.includes('pinterest.com')) {
-                results.push({ image: imgUrl, width: parseInt(match[3]) || null, height: parseInt(match[2]) || null });
-            }
-        }
-
-        // Fallback: cari semua URL pinimg dari HTML
-        if (results.length === 0) {
-            const pinImgMatches = html.matchAll(/https:\/\/i\.pinimg\.com\/[^"'\s\\]+\.(?:jpg|jpeg|png|webp)/g);
-            for (const match of pinImgMatches) {
-                const url = match[0];
-                if (!results.find(r => r.image === url)) {
-                    results.push({ image: url, width: null, height: null });
-                }
-            }
-        }
-
-        // Fallback ke-2: DuckDuckGo Images
-        if (results.length === 0) {
-            const ddgRes = await axios.get(`https://duckduckgo.com/`, {
-                params: { q: `${keyword} pinterest`, ia: 'images', iax: 'images' },
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Accept': 'text/html'
-                },
-                timeout: 10000
-            });
-
-            const vqdMatch = ddgRes.data.match(/vqd=([\d-]+)/);
-            const vqd = vqdMatch?.[1];
-
-            if (vqd) {
-                const imgRes = await axios.get('https://duckduckgo.com/i.js', {
-                    params: { l: 'id-id', o: 'json', q: `${keyword} pinterest`, vqd, f: ',,,,,', p: '1' },
-                    headers: { 'User-Agent': 'Mozilla/5.0', 'Referer': 'https://duckduckgo.com/' },
-                    timeout: 10000
-                });
-
-                const ddgResults = imgRes.data?.results || [];
-                for (const item of ddgResults.slice(0, 20)) {
-                    if (item.image?.includes('pinimg.com') || item.thumbnail?.includes('pinimg.com')) {
-                        results.push({
-                            image: item.image || item.thumbnail,
-                            thumbnail: item.thumbnail || "",
-                            title: item.title || "",
-                            width: item.width || null,
-                            height: item.height || null,
-                            source: item.url || ""
-                        });
-                    }
-                }
-            }
-        }
+        const results = response.data?.resource_response?.data?.results || [];
 
         if (results.length === 0) {
-            return res.status(404).json({
-                status: false, creator: "InuuTyzDev",
-                message: "Tidak ada hasil Pinterest ditemukan untuk keyword tersebut."
-            });
+            return res.status(404).json({ status: false, creator: "InuuTyzDev", message: "Tidak ada hasil ditemukan." });
         }
 
-        return res.status(200).json({
-            status: true, creator: "InuuTyzDev",
-            result: results.slice(0, 20)
-        });
+        const formatted = results.map(pin => ({
+            id: pin.id,
+            title: pin.seo_alt_text || pin.title || "No Title",
+            image: pin.images?.["474x"]?.url || pin.images?.["236x"]?.url || pin.images?.orig?.url || null,
+            board: pin.board?.name || "-",
+            username: pin.pinner?.username || "-",
+            source: `https://id.pinterest.com/pin/${pin.id}/`
+        })).filter(item => item.image !== null);
+
+        return res.status(200).json({ status: true, creator: "InuuTyzDev", result: formatted });
 
     } catch (e) {
-        return res.status(500).json({
-            status: false, creator: "InuuTyzDev",
-            message: "Gagal scrape Pinterest: " + e.message
-        });
+        return res.status(500).json({ status: false, creator: "InuuTyzDev", message: "Gagal scrape Pinterest: " + e.message });
     }
 }
 else if (type === 'spotify-search') {
