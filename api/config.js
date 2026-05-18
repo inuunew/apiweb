@@ -436,6 +436,12 @@ export default async function handler(req, res) {
     "method": "GET",
     "params": [{ "name": "q", "required": true, "description": "Judul lagu / video YouTube" }]
 }, 
+{
+    "name": "Pinterest Search",
+    "endpoint": "/api/search/pinterest",
+    "method": "GET",
+    "params": [{ "name": "q", "required": true, "description": "Keyword pencarian Pinterest" }]
+}, 
     {
         "name": "Google Books",
         "endpoint": "/api/search/books",
@@ -474,37 +480,61 @@ export default async function handler(req, res) {
 }
 ], 
             "stalker": [
-                {
-                    "name": "Pinterest Stalk",
-                    "endpoint": "/api/stalker/pinterest",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Username Pinterest" }]
-                },
-                {
-                    "name": "GitHub Stalk",
-                    "endpoint": "/api/stalker/github",
-                    "method": "GET",
-                    "params": [{ "name": "user", "required": true, "description": "Username GitHub" }]
-                },
-                {
-                    "name": "Twitter Stalk",
-                    "endpoint": "/api/stalker/twitter",
-                    "method": "GET",
-                    "params": [{ "name": "user", "required": true, "description": "Username Twitter" }]
-                },
-                {
-                    "name": "YouTube Stalk",
-                    "endpoint": "/api/stalker/youtube",
-                    "method": "GET",
-                    "params": [{ "name": "username", "required": true, "description": "Username / ID Channel" }]
-                },
-                {
-                    "name": "Threads Stalk",
-                    "endpoint": "/api/stalker/threads",
-                    "method": "GET",
-                    "params": [{ "name": "q", "required": true, "description": "Username Threads" }]
-                }
-            ],
+    {
+        "name": "GitHub Stalk",
+        "endpoint": "/api/stalker/github",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Username GitHub" }]
+    },
+    {
+        "name": "NPM Stalk",
+        "endpoint": "/api/stalker/npm",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Nama package NPM" }]
+    },
+    {
+        "name": "Reddit Stalk",
+        "endpoint": "/api/stalker/reddit",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Username Reddit" }]
+    },
+    {
+        "name": "Roblox Stalk",
+        "endpoint": "/api/stalker/roblox",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Username Roblox" }]
+    },
+    {
+        "name": "Steam Stalk",
+        "endpoint": "/api/stalker/steam",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "SteamID atau Vanity URL" }]
+    },
+    {
+        "name": "TikTok Stalk",
+        "endpoint": "/api/stalker/tiktok",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Username TikTok (tanpa @)" }]
+    },
+    {
+        "name": "Threads Stalk",
+        "endpoint": "/api/stalker/threads",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Username Threads (tanpa @)" }]
+    },
+    {
+        "name": "YouTube Stalk",
+        "endpoint": "/api/stalker/youtube",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Username atau handle channel YouTube" }]
+    },
+    {
+        "name": "Twitter / X Stalk",
+        "endpoint": "/api/stalker/twitter",
+        "method": "GET",
+        "params": [{ "name": "q", "required": true, "description": "Username Twitter/X (tanpa @)" }]
+    }
+],
   "tools": [
     {
       "name": "VCC Generator",
