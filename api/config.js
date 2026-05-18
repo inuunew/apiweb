@@ -128,6 +128,27 @@ export default async function handler(req, res) {
     "params": [
         { "name": "prompt", "required": true, "description": "Pertanyaan untuk Olabiba AI" }
     ]
+}, 
+{
+    "name": "Unlimited AI",
+    "endpoint": "/api/ai/unlimitedai",
+    "method": "GET",
+    "params": [{ "name": "prompt", "required": true, "description": "Pertanyaan untuk Unlimited AI" }]
+},
+{
+    "name": "Feelbetter AI",
+    "endpoint": "/api/ai/feelbetter",
+    "method": "GET",
+    "params": [
+        { "name": "prompt", "required": true, "description": "Curhatan atau pertanyaan" },
+        { "name": "system", "required": false, "description": "Custom system prompt (opsional)" }
+    ]
+},
+{
+    "name": "Chat GPT Online",
+    "endpoint": "/api/ai/gptonline",
+    "method": "GET",
+    "params": [{ "name": "prompt", "required": true, "description": "Pertanyaan untuk GPT Online" }]
 }
             ],
             "ai-image": [
@@ -172,7 +193,13 @@ export default async function handler(req, res) {
             "endpoint": "/api/ai-image/deepai",
             "method": "GET",
             "params": [{ "name": "prompt", "required": true, "description": "Deskripsi gambar" }]
-        }
+        }, 
+        {
+    "name": "DeepAI Text to Image",
+    "endpoint": "/api/ai-image/deepaitxt2img",
+    "method": "GET",
+    "params": [{ "name": "prompt", "required": true, "description": "Deskripsi gambar yang ingin dibuat" }]
+}
     ],
             "maker": [
                 {
@@ -397,6 +424,12 @@ export default async function handler(req, res) {
         "method": "GET",
         "params": [{ "name": "q", "required": true, "description": "16 digit NIK KTP" }]
     },
+    {
+    "name": "YouTube Search",
+    "endpoint": "/api/search/ytsearch",
+    "method": "GET",
+    "params": [{ "name": "q", "required": true, "description": "Judul lagu / video YouTube" }]
+}, 
     {
         "name": "Google Books",
         "endpoint": "/api/search/books",
