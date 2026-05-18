@@ -1448,7 +1448,6 @@ else if (type === 'pinterest') {
         });
     }
 }
-}
 else if (type === 'spotify-search') {
     if (!keyword) return res.status(400).json({ status: false, message: "Parameter 'q' wajib diisi!" });
     const result = await spotifyClient.search(keyword);
