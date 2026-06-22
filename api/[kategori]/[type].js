@@ -1128,88 +1128,71 @@ else if (type === 'gptonline') {
 else if (type === 'youtube_v2') {
     if (!url) return res.status(400).json({ status: false, message: "Parameter 'url' wajib diisi!" });
 
-    function extractVideoId(url) {
+    // ── Step 1: Ambil semua format via Cobalt ──────────────────────────
+    const qualities = ["144", "240", "360", "480", "720", "1080", "1440", "2160"];
+    const bitrates  = ["128", "192", "256", "320"];
+
+    const fetchCobalt = async (body) => {
         try {
-            const u = new URL(url);
-            if (u.hostname.includes("youtu.be")) return u.pathname.slice(1).split("?")[0];
-            return u.searchParams.get("v");
+            const r = await axios.post("https://api.cobalt.tools/", body, {
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                },
+                timeout: 20000,
+                validateStatus: () => true
+            });
+            return r.status === 200 ? r.data : null;
         } catch { return null; }
-    }
-
-    const videoId = extractVideoId(url);
-    if (!videoId) return res.status(400).json({ status: false, message: "URL YouTube tidak valid!" });
-
-    const baseHeaders = {
-        "accept-language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
-        "user-agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36",
-        "sec-ch-ua": '"Chromium";v="137", "Not/A)Brand";v="24"',
-        "sec-ch-ua-mobile": "?1",
-        "sec-ch-ua-platform": '"Android"',
     };
 
-    // Step 1: Fetch oEmbed + widget secara paralel
-    const [oembed, widget] = await Promise.all([
-        axios.get(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`, {
-            headers: { ...baseHeaders, "origin": "https://yt1s.africa.com", "referer": "https://yt1s.africa.com/" }
-        }),
-        axios.get(`https://api.ytmp3.tube/widgetplus?url=https://www.youtube.com/watch?v=${videoId}&title=video`, {
-            headers: {
-                ...baseHeaders,
-                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                "referer": "https://yt1s.africa.com/",
-                "sec-fetch-dest": "iframe",
-                "sec-fetch-mode": "navigate",
-                "sec-fetch-site": "cross-site",
-                "upgrade-insecure-requests": "1",
-            }
-        })
-    ]);
+    // ── Step 2: Metadata via oEmbed ────────────────────────────────────
+    let title = "", author = "", thumb = "", videoId = "";
+    try {
+        const u = new URL(url);
+        videoId = u.hostname.includes("youtu.be")
+            ? u.pathname.slice(1).split("?")[0]
+            : u.searchParams.get("v");
 
-    const { title, author_name: author, thumbnail_url: thumb } = oembed.data;
+        const oembed = await axios.get(
+            `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`,
+            { timeout: 10000 }
+        );
+        title  = oembed.data.title;
+        author = oembed.data.author_name;
+        thumb  = oembed.data.thumbnail_url;
+    } catch { /* lanjut meski gagal */ }
 
-    // Step 2: Parse widget-data
-    const match = widget.data.match(/<script[^>]*id="widget-data"[^>]*>([\s\S]*?)<\/script>/);
-    if (!match) return res.status(500).json({ status: false, creator: "InuuTyzDev", message: "widget-data tidak ditemukan." });
-
-    const { token, timestamp, encryptedVideoId: secretToken } = JSON.parse(match[1].trim());
-
-    const apiHeaders = {
-        ...baseHeaders,
-        "accept": "*/*",
-        "content-type": "application/json",
-        "origin": "https://api.ytmp3.tube",
-        "referer": "https://api.ytmp3.tube/",
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "same-origin",
-    };
-
-    const postApi = (endpoint, body) =>
-        axios.post(`https://api.ytmp3.tube${endpoint}`, { id: videoId, token, timestamp, secretToken, ...body }, { headers: apiHeaders })
-            .then(r => r.data).catch(() => null);
-
-    const pollMedia = async (endpoint, payload, maxRetry = 10) => {
-        for (let i = 0; i < maxRetry; i++) {
-            const r = await postApi(endpoint, payload);
-            if (!r) break;
-            if (r.status === "ok" && r.link) return r.link;
-            if (r.status === "fail") return null;
-            await new Promise(res => setTimeout(res, 1500));
-        }
-        return null;
-    };
-
-    // Step 3: Poll MP4 & MP3 paralel
-    const mp4Qualities = ["1080", "720", "480", "360", "240", "144"];
-    const mp3Bitrates  = ["320", "256", "192", "128", "64"];
-
+    // ── Step 3: Fetch MP4 & MP3 paralel ───────────────────────────────
     const [mp4Results, mp3Results] = await Promise.all([
-        Promise.all(mp4Qualities.map(q => pollMedia("/api/download/mp4", { videoQuality: q }, 15).then(link => ({ q, link })))),
-        Promise.all(mp3Bitrates.map(b  => pollMedia("/api/download/mp3", { audioBitrate: b }, 80).then(link => ({ b, link })))),
+        Promise.all(qualities.map(q =>
+            fetchCobalt({ url, videoQuality: q, downloadMode: "mute", filenameStyle: "basic" })
+                .then(data => {
+                    if (!data) return null;
+                    const link = data.url || (data.picker?.[0]?.url);
+                    return link ? { quality: q + "p", url: link } : null;
+                })
+        )),
+        Promise.all(bitrates.map(b =>
+            fetchCobalt({ url, audioBitrate: b, downloadMode: "audio", filenameStyle: "basic" })
+                .then(data => {
+                    if (!data) return null;
+                    const link = data.url;
+                    return link ? { quality: b + "kbps", url: link } : null;
+                })
+        ))
     ]);
 
-    const mp4 = mp4Results.filter(x => x.link).map(({ q, link }) => ({ quality: q + "p",    url: link }));
-    const mp3 = mp3Results.filter(x => x.link).map(({ b, link }) => ({ quality: b + "kbps", url: link }));
+    const mp4 = mp4Results.filter(Boolean);
+    const mp3 = mp3Results.filter(Boolean);
+
+    if (!mp4.length && !mp3.length) {
+        return res.status(500).json({
+            status: false,
+            creator: "InuuTyzDev",
+            message: "Gagal mengambil link download dari Cobalt."
+        });
+    }
 
     return res.status(200).json({
         status: true,
