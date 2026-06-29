@@ -193,6 +193,7 @@ export default async function handler(req, res) {
 
     const apiKeyCuki = "cuki-x";
 
+
     // FIX #2: Semua blok else if kategori masuk ke dalam try utama
     try {
         // ==========================================
@@ -294,6 +295,7 @@ export default async function handler(req, res) {
             "Cookie": cookieHeader
         }
     });
+
 
     let rawBody = "";
     dsRes.data.setEncoding("utf8");
@@ -3064,6 +3066,58 @@ if (type === 'quotes-anime') {
     const keyword = q || query || searchText;
     const baseUrl = "https://api.cuki.biz.id";
 
+    
+const FILEM21_BASE = 'https://tv13.filem21.net/';
+const filem21Headers = {
+    'authority': 'tv13.filem21.net',
+    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'accept-language': 'en-US,en;q=0.9',
+    'referer': FILEM21_BASE,
+    'sec-fetch-dest': 'document',
+    'sec-fetch-mode': 'navigate',
+    'sec-fetch-site': 'same-origin',
+    'upgrade-insecure-requests': '1',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36'
+};
+
+// Helper: ambil HTML dengan sesi cookie (pakai tough-cookie seperti di gptonline)
+const getFilem21Html = async (targetUrl, withSession = false) => {
+    const { CookieJar } = await import('tough-cookie');
+    const { wrapper } = await import('axios-cookiejar-support');
+    const jar = new CookieJar();
+    const client = wrapper(axios.create({ jar, withCredentials: true, timeout: 15000, headers: filem21Headers }));
+    if (withSession) await client.get(FILEM21_BASE).catch(() => {});
+    const { data } = await client.get(targetUrl);
+    return cheerio.load(data);
+};
+
+// Helper: parse daftar film dari halaman list
+const parseFilem21List = ($) => {
+    const results = [];
+    $('#gmr-main-load article').each((_, el) => {
+        const titleEl = $(el).find('.entry-title a');
+        const title   = titleEl.text().trim();
+        const link    = titleEl.attr('href');
+        if (!title) return;
+
+        const item = {
+            title,
+            link,
+            image:    $(el).find('.content-thumbnail img').attr('src') || null,
+            rating:   $(el).find('.gmr-rating-item').text().replace(/\s/g, '').trim() || 'N/A',
+            type:     $(el).find('.gmr-posttype-item').text().trim() || 'Movie',
+            quality:  $(el).find('.gmr-quality-item a').text().trim() || null,
+            genres_countries: []
+        };
+        const eps      = $(el).find('.gmr-numbeps span').text().trim();
+        const duration = $(el).find('.gmr-duration-item').text().replace(/\s/g, '').trim();
+        if (eps)      item.episode  = eps;
+        if (duration) item.duration = duration;
+        $(el).find('.gmr-movie-on a').each((_, a) => item.genres_countries.push($(a).text().trim()));
+        results.push(item);
+    });
+    return results;
+};
     try {
         let response;
         if (type === 'melolo-home') {
@@ -3081,7 +3135,130 @@ if (type === 'quotes-anime') {
             response = await axios.get(`${baseUrl}/api/movie/netflix-trending?apikey=${apiKeyCuki}&language=${language || 'id'}`);
         } else if (type === 'pusatfilm-search') {
             response = await axios.get(`${baseUrl}/api/movie/pusatfilm21-search?apikey=${apiKeyCuki}&query=${encodeURIComponent(keyword)}&type=search`);
+        } else if (type === 'filem21-tv') {
+    const pg = parseInt(page) || 1;
+    const targetUrl = pg === 1 ? `${FILEM21_BASE}tv/` : `${FILEM21_BASE}tv/page/${pg}/`;
+    const $ = await getFilem21Html(targetUrl, pg !== 1);
+    const results    = parseFilem21List($);
+    const totalPages = parseInt($('.page-numbers').not('.next').last().text().trim()) || 1;
+    return res.status(200).json({ status: true, creator: 'InuuTyzDev', result: { pagination: { current_page: pg, total_pages: totalPages }, results } });
+}
+
+// ── GENRE LIST ──
+else if (type === 'filem21-genre-list') {
+    const $ = await getFilem21Html(FILEM21_BASE);
+    const genres = [];
+    const seen   = new Set();
+    $('#primary-menu a').each((_, el) => {
+        const link = $(el).attr('href') || '';
+        if (!link.includes('/genre/')) return;
+        const name = $(el).find('[itemprop="name"]').text().trim() || $(el).text().trim();
+        const slug = link.replace(/https?:\/\/[^/]+/, '').replace(/\/genre\//, '').replace(/\//g, '');
+        if (name && slug && !seen.has(slug)) { seen.add(slug); genres.push({ name, slug, link }); }
+    });
+    return res.status(200).json({ status: true, creator: 'InuuTyzDev', result: genres });
+} else if (type === 'filem21-search') {
+    if (!keyword) return res.status(400).json({ status: false, message: "Parameter 'q' (judul film) wajib diisi!" });
+    const targetUrl = `${FILEM21_BASE}?s=${encodeURIComponent(keyword)}&post_type[]=post&post_type[]=tv`;
+    const $ = await getFilem21Html(targetUrl, true);
+    const results = parseFilem21List($);
+    return res.status(200).json({ status: true, creator: 'InuuTyzDev', result: { pagination: { current_page: 1 }, results } });
+}
+
+// ── GENRE MOVIES ──
+else if (type === 'filem21-genre') {
+    if (!keyword) return res.status(400).json({ status: false, message: "Parameter 'q' (slug genre, contoh: action) wajib diisi!" });
+    const pg = parseInt(page) || 1;
+    const targetUrl = pg === 1
+        ? `${FILEM21_BASE}genre/${keyword.toLowerCase()}/`
+        : `${FILEM21_BASE}genre/${keyword.toLowerCase()}/page/${pg}/`;
+    const $ = await getFilem21Html(targetUrl, pg !== 1);
+    const results    = parseFilem21List($);
+    const totalPages = parseInt($('.page-numbers').not('.next').last().text().trim()) || 1;
+    return res.status(200).json({ status: true, creator: 'InuuTyzDev', result: { pagination: { current_page: pg, total_pages: totalPages }, results } });
+}
+
+// ── COUNTRY LIST ──
+else if (type === 'filem21-country-list') {
+    const $ = await getFilem21Html(FILEM21_BASE);
+    const countries = [];
+    const seen      = new Set();
+    $('#primary-menu a').each((_, el) => {
+        const link = $(el).attr('href') || '';
+        if (!link.includes('/country/')) return;
+        const name = $(el).find('[itemprop="name"]').text().trim() || $(el).text().trim();
+        const slug = link.replace(/https?:\/\/[^/]+/, '').replace(/\/country\//, '').replace(/\//g, '');
+        if (name && slug && !seen.has(slug)) { seen.add(slug); countries.push({ name, slug, link }); }
+    });
+    return res.status(200).json({ status: true, creator: 'InuuTyzDev', result: countries });
+}
+
+// ── COUNTRY MOVIES ──
+else if (type === 'filem21-country') {
+    if (!keyword) return res.status(400).json({ status: false, message: "Parameter 'q' (slug negara, contoh: japan) wajib diisi!" });
+    const pg = parseInt(page) || 1;
+    const targetUrl = pg === 1
+        ? `${FILEM21_BASE}country/${keyword.toLowerCase()}/`
+        : `${FILEM21_BASE}country/${keyword.toLowerCase()}/page/${pg}/`;
+    const $ = await getFilem21Html(targetUrl, pg !== 1);
+    const results    = parseFilem21List($);
+    const totalPages = parseInt($('.page-numbers').not('.next').last().text().trim()) || 1;
+    return res.status(200).json({ status: true, creator: 'InuuTyzDev', result: { pagination: { current_page: pg, total_pages: totalPages }, results } });
+}
+
+// ── DETAIL ──
+else if (type === 'filem21-detail') {
+    if (!url) return res.status(400).json({ status: false, message: "Parameter 'url' (slug atau full URL film) wajib diisi!" });
+    const targetUrl = url.startsWith('http') ? url : `${FILEM21_BASE}${url}`;
+    const $ = await getFilem21Html(targetUrl, true);
+
+    const detail = {
+        title:        $('.entry-title').text().trim() || 'N/A',
+        image:        $('.gmr-movie-data figure img').attr('src') || null,
+        trailer:      $('.gmr-trailer-popup').attr('href') || $('.gmr-embed-responsive iframe').attr('src') || null,
+        rating:       $('span[itemprop="ratingValue"]').text().trim() || 'N/A',
+        rating_count: $('span[itemprop="ratingCount"]').text().trim() || 'N/A',
+        synopsis:     $('.entry-content .gtx-body').text().trim() || $('.entry-content p').first().text().trim() || 'N/A'
+    };
+
+    // Episode list (khusus serial)
+    const episodes = [];
+    $('.gmr-listseries a').each((_, el) => {
+        if (!$(el).hasClass('gmr-all-serie')) {
+            episodes.push({ episode: $(el).text().trim(), link: $(el).attr('href') });
         }
+    });
+    if (episodes.length) detail.episodes_list = episodes;
+
+    // Metadata (sutradara, genre, durasi, dll)
+    const metadata = {};
+    $('.gmr-moviedata').each((_, el) => {
+        const labelRaw = $(el).find('strong').text().trim();
+        if (!labelRaw) return;
+        const label  = labelRaw.replace(':', '').trim();
+        const values = [];
+        $(el).find('a').each((_, a) => { const t = $(a).text().trim(); if (t) values.push(t); });
+        metadata[label] = values.length
+            ? values.join(', ')
+            : $(el).text().replace(labelRaw, '').replace(/[\n\t]/g, '').trim();
+    });
+    detail.metadata = metadata;
+
+    // Tags
+    const tags = [];
+    $('.tags-links-content a').each((_, el) => tags.push($(el).text().trim()));
+    detail.tags = tags;
+
+    // Download links
+    const downloads = [];
+    $('.gmr-download-list li a').each((_, el) => {
+        const dl = $(el).attr('href');
+        if (dl) downloads.push({ label: $(el).text().replace(/[\n\t]/g, '').trim(), url: dl });
+    });
+    detail.download_links = downloads;
+
+    return res.status(200).json({ status: true, creator: 'InuuTyzDev', result: detail });
+}
         // ... tambahkan else if untuk type movie lainnya sesuai kebutuhan
 
         if (!response) return res.status(404).json({ status: false, message: "Type movie tidak ditemukan." });
